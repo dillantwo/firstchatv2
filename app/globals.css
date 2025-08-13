@@ -1,0 +1,180 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #4d6bfe;
+}
+
+html{
+  @apply scroll-smooth;
+}
+
+::-webkit-scrollbar{
+  display: none;
+}
+
+/* 自定义滚动条样式 */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  display: block;
+}
+
+.scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
+  background-color: rgba(75, 85, 99, 0.6);
+  border-radius: 3px;
+}
+
+.scrollbar-thumb-gray-600::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(75, 85, 99, 0.8);
+}
+
+.scrollbar-track-transparent::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+/* 隐藏滚动条，除非内容溢出 */
+.chat-list-container {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(75, 85, 99, 0.6) transparent;
+}
+
+.chat-list-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-list-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-list-container::-webkit-scrollbar-thumb {
+  background-color: rgba(75, 85, 99, 0.6);
+  border-radius: 3px;
+}
+
+.chat-list-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(75, 85, 99, 0.8);
+}
+.loader div:nth-child(2){
+  animation-delay: 0.2s;
+}
+.loader div:nth-child(3){
+  animation-delay: 0.4s;
+}
+
+code{
+  white-space: pre-wrap !important;
+}
+
+pre{
+  border-radius: 10px !important;
+}
+
+/* KaTeX 数学公式样式 */
+.katex {
+  font-size: 1.6em !important;
+}
+
+.katex-display {
+  font-size: 1.8em !important;
+  margin: 1.5em 0 !important;
+}
+
+/* 行内数学公式 */
+.katex-mathml {
+  font-size: 1.4em !important;
+}
+
+/* 块级数学公式额外样式 */
+.katex-display > .katex {
+  font-size: 2em !important;
+  text-align: center !important;
+}
+
+/* Markdown表格美化样式 */
+.markdown-table-wrapper {
+  margin: 1.5rem 0;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* 表格基础样式 - 自动换行优化 */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  table-layout: auto;
+  word-break: break-word;
+}
+
+/* 表头样式 */
+table thead {
+  background-color: #f9fafb;
+}
+
+table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e5e7eb;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  white-space: normal;
+  line-height: 1.4;
+}
+
+/* 表格内容样式 - 自动换行 */
+table td {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: #1f2937;
+  border-bottom: 1px solid #e5e7eb;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  white-space: normal;
+  line-height: 1.6;
+  vertical-align: top;
+}
+
+/* 表格行悬停效果 */
+table tbody tr:hover {
+  background-color: #f9fafb;
+  transition: background-color 0.15s ease-in-out;
+}
+
+/* 最后一行去掉下边框 */
+table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* 响应式设计 - 更紧凑的移动端样式 */
+@media (max-width: 640px) {
+  table th,
+  table td {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+  
+  table th {
+    font-size: 0.7rem;
+  }
+}
+
+/* 确保长单词和URL能够断行 */
+table th *,
+table td * {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
