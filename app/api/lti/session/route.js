@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import LTIUser from '@/models/LTIUser';
+import LTICourse from '@/models/LTICourse';
 import connectDB from '@/config/db';
 
 export async function GET(request) {
@@ -20,37 +21,52 @@ export async function GET(request) {
     console.log('[LTI Session] Token decoded, userId:', decoded.userId);
     
     // Get user from database
+    console.log('[LTI Session] Looking for user with ID:', decoded.userId);
+    console.log('[LTI Session] Using model:', LTIUser.modelName);
+    console.log('[LTI Session] Collection name:', LTIUser.collection.name);
+    
     const user = await LTIUser.findById(decoded.userId);
     console.log('[LTI Session] User found:', user ? 'Yes' : 'No');
+    console.log('[LTI Session] User query result:', user ? `Name: ${user.name}, Active: ${user.isActive}` : 'null');
     
     if (!user || !user.isActive) {
       console.log('[LTI Session] User not found or inactive');
       return NextResponse.json({ authenticated: false }, { status: 401 });
     }
     
-    // Return user information (excluding sensitive data)
+    // Get the most recent course association for this user
+    const courseAssociation = await LTICourse.findOne({
+      user_id: user._id
+    }).sort({ last_access: -1 });
+    
+    console.log('[LTI Session] Course association found:', courseAssociation ? 'Yes' : 'No');
+    
+    if (!courseAssociation) {
+      console.log('[LTI Session] No course association found for user');
+      return NextResponse.json({ authenticated: false, message: 'No course association found' }, { status: 401 });
+    }
+    
+    // Return user information (combining user info and course context)
     const userInfo = {
       id: user._id.toString(),
       sub: user.sub,
       name: user.name,
       username: user.username,
       email: user.email,
-      given_name: user.given_name,
-      family_name: user.family_name,
-      picture: user.picture,
-      roles: user.roles,
-      context_id: user.context_id,
-      context_label: user.context_label,
-      context_title: user.context_title,
-      resource_link_id: user.resource_link_id,
-      resource_link_title: user.resource_link_title,
       platform_name: user.platform_name,
-      isInstructor: user.roles?.some(role => 
+      // Always use course association context (since we removed these fields from user)
+      context_id: courseAssociation.context_id,
+      context_label: courseAssociation.context_label,
+      context_title: courseAssociation.context_title,
+      resource_link_id: courseAssociation.resource_link_id,
+      resource_link_title: courseAssociation.resource_link_title,
+      roles: courseAssociation.roles || [],
+      isInstructor: (courseAssociation.roles || []).some(role => 
         role.includes('Instructor') || 
-        role.includes('ContentDeveloper') || 
+        role.includes('ContentDeveloper') ||
         role.includes('Manager')
       ) || false,
-      isLearner: user.roles?.some(role => 
+      isLearner: (courseAssociation.roles || []).some(role => 
         role.includes('Learner')
       ) || false
     };

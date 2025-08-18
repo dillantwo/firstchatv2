@@ -13,11 +13,25 @@ const ChatSchema = new mongoose.Schema(
                         name: {type: String},
                         url: {type: String}
                     }
-                ]
+                ],
+                // Token usage for this specific message (if available from AI provider)
+                tokenUsage: {
+                    promptTokens: {type: Number, default: 0},
+                    completionTokens: {type: Number, default: 0},
+                    totalTokens: {type: Number, default: 0}
+                }
             },
         ],
         userId: {type: String, required: true},
         chatflowId: {type: String, default: null}, // Associate with specific chatflow
+        courseId: {type: String, default: null}, // Associate with specific course for token tracking
+        // Aggregate token usage for this entire chat
+        totalTokenUsage: {
+            promptTokens: {type: Number, default: 0},
+            completionTokens: {type: Number, default: 0},
+            totalTokens: {type: Number, default: 0},
+            lastUpdated: {type: Date, default: Date.now}
+        }
     },
     {timestamps: true}
 );

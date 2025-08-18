@@ -94,18 +94,20 @@ const Message = ({role, content, images}) => {
             </tr>
         ),
         th: ({ children }) => (
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 last:border-r-0 break-words">
-                <div className="min-w-0 break-words whitespace-normal">
-                    {children}
-                </div>
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 last:border-r-0 break-words min-w-0 whitespace-normal">
+                {children}
             </th>
         ),
         td: ({ children }) => (
-            <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-200 last:border-r-0 break-words">
-                <div className="min-w-0 break-words whitespace-normal leading-relaxed">
-                    {children}
-                </div>
+            <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-200 last:border-r-0 break-words min-w-0 whitespace-normal leading-relaxed">
+                {children}
             </td>
+        ),
+        // Prevent p tag nesting issues
+        p: ({ children }) => (
+            <div className="mb-4 last:mb-0">
+                {children}
+            </div>
         ),
     }), []);
 

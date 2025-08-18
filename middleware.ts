@@ -8,6 +8,11 @@ export function middleware(request) {
     return NextResponse.next();
   }
   
+  // Allow admin routes without LTI authentication
+  if (pathname.startsWith('/api/admin/') || pathname.startsWith('/admin')) {
+    return NextResponse.next();
+  }
+  
   // Allow public assets and Next.js internals
   if (pathname.startsWith('/_next/') || 
       pathname.startsWith('/favicon.ico') ||

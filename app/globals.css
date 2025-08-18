@@ -178,3 +178,23 @@ table td * {
   word-break: break-word;
   overflow-wrap: break-word;
 }
+
+/* Tooltip 样式改进 - 确保不重叠 */
+.tooltip {
+  z-index: 99999 !important;
+  position: absolute;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* 确保group hover tooltips有正确的层级 */
+.group:hover .tooltip,
+.group-hover\:opacity-100 {
+  z-index: 99999 !important;
+}
+
+/* 确保所有悬停提示都在最顶层 */
+[class*="group-hover:opacity-100"],
+[class*="z-[9999]"] {
+  z-index: 99999 !important;
+}

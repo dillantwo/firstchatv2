@@ -23,27 +23,52 @@ export default function LTIAuthGuard({ children }) {
   }
 
   if (!isAuthenticated) {
-    console.log('[LTI AuthGuard] User not authenticated, showing access denied');
+    console.log('[LTI AuthGuard] User not authenticated, showing login dialog');
+    
+    const handleGoToMoodle = () => {
+      // 跳转到Moodle网站
+      window.open(process.env.NEXT_PUBLIC_MOODLE_LINK || 'https://qefmoodle.com', '_blank');
+    };
+
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#292a2d] text-white">
-        <div className="text-center max-w-md mx-auto p-8">
-          <div className="mb-6">
-            <svg className="w-16 h-16 mx-auto text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg shadow-xl max-w-md mx-4 p-6">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Moodle Login Required</h2>
+            <p className="text-gray-600">
+              You have been logged out from Moodle. Please log in again through Moodle to continue using the chatbot.
+            </p>
           </div>
           
-          <h1 className="text-2xl font-bold mb-4">Access Restricted</h1>
-          <p className="text-gray-300 mb-6">
-            This application can only be accessed through Moodle LTI 1.3. 
-            Please access this tool from within your Moodle course.
-          </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="flex items-start">
+              <svg className="w-5 h-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <h3 className="text-sm font-medium text-blue-800 mb-1">How to access:</h3>
+                <p className="text-sm text-blue-700">
+                  This chatbot can only be accessed through your Moodle course. Please find the chatbot activity in your course and click on it.
+                </p>
+              </div>
+            </div>
+          </div>
           
-          <div className="bg-yellow-900/30 border border-yellow-500/50 rounded-lg p-4 text-yellow-200">
-            <h3 className="font-semibold mb-2">For Instructors:</h3>
-            <p className="text-sm">
-              Add this tool to your Moodle course as an External Tool (LTI) activity to allow students to access the chatbot.
-            </p>
+          <div className="flex justify-center">
+            <button
+              onClick={handleGoToMoodle}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors duration-200 flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              Go to Moodle
+            </button>
           </div>
         </div>
       </div>

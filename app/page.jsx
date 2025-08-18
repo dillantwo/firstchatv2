@@ -5,6 +5,7 @@ import PromptBox from "@/components/PromptBox";
 import Sidebar from "@/components/Sidebar";
 import ChatflowSelector from "@/components/ChatflowSelector";
 import LTIAuthGuard from "@/components/LTIAuthGuard";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { useAppContext } from "@/context/AppContextLTI";
 import { useHydration } from "@/utils/useHydration";
 import Image from "next/image";
@@ -15,7 +16,7 @@ export default function Home() {
   const [expand, setExpand] = useState(false)
   const [messages, setMessages] = useState([])
   const [isLoading, setIsLoading] = useState(false)
-  const {selectedChat, selectedChatflow, handleChatflowChange} = useAppContext()
+  const {selectedChat, selectedChatflow, handleChatflowChange, createNewChat} = useAppContext()
   const containerRef = useRef(null)
   const hasHydrated = useHydration();
 
@@ -45,15 +46,42 @@ export default function Home() {
 
   return (
     <LTIAuthGuard>
-      <div>
-        <div className="flex h-screen">
-          <Sidebar expand={expand} setExpand={setExpand}/>
-          <div className="flex-1 flex flex-col items-center justify-center px-4 pb-8 bg-[#292a2d] text-white relative">
+      <ErrorBoundary>
+        <div>
+          <div className="flex h-screen">
+            <Sidebar expand={expand} setExpand={setExpand}/>
+            <div className="flex-1 flex flex-col items-center justify-center px-4 pb-8 bg-[#292a2d] text-white relative">
             {/* Mobile top navigation */}
             <div className="md:hidden absolute px-4 top-6 flex items-center justify-between w-full">
-              <Image onClick={()=> (expand ? setExpand(false) : setExpand(true))}
-               className="rotate-180" src={assets.menu_icon} alt=""/>
-              <Image className="opacity-70" src={assets.chat_icon} alt=""/>
+              <div className="group relative">
+                <Image onClick={()=> (expand ? setExpand(false) : setExpand(true))}
+                 className="rotate-180 cursor-pointer" src={assets.menu_icon} alt=""/>
+                <div className="absolute w-max top-10 left-0 opacity-0 group-hover:opacity-100 transition bg-black text-white text-sm px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]">
+                  {expand ? 'Close menu' : 'Open menu'}
+                  <div className="w-3 h-3 absolute bg-black rotate-45 left-4 -top-1.5"></div>
+                </div>
+              </div>
+              
+              {/* Mobile ChatflowSelector in the middle of navigation */}
+              <div className="flex-1 mx-4 max-w-xs">
+                <ChatflowSelector 
+                  selectedChatflow={selectedChatflow} 
+                  onChatflowChange={handleChatflowChange} 
+                />
+              </div>
+              
+              <div className="group relative">
+                <Image 
+                  onClick={createNewChat}
+                  className="opacity-70 cursor-pointer hover:opacity-100 transition-opacity" 
+                  src={assets.chat_icon} 
+                  alt="New chat"
+                />
+                <div className="absolute w-max top-10 right-0 opacity-0 group-hover:opacity-100 transition bg-black text-white text-sm px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]">
+                  New chat
+                  <div className="w-3 h-3 absolute bg-black rotate-45 right-4 -top-1.5"></div>
+                </div>
+              </div>
             </div>
 
             {/* Desktop ChatflowSelector */}
@@ -64,16 +92,10 @@ export default function Home() {
               />
             </div>
 
-            {/* Mobile ChatflowSelector */}
-            <div className="md:hidden absolute top-16 left-4 right-4 z-10">
-              <ChatflowSelector 
-                selectedChatflow={selectedChatflow} 
-                onChatflowChange={handleChatflowChange} 
-              />
-            </div>
+            {/* Mobile ChatflowSelector - removed as it's now shown in the middle when chatting */}
 
             {messages.length === 0 || !selectedChat ? (
-              <div className="mt-16 md:mt-0">
+              <div className="mt-16 md:mt-8 mb-24 md:mb-32">
               <div className="flex items-center gap-3">
                 <Image src={assets.reshot_icon} alt="" className="h-10"/>
                 <p className="text-2xl font-medium">Hi, I'm FirstChat.</p>
@@ -90,7 +112,8 @@ export default function Home() {
             <div ref={containerRef}
             className="relative flex flex-col items-center justify-start w-full mt-32 md:mt-20 max-h-screen overflow-y-auto"
             > 
-            <p className="fixed top-20 md:top-8 border border-transparent hover:border-gray-500/50 py-1 px-2 rounded-lg font-semibold mb-6">
+            {/* Desktop: Show chat title and chatflow name */}
+            <p className="hidden md:block fixed top-8 border border-transparent hover:border-gray-500/50 py-1 px-2 rounded-lg font-semibold mb-6">
               {(selectedChat?.name || 'No Chat Selected').length > 8 
                 ? (selectedChat?.name || 'No Chat Selected').substring(0, 8) + '...' 
                 : (selectedChat?.name || 'No Chat Selected')}
@@ -98,8 +121,15 @@ export default function Home() {
                 <span className="text-xs text-gray-400 ml-2">• {selectedChatflow.name}</span>
               )}
             </p>
+            
+            {/* Mobile: Show chat title only */}
+            <p className="md:hidden fixed top-20 border border-transparent py-1 px-2 rounded-lg font-semibold mb-6 text-sm">
+              {(selectedChat?.name || 'No Chat Selected').length > 12 
+                ? (selectedChat?.name || 'No Chat Selected').substring(0, 12) + '...' 
+                : (selectedChat?.name || 'No Chat Selected')}
+            </p>
             {messages.map((msg, index)=>(
-              <Message key={index} role={msg.role} content={msg.content} images={msg.images}/>
+              <Message key={`msg-${index}-${msg.role}-${msg.content?.slice(0, 20)}`} role={msg.role} content={msg.content} images={msg.images}/>
             ))}
             {
               isLoading && (
@@ -124,6 +154,7 @@ export default function Home() {
           </div>
         </div>
       </div>
+      </ErrorBoundary>
     </LTIAuthGuard>
   );
 }

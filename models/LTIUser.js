@@ -11,14 +11,6 @@ const LTIUserSchema = new mongoose.Schema({
   username: { type: String }, // LTI username
   email: { type: String, default: null }, // May be null from LTI
   
-  // Context Information (Course/Class)
-  context_id: { type: String, required: true }, // Course ID
-  context_title: { type: String }, // Course name
-  
-  // Resource Information
-  resource_link_id: { type: String }, // Activity/resource ID
-  resource_link_title: { type: String }, // Activity name
-  
   // User Roles (simplified)
   roles: [{ type: String }], // LTI role URIs
   isInstructor: { type: Boolean, default: false }, // Derived from roles
@@ -60,9 +52,8 @@ LTIUserSchema.pre('save', function(next) {
 
 // Essential indexes for performance
 LTIUserSchema.index({ sub: 1, iss: 1 }, { unique: true });
-LTIUserSchema.index({ context_id: 1 });
 LTIUserSchema.index({ session_id: 1 });
 
-const LTIUser = mongoose.models.LTIUser || mongoose.model('LTIUser', LTIUserSchema);
+const LTIUser = mongoose.models.LTIUser || mongoose.model('LTIUser', LTIUserSchema, 'lti_users');
 
 export default LTIUser;

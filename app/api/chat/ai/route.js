@@ -1,10 +1,12 @@
 export const maxDuration = 300; // 增加到 5 分鐘
 import connectDB from "@/config/db";
 import Chat from "@/models/Chat";
+import LTIUser from "@/models/LTIUser";
+import LTICourse from "@/models/LTICourse";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-// import { AzureOpenAI } from "openai";
+import { checkChatflowPermission } from "@/utils/permissionUtils";
 
 // Flowise API configuration
 const FLOWISE_BASE_URL = process.env.FLOWISE_BASE_URL;
@@ -66,18 +68,6 @@ async function queryFlowise(data, chatflowId) {
     return result;
 }
 
-
-// Azure OpenAI configuration (using environment variables)
-// const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
-// const modelName = process.env.AZURE_OPENAI_MODEL_NAME || "gpt-4o";
-// const deployment = process.env.AZURE_OPENAI_DEPLOYMENT;
-// const apiKey = process.env.AZURE_OPENAI_API_KEY;
-// const apiVersion = process.env.AZURE_OPENAI_API_VERSION || "2024-04-01-preview";
-// const options = { endpoint, apiKey, deployment, apiVersion }
-
-// // Initialize OpenAI client with Azure OpenAI
-// const openai = new AzureOpenAI(options);
-
 export async function POST(req){
     try {
         // Get user ID from LTI session cookie
@@ -105,18 +95,8 @@ export async function POST(req){
         const { chatId, prompt, images, chatflowId } = await req.json();
 
         console.log('Received request:', { userId, chatId, prompt, imagesCount: images?.length, chatflowId });
-        
-        // If there are images, print image information for debugging
-        if (images && images.length > 0) {
-            console.log('Received images:', images.map((img, index) => ({
-                index,
-                isBase64: typeof img === 'string' && img.startsWith('data:'),
-                isUrl: typeof img === 'string' && (img.startsWith('http') || img.startsWith('blob:')),
-                type: typeof img,
-                preview: typeof img === 'string' ? img.substring(0, 50) + '...' : 'object'
-            })));
-        }
 
+        // Validate required parameters
         if(!prompt?.trim()){
             return NextResponse.json({
                 success: false,
@@ -131,13 +111,59 @@ export async function POST(req){
               });
         }
 
+        // Connect to database and get user information
+        await connectDB();
+        
+        // Get user information for permission checking (using new split table structure)
+        const user = await LTIUser.findById(userId);
+        if (!user) {
+            return NextResponse.json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        // Get user's course association to find roles and course context
+        // Use the correct field names: user_id and context_id
+        const courseAssociation = await LTICourse.findOne({ 
+            user_id: user._id 
+        }).sort({ updatedAt: -1 }); // Get most recent course association
+
+        if (!courseAssociation) {
+            console.log(`[Chat AI] No course association found for user ${userId}`);
+            return NextResponse.json({
+                success: false,
+                message: "No course association found",
+            });
+        }
+
+        console.log(`[Chat AI] User course context: ${courseAssociation.context_id}, roles:`, courseAssociation.roles);
+
+        // Check if user has permission to use this chatflow
+        const hasPermission = await checkChatflowPermission(
+            userId,
+            courseAssociation.context_id,  // Use context_id instead of courseId
+            courseAssociation.roles,
+            chatflowId,
+            'chat'
+        );
+
+        if (!hasPermission) {
+            console.log(`[Chat AI] Permission denied for user ${userId} to use chatflow ${chatflowId}`);
+            return NextResponse.json({
+                success: false,
+                message: "您没有权限使用此聊天流",
+            });
+        }
+
+        console.log(`[Chat AI] Permission granted for user ${userId} to use chatflow ${chatflowId}`);
+
         // Generate session ID for this chat conversation
         // Same chat will always have the same session ID for context continuity
         const sessionId = createSessionId(userId, chatId);
         console.log('Generated session ID for chat:', sessionId);
 
         // Find the chat document in the database based on userId and chatId
-        await connectDB()
         const data = await Chat.findOne({userId, _id: chatId})
 
         if(!data){
@@ -145,6 +171,17 @@ export async function POST(req){
                 success: false,
                 message: "Chat not found",
               });
+        }
+
+        // Log image information for debugging
+        if (images && images.length > 0) {
+            console.log('Received images:', images.map((img, index) => ({
+                index,
+                isBase64: typeof img === 'string' && img.startsWith('data:'),
+                isUrl: typeof img === 'string' && (img.startsWith('http') || img.startsWith('blob:')),
+                type: typeof img,
+                preview: typeof img === 'string' ? img.substring(0, 50) + '...' : 'object'
+            })));
         }
 
         // Create a user message object
@@ -238,9 +275,77 @@ export async function POST(req){
         console.log('Flowise response keys:', completion ? Object.keys(completion) : 'null');
         console.log('Flowise full response:', JSON.stringify(completion, null, 2));
         
-        // Adapt Flowise response format to standard chat message format
-        // Flowise API usually returns an object containing the response
+        // Extract token usage information if available
+        let tokenUsage = null;
+        if (completion && typeof completion === 'object') {
+            // First, try to extract from agentFlowExecutedData (Flowise specific)
+            if (completion.agentFlowExecutedData && Array.isArray(completion.agentFlowExecutedData)) {
+                console.log('🔍 Checking agentFlowExecutedData for token usage...');
+                
+                for (let i = 0; i < completion.agentFlowExecutedData.length; i++) {
+                    const executedData = completion.agentFlowExecutedData[i];
+                    
+                    // Check in data.outputs.output.usageMetadata (correct path based on actual response)
+                    if (executedData.data && executedData.data.outputs && executedData.data.outputs.output && executedData.data.outputs.output.usageMetadata) {
+                        const usage = executedData.data.outputs.output.usageMetadata;
+                        console.log(`✅ Found token usage in agentFlowExecutedData[${i}].data.outputs.output.usageMetadata:`, usage);
+                        tokenUsage = {
+                            input_tokens: usage.input_tokens || 0,
+                            output_tokens: usage.output_tokens || 0,
+                            total_tokens: usage.total_tokens || 0,
+                            input_token_details: usage.input_token_details,
+                            output_token_details: usage.output_token_details
+                        };
+                        break;
+                    }
+                    // Also check alternative path data.output.usageMetadata
+                    else if (executedData.data && executedData.data.output && executedData.data.output.usageMetadata) {
+                        const usage = executedData.data.output.usageMetadata;
+                        console.log(`✅ Found token usage in agentFlowExecutedData[${i}].data.output.usageMetadata:`, usage);
+                        tokenUsage = {
+                            input_tokens: usage.input_tokens || 0,
+                            output_tokens: usage.output_tokens || 0,
+                            total_tokens: usage.total_tokens || 0,
+                            input_token_details: usage.input_token_details,
+                            output_token_details: usage.output_token_details
+                        };
+                        break;
+                    }
+                }
+            }
+            
+            // If not found in agentFlowExecutedData, check for common token usage fields
+            if (!tokenUsage) {
+                tokenUsage = completion.usage || 
+                            completion.token_usage || 
+                            completion.tokens || 
+                            completion.usage_metadata ||
+                            completion.usageMetadata ||
+                            completion.metadata?.usage ||
+                            null;
+            }
+            
+            if (tokenUsage) {
+                console.log('🔢 Token usage found:', JSON.stringify(tokenUsage, null, 2));
+                
+                // Log detailed token information
+                const promptTokens = tokenUsage.prompt_tokens || tokenUsage.input_tokens || tokenUsage.prompt || 0;
+                const completionTokens = tokenUsage.completion_tokens || tokenUsage.output_tokens || tokenUsage.completion || 0;
+                const totalTokens = tokenUsage.total_tokens || tokenUsage.total || (promptTokens + completionTokens);
+                
+                console.log(`📊 Token breakdown - Prompt: ${promptTokens}, Completion: ${completionTokens}, Total: ${totalTokens}`);
+            } else {
+                console.log('ℹ️  No token usage information found in Flowise response');
+                // Log all top-level keys to help identify where token info might be
+                if (completion && typeof completion === 'object') {
+                    console.log('🔍 Available response fields:', Object.keys(completion));
+                }
+            }
+        }
+        
+        // Extract response content and token usage
         let responseContent = '';
+        let extractedTokenUsage = null;
         
         if (typeof completion === 'string') {
             responseContent = completion;
@@ -254,6 +359,22 @@ export async function POST(req){
                              completion.message ||
                              (typeof completion.content === 'string' ? completion.content : '') ||
                              JSON.stringify(completion);
+            
+            // Extract token usage if available
+            if (tokenUsage) {
+                extractedTokenUsage = {
+                    promptTokens: tokenUsage.prompt_tokens || tokenUsage.input_tokens || tokenUsage.prompt || 0,
+                    completionTokens: tokenUsage.completion_tokens || tokenUsage.output_tokens || tokenUsage.completion || 0,
+                    totalTokens: tokenUsage.total_tokens || tokenUsage.total || 0
+                };
+                
+                // If total tokens not provided, calculate it
+                if (!extractedTokenUsage.totalTokens && (extractedTokenUsage.promptTokens || extractedTokenUsage.completionTokens)) {
+                    extractedTokenUsage.totalTokens = extractedTokenUsage.promptTokens + extractedTokenUsage.completionTokens;
+                }
+                
+                console.log('💾 Saving token usage:', extractedTokenUsage);
+            }
         } else {
             responseContent = "Sorry, I couldn't generate a response.";
         }
@@ -261,17 +382,39 @@ export async function POST(req){
         const message = {
             role: "assistant",
             content: responseContent,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            ...(extractedTokenUsage && { tokenUsage: extractedTokenUsage })
         };
         
         data.messages.push(message);
+        
+        // Update aggregate token usage for the chat
+        if (extractedTokenUsage) {
+            if (!data.totalTokenUsage) {
+                data.totalTokenUsage = {
+                    promptTokens: 0,
+                    completionTokens: 0,
+                    totalTokens: 0,
+                    lastUpdated: new Date()
+                };
+            }
+            
+            data.totalTokenUsage.promptTokens += extractedTokenUsage.promptTokens;
+            data.totalTokenUsage.completionTokens += extractedTokenUsage.completionTokens;
+            data.totalTokenUsage.totalTokens += extractedTokenUsage.totalTokens;
+            data.totalTokenUsage.lastUpdated = new Date();
+            
+            console.log(`📈 Updated chat total tokens: ${data.totalTokenUsage.totalTokens} (prompt: ${data.totalTokenUsage.promptTokens}, completion: ${data.totalTokenUsage.completionTokens})`);
+        }
+        
         await data.save();
 
         // Return assistant message and updated chat information (including possibly updated name)
         return NextResponse.json({
             success: true, 
             data: message,
-            chatName: data.name // Return updated chat name
+            chatName: data.name, // Return updated chat name
+            ...(extractedTokenUsage && { tokenUsage: extractedTokenUsage }) // Include token usage in response
         })
     } catch (error) {
         console.error('Error in AI chat API:', error);

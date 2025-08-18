@@ -18,19 +18,20 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <LTIAuthProvider>
-      <AppContextProvider>
-        <html lang="en">
-          <body className={`${inter.className} antialiased`} suppressHydrationWarning={true}>
+    <html lang="en">
+      <body className={`${inter.className} antialiased`} suppressHydrationWarning={true}>
+        <LTIAuthProvider>
+          <AppContextProvider>
             <Toaster toastOptions={
               {
                 success: {style: { background: "black", color: "white"}},
                 error: {style: { background: "black", color: "white"}}
               }
             }/>
-            {children}</body>
-        </html>
-      </AppContextProvider>
-    </LTIAuthProvider>
+            {children}
+          </AppContextProvider>
+        </LTIAuthProvider>
+      </body>
+    </html>
   );
 }

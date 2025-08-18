@@ -2,11 +2,9 @@ import { NextResponse } from "next/server";
 import jwt from 'jsonwebtoken';
 import connectDB from '@/config/db';
 import LTIUser from '@/models/LTIUser';
-import { ChatflowPermission } from '@/models/ChatflowPermission';
-
-// Flowise API configuration
-const FLOWISE_BASE_URL = process.env.FLOWISE_BASE_URL;
-const FLOWISE_API_KEY = process.env.FLOWISE_API_KEY;
+import LTICourse from '@/models/LTICourse';
+import ChatflowPermission from '@/models/ChatflowPermission';
+import Chatflow from '@/models/Chatflow';
 
 export async function GET(request) {
     console.log('[Chatflows API] === Chatflows API called ===');
@@ -41,12 +39,11 @@ export async function GET(request) {
         await connectDB();
         console.log('[Chatflows API] Database connected');
 
-        // Find user
+        // Find user using LTI structure
         const user = await LTIUser.findById(decoded.userId);
         if (!user) {
             console.log('[Chatflows API] User not found for ID:', decoded.userId);
             return NextResponse.json({ 
-                success: false, 
                 message: 'User not found' 
             }, { status: 401 });
         }
@@ -54,67 +51,95 @@ export async function GET(request) {
         console.log('[Chatflows API] User found:', {
             id: user._id,
             name: user.name,
-            context_id: user.context_id,
-            roles: user.roles
+            username: user.username
         });
 
-        // Get user's chatflow permissions based on course and role
-        const permissions = await ChatflowPermission.find({ 
-            courseId: user.context_id, 
-            hasAccess: true,
-            allowedRoles: { $in: user.roles }
-        });
-
-        const allowedChatflowIds = permissions.map(p => p.chatflowId);
-
-        console.log(`[Chatflows API] User: ${user.name}, Course: ${user.context_id}, Roles: ${user.roles?.join(',')}`);
-        console.log(`[Chatflows API] Found ${permissions.length} permissions for ${allowedChatflowIds.length} chatflows`);
-
-        if (allowedChatflowIds.length === 0) {
-            console.log(`[Chatflows API] No chatflow permissions found for user in course ${user.context_id}`);
+        // Get user's current course context - try course association first, then user context
+        let contextId = user.context_id; // Default from user
+        let userRoles = user.roles || [];
+        
+        // Check for course association for more recent context
+        const courseAssociation = await LTICourse.findOne({
+            user_id: user._id
+        }).sort({ last_access: -1 });
+        
+        if (courseAssociation) {
+            contextId = courseAssociation.context_id;
+            userRoles = courseAssociation.roles || user.roles || [];
+            console.log('[Chatflows API] Course association found:', {
+                course: courseAssociation.context_title,
+                roles: userRoles
+            });
+        } else {
+            console.log('[Chatflows API] No course association found for user:', user._id);
             return NextResponse.json({
                 success: true,
-                data: []
+                data: [],
+                message: 'No course association found'
+            });
+        }
+        
+        console.log('[Chatflows API] Course context:', contextId);
+        console.log('[Chatflows API] User roles in course:', userRoles);
+        
+        const permissions = await ChatflowPermission.find({
+            courseId: contextId,
+            allowedRoles: { $in: userRoles },
+            isActive: true
+        });
+        
+        console.log(`[Chatflows API] Found ${permissions.length} chatflow permissions for course ${contextId}`);
+        
+        if (permissions.length === 0) {
+            console.log('[Chatflows API] No chatflow permissions found for this course and roles');
+            return NextResponse.json({
+                success: true,
+                data: [],
+                message: 'No chatflow permissions for this course and your roles'
             });
         }
 
-        // Get all chatflows from Flowise
-        const response = await fetch(`${FLOWISE_BASE_URL}/api/v1/chatflows`, {
-            method: "GET",
-            headers: {
-                "Authorization": `Bearer ${FLOWISE_API_KEY}`,
-                "Content-Type": "application/json"
-            }
+        // Get allowed chatflow IDs
+        const allowedChatflowIds = permissions.map(p => p.chatflowId);
+        console.log('[Chatflows API] Allowed chatflow IDs:', allowedChatflowIds);
+
+        // Get chatflow details from local database
+        const chatflows = await Chatflow.find({
+            flowId: { $in: allowedChatflowIds },
+            isActive: true
         });
-
-        if (!response.ok) {
-            throw new Error(`Flowise API error: ${response.status} ${response.statusText}`);
-        }
-
-        const chatflows = await response.json();
         
-        // Filter to only allowed chatflows and format data
-        const filteredChatflows = chatflows
-            .filter(flow => allowedChatflowIds.includes(flow.id))
-            .map(flow => ({
-                id: flow.id,
-                name: flow.name,
-                description: flow.description || '',
-                deployed: true, // All fetched ones are available
-                category: flow.category || 'General'
-            }));
+        console.log(`[Chatflows API] Found ${chatflows.length} chatflows in local database`);
+        
+        // Format response data
+        const filteredChatflows = chatflows.map(flow => ({
+            id: flow.flowId,
+            name: flow.name,
+            description: flow.description || '',
+            deployed: flow.deployed || false,
+            category: flow.category || 'General',
+            endpoint: flow.apiConfig?.endpoint || `https://aiagent.qefmoodle.com/api/v1/prediction/${flow.flowId}`
+        }));
+
+        console.log(`[Chatflows API] Returning ${filteredChatflows.length} chatflows for course: ${courseAssociation.context_title}`);
+        console.log(`[Chatflows API] Final chatflows:`, filteredChatflows.map(f => ({ id: f.id, name: f.name })));
 
         return NextResponse.json({
             success: true,
-            data: filteredChatflows
+            data: filteredChatflows,
+            courseInfo: {
+                courseId: contextId,
+                courseName: courseAssociation.context_title,
+                userRoles: courseAssociation.roles
+            }
         });
 
     } catch (error) {
-        console.error('Error fetching chatflows:', error);
+        console.error('[Chatflows API] Error fetching chatflows:', error);
         return NextResponse.json({ 
             success: false, 
             message: error.message || 'Failed to fetch chatflows',
             error: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        });
+        }, { status: 500 });
     }
 }

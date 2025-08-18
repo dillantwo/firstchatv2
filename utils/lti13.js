@@ -98,7 +98,15 @@ export class LTI13Service {
 
   // Extract user information from LTI claims
   extractUserInfo(payload) {
+    const contextClaim = payload['https://purl.imsglobal.org/spec/lti/claim/context'];
+    const resourceLinkClaim = payload['https://purl.imsglobal.org/spec/lti/claim/resource_link'];
+    const rolesClaim = payload['https://purl.imsglobal.org/spec/lti/claim/roles'];
+    const platformClaim = payload['https://purl.imsglobal.org/spec/lti/claim/tool_platform'];
     const custom = payload['https://purl.imsglobal.org/spec/lti/claim/custom'] || {};
+    
+    console.log('[LTI] Context claim:', contextClaim);
+    console.log('[LTI] Resource link claim:', resourceLinkClaim);
+    console.log('[LTI] Roles claim:', rolesClaim);
     
     return {
       sub: payload.sub,
@@ -112,27 +120,27 @@ export class LTI13Service {
       picture: payload.picture,
       
       // Context information
-      context_id: payload['https://purl.imsglobal.org/spec/lti/claim/context']?.id,
-      context_label: payload['https://purl.imsglobal.org/spec/lti/claim/context']?.label,
-      context_title: payload['https://purl.imsglobal.org/spec/lti/claim/context']?.title,
+      context_id: contextClaim?.id,
+      context_label: contextClaim?.label,
+      context_title: contextClaim?.title,
       
       // Resource link information
-      resource_link_id: payload['https://purl.imsglobal.org/spec/lti/claim/resource_link']?.id,
-      resource_link_title: payload['https://purl.imsglobal.org/spec/lti/claim/resource_link']?.title,
+      resource_link_id: resourceLinkClaim?.id,
+      resource_link_title: resourceLinkClaim?.title,
       
       // Roles
-      roles: payload['https://purl.imsglobal.org/spec/lti/claim/roles'] || [],
+      roles: rolesClaim || [],
       
       // Platform information
-      platform_id: payload['https://purl.imsglobal.org/spec/lti/claim/tool_platform']?.guid,
-      platform_name: payload['https://purl.imsglobal.org/spec/lti/claim/tool_platform']?.name,
-      platform_version: payload['https://purl.imsglobal.org/spec/lti/claim/tool_platform']?.version,
+      platform_id: platformClaim?.guid,
+      platform_name: platformClaim?.name,
+      platform_version: platformClaim?.version,
       
       // Deployment
       deployment_id: payload['https://purl.imsglobal.org/spec/lti/claim/deployment_id'],
       
       // Custom claims
-      custom: payload['https://purl.imsglobal.org/spec/lti/claim/custom'] || {}
+      custom: custom
     };
   }
 

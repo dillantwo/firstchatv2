@@ -625,7 +625,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                 />
                 <button
                   onClick={() => removeImage(image.id)}
-                  className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-[9999]"
                 >
                   ×
                 </button>
@@ -675,9 +675,9 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             // For non-new chat state, show all buttons
             return true;
           })
-          .map((item, index) => (
+          .map((item) => (
           <button
-            key={index}
+            key={item.text}
             type="button"
             onClick={() => handleQuickPrompt(item.content)}
             className="quick-prompt-btn flex items-center gap-1.5 px-4 py-2 bg-[#404045]/80 border border-gray-300/30 rounded-full hover:bg-gray-500/30 hover:border-gray-300/60 text-xs text-white/90 group min-w-[100px] justify-center"

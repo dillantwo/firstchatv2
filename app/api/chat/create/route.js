@@ -1,5 +1,7 @@
 import connectDB from "@/config/db";
 import Chat from "@/models/Chat";
+import LTIUser from "@/models/LTIUser";
+import LTICourse from "@/models/LTICourse";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
 
@@ -30,17 +32,41 @@ export async function POST(req){
         const { chatflowId } = body;
         console.log('[Chat Create] Received chatflowId:', chatflowId);
 
+        // Connect to the database and get user information
+        await connectDB();
+        
+        // Get user's course context for chat association
+        const user = await LTIUser.findById(userId);
+        if (!user) {
+            return NextResponse.json({success: false, message: "User not found"});
+        }
+
+        // Get user's current course context - try course association first, then user context
+        let courseId = user.context_id; // Default from user
+        
+        // Check for course association for more recent context
+        const courseAssociation = await LTICourse.findOne({
+            user_id: user._id
+        }).sort({ last_access: -1 });
+
+        if (courseAssociation) {
+            courseId = courseAssociation.context_id;
+            console.log('[Chat Create] Using course association context:', courseId);
+        } else {
+            console.log('[Chat Create] Using user default context:', courseId);
+        }
+
         // Prepare the chat data to be saved in the database
         const chatData = {
             userId,
             messages: [],
             name: "New Chat", // Keep default name, will be updated on first conversation
             chatflowId: chatflowId || null, // If chatflowId is provided, associate with that chatflow
+            courseId: courseId || null, // Associate with user's current course for token tracking
         };
         console.log('[Chat Create] Chat data to create:', chatData);
 
-        // Connect to the database and create a new chat
-        await connectDB();
+        // Create a new chat
         const newChat = await Chat.create(chatData);
         console.log('[Chat Create] Chat created successfully with ID:', newChat._id);
 
