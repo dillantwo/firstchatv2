@@ -6,6 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import ChatflowSelector from "@/components/ChatflowSelector";
 import LTIAuthGuard from "@/components/LTIAuthGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import PinnedMessages from "@/components/PinnedMessages";
 import { useAppContext } from "@/context/AppContextLTI";
 import { useHydration } from "@/utils/useHydration";
 import Image from "next/image";
@@ -16,6 +17,8 @@ export default function Home() {
   const [expand, setExpand] = useState(false)
   const [messages, setMessages] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const [pinnedMessages, setPinnedMessages] = useState([])
+  const [showPinnedPanel, setShowPinnedPanel] = useState(false)
   const {selectedChat, selectedChatflow, handleChatflowChange, createNewChat} = useAppContext()
   const containerRef = useRef(null)
   const hasHydrated = useHydration();
@@ -37,6 +40,41 @@ export default function Home() {
     }
   },[messages])
 
+  // Handle pinning/unpinning messages
+  const handlePinMessage = (message) => {
+    // Create a unique ID for the message based on content and role
+    const messageId = `${message.role}-${message.content?.slice(0, 100)?.replace(/\s/g, '')}`;
+    const isAlreadyPinned = pinnedMessages.some(pinned => 
+      `${pinned.role}-${pinned.content?.slice(0, 100)?.replace(/\s/g, '')}` === messageId
+    );
+
+    if (isAlreadyPinned) {
+      // Unpin message
+      setPinnedMessages(prev => prev.filter(pinned => 
+        `${pinned.role}-${pinned.content?.slice(0, 100)?.replace(/\s/g, '')}` !== messageId
+      ));
+    } else {
+      // Pin message
+      setPinnedMessages(prev => [...prev, { ...message, timestamp: Date.now() }]);
+      if (!showPinnedPanel) {
+        setShowPinnedPanel(true);
+      }
+    }
+  };
+
+  // Handle unpinning from pinned panel
+  const handleUnpinMessage = (index) => {
+    setPinnedMessages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Check if a message is pinned
+  const isMessagePinned = (message) => {
+    const messageId = `${message.role}-${message.content?.slice(0, 100)?.replace(/\s/g, '')}`;
+    return pinnedMessages.some(pinned => 
+      `${pinned.role}-${pinned.content?.slice(0, 100)?.replace(/\s/g, '')}` === messageId
+    );
+  };
+
   // Don't render until hydrated to prevent mismatches
   if (!hasHydrated) {
     return null;
@@ -50,7 +88,22 @@ export default function Home() {
         <div>
           <div className="flex h-screen">
             <Sidebar expand={expand} setExpand={setExpand}/>
-            <div className="flex-1 flex flex-col items-center justify-center px-4 pb-8 bg-[#292a2d] text-white relative">
+            <div className={`flex-1 flex flex-col items-center justify-center px-4 pb-8 bg-[#292a2d] text-white relative transition-all duration-300 ${
+              showPinnedPanel ? 'md:mr-[600px] lg:mr-[700px] xl:mr-[800px] mr-0' : 'mr-0'
+            }`}>
+            {/* Pinned messages toggle button */}
+            <button
+              onClick={() => setShowPinnedPanel(!showPinnedPanel)}
+              className="fixed top-6 right-6 z-20 bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-colors duration-200 flex items-center gap-2"
+              title={showPinnedPanel ? 'Hide pinned messages' : 'Show pinned messages'}
+            >
+              <Image src={assets.pin_icon} alt="Pin" className="w-5 h-5" />
+              {pinnedMessages.length > 0 && (
+                <span className="bg-blue-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1">
+                  {pinnedMessages.length}
+                </span>
+              )}
+            </button>
             {/* Mobile top navigation */}
             <div className="md:hidden absolute px-4 top-6 flex items-center justify-between w-full">
               <div className="group relative">
@@ -129,7 +182,15 @@ export default function Home() {
                 : (selectedChat?.name || 'No Chat Selected')}
             </p>
             {messages.map((msg, index)=>(
-              <Message key={`msg-${index}-${msg.role}-${msg.content?.slice(0, 20)}`} role={msg.role} content={msg.content} images={msg.images}/>
+              <Message 
+                key={`msg-${index}-${msg.role}-${msg.content?.slice(0, 20)}`} 
+                role={msg.role} 
+                content={msg.content} 
+                images={msg.images}
+                onPinMessage={handlePinMessage}
+                isPinned={isMessagePinned(msg)}
+                showPinButton={true}
+              />
             ))}
             {
               isLoading && (
@@ -152,6 +213,14 @@ export default function Home() {
           <p className="text-xs absolute bottom-1 text-gray-500">AI-generated, for reference only</p>
 
           </div>
+
+          {/* Pinned Messages Panel */}
+          <PinnedMessages
+            pinnedMessages={pinnedMessages}
+            onUnpinMessage={handleUnpinMessage}
+            isVisible={showPinnedPanel}
+            onToggleVisibility={() => setShowPinnedPanel(!showPinnedPanel)}
+          />
         </div>
       </div>
       </ErrorBoundary>

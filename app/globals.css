@@ -31,6 +31,33 @@ html{
   background-color: rgba(75, 85, 99, 0.8);
 }
 
+/* 文本截断样式 */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Pinned message styles */
+.pinned-message-container {
+  transform-origin: top left;
+}
+
+.pinned-message-container .message-content {
+  max-width: 100%;
+  word-wrap: break-word;
+}
+
 .scrollbar-track-transparent::-webkit-scrollbar-track {
   background-color: transparent;
 }

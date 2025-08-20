@@ -8,7 +8,7 @@ import rehypeKatex from 'rehype-katex'
 import Prism from 'prismjs'
 import toast from 'react-hot-toast'
 
-const Message = ({role, content, images}) => {
+const Message = ({role, content, images, onPinMessage, isPinned = false, showPinButton = true, isInPinnedPanel = false}) => {
 
     const [previewModal, setPreviewModal] = useState({ isOpen: false, image: null });
     const [htmlViewMode, setHtmlViewMode] = useState('rendered'); // 'rendered' | 'code'
@@ -49,6 +49,18 @@ const Message = ({role, content, images}) => {
         toast.success('Message copied to clipboard')
     }
 
+    const handlePinMessage = () => {
+        if (onPinMessage) {
+            onPinMessage({
+                role,
+                content,
+                images,
+                timestamp: Date.now()
+            });
+            toast.success(isPinned ? 'Message unpinned' : 'Message pinned');
+        }
+    };
+
     // Open image preview modal
     const openPreviewModal = (image) => {
         setPreviewModal({ isOpen: true, image });
@@ -72,40 +84,50 @@ const Message = ({role, content, images}) => {
     // Custom components for better table styling
     const markdownComponents = useMemo(() => ({
         table: ({ children }) => (
-            <div className="my-6 rounded-lg border border-gray-200 shadow-sm">
-                <table className="w-full divide-y divide-gray-200 table-auto">
+            <div className={`my-6 shadow-sm ${
+                isInPinnedPanel ? '' : 'rounded-lg border border-gray-200'
+            }`}>
+                <table className="w-full divide-y table-auto">
                     {children}
                 </table>
             </div>
         ),
         thead: ({ children }) => (
-            <thead className="bg-gray-50">
+            <thead className={isInPinnedPanel ? 'bg-gray-600' : 'bg-gray-50'}>
                 {children}
             </thead>
         ),
         tbody: ({ children }) => (
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className={`divide-y ${
+                isInPinnedPanel ? 'bg-gray-700 divide-gray-500' : 'bg-white divide-gray-200'
+            }`}>
                 {children}
             </tbody>
         ),
         tr: ({ children }) => (
-            <tr className="hover:bg-gray-50 transition-colors duration-150">
+            <tr className={`transition-colors duration-150 ${
+                isInPinnedPanel ? 'hover:bg-gray-600' : 'hover:bg-gray-50'
+            }`}>
                 {children}
             </tr>
         ),
         th: ({ children }) => (
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200 last:border-r-0 break-words min-w-0 whitespace-normal">
+            <th className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider border-r last:border-r-0 break-words min-w-0 whitespace-normal ${
+                isInPinnedPanel ? 'text-white border-gray-500' : 'text-gray-500 border-gray-200'
+            }`}>
                 {children}
             </th>
         ),
         td: ({ children }) => (
-            <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-200 last:border-r-0 break-words min-w-0 whitespace-normal leading-relaxed">
+            <td className={`px-4 py-3 text-sm border-r last:border-r-0 break-words min-w-0 whitespace-normal leading-relaxed ${
+                isInPinnedPanel ? 'text-white border-gray-500' : 'text-gray-900 border-gray-200'
+            }`}>
                 {children}
             </td>
         ),
         // Prevent p tag nesting issues
         p: ({ children }) => (
-            <div className="mb-4 last:mb-0">
+            <div className={`mb-4 last:mb-0 ${isInPinnedPanel ? 'text-white' : ''}`}>
                 {children}
             </div>
         ),
@@ -120,7 +142,7 @@ const Message = ({role, content, images}) => {
             const afterHTML = parts[1] || '';
             
             return (
-                <div className="space-y-4 w-full">
+                <div className={`space-y-4 w-full ${isInPinnedPanel ? 'text-white' : ''}`}>
                     {/* Content before HTML code block */}
                     {beforeHTML && (
                         <Markdown 
@@ -133,44 +155,48 @@ const Message = ({role, content, images}) => {
                     )}
                     
                     {/* HTML code/preview area */}
-                    <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
-                        <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-700">
-                                {htmlViewMode === 'rendered' ? '' : 'HTML Code'}
-                            </span>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => setHtmlViewMode('rendered')}
-                                    className={`px-3 py-1 text-xs rounded ${
-                                        htmlViewMode === 'rendered' 
-                                            ? 'bg-blue-500 text-white' 
-                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                    }`}
-                                >
-                                    Preview
-                                </button>
-                                <button
-                                    onClick={() => setHtmlViewMode('code')}
-                                    className={`px-3 py-1 text-xs rounded ${
-                                        htmlViewMode === 'code' 
-                                            ? 'bg-blue-500 text-white' 
-                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                    }`}
-                                >
-                                    Code
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        navigator.clipboard.writeText(htmlCode);
-                                        toast.success('HTML code copied to clipboard');
-                                    }}
-                                    className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
-                                >
-                                    Copy
-                                </button>
+                    <div className={`overflow-hidden ${
+                        isInPinnedPanel ? '' : 'border rounded-lg border-gray-300 bg-white'
+                    }`}>
+                        {!isInPinnedPanel && (
+                            <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 flex items-center justify-between">
+                                <span className="text-sm font-medium text-gray-700">
+                                    {htmlViewMode === 'rendered' ? '' : 'HTML Code'}
+                                </span>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setHtmlViewMode('rendered')}
+                                        className={`px-3 py-1 text-xs rounded ${
+                                            htmlViewMode === 'rendered' 
+                                                ? 'bg-blue-500 text-white' 
+                                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                        }`}
+                                    >
+                                        Preview
+                                    </button>
+                                    <button
+                                        onClick={() => setHtmlViewMode('code')}
+                                        className={`px-3 py-1 text-xs rounded ${
+                                            htmlViewMode === 'code' 
+                                                ? 'bg-blue-500 text-white' 
+                                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                        }`}
+                                    >
+                                        Code
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(htmlCode);
+                                            toast.success('HTML code copied to clipboard');
+                                        }}
+                                        className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
+                                    >
+                                        Copy
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                        <div className="p-4">
+                        )}
+                        <div className={isInPinnedPanel ? '' : 'p-4'}>
                             {htmlViewMode === 'rendered' ? (
                                 <iframe
                                     ref={iframeRef}
@@ -180,11 +206,15 @@ const Message = ({role, content, images}) => {
                                     title="HTML Render Preview"
                                     sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock"
                                     style={{ 
-                                        height: '250px', // Reduced initial height
-                                        minHeight: '150px', // Reduced minimum height
-                                        overflow: 'auto', // Allow scrolling in case content is too long
+                                        height: isInPinnedPanel ? '600px' : '250px', // Even larger height for pinned panel
+                                        minHeight: isInPinnedPanel ? '500px' : '150px', // Increased minimum height for pinned panel
+                                        maxHeight: isInPinnedPanel ? '600px' : '250px', // Prevent iframe from growing beyond this
+                                        overflow: 'hidden', // Hide overflow to prevent expansion
                                         border: 'none',
-                                        display: 'block'
+                                        display: 'block',
+                                        width: '100%',
+                                        maxWidth: '100%', // Prevent horizontal expansion
+                                        resize: 'none' // Disable manual resizing
                                     }}
                                     onLoad={(e) => {
                                         // Auto-adjust iframe height to fully fit content and monitor content changes
@@ -194,7 +224,11 @@ const Message = ({role, content, images}) => {
                                             
                                             // Dynamic height adjustment function
                                             const adjustHeight = () => {
-                                                try {
+                                                try {` + 
+                                                    (isInPinnedPanel ? `
+                                                    // Don't auto-adjust height in pinned panel to prevent expansion
+                                                    console.log('Height adjustment disabled in pinned panel');
+                                                    return;` : `
                                                     // Get actual content height including all elements
                                                     const bodyHeight = doc.body.scrollHeight;
                                                     const documentHeight = doc.documentElement.scrollHeight;
@@ -209,7 +243,7 @@ const Message = ({role, content, images}) => {
                                                     doc.body.style.overflow = 'auto';
                                                     doc.documentElement.style.overflow = 'auto';
                                                     
-                                                    console.log('Iframe height adjusted to:', finalHeight);
+                                                    console.log('Iframe height adjusted to:', finalHeight);`) + `
                                                 } catch (innerError) {
                                                     console.log('Height adjustment failed:', innerError);
                                                 }
@@ -280,19 +314,43 @@ const Message = ({role, content, images}) => {
                                                         padding: 8px; 
                                                         font-family: Arial, sans-serif;
                                                         overflow: auto;
+                                                        max-width: 100%;
+                                                        max-height: 100vh;
+                                                        position: relative;
+                                                    }
+                                                    /* Prevent draggable elements from expanding the container */
+                                                    * {
+                                                        max-width: 100% !important;
+                                                    }
+                                                    /* Constrain draggable elements */
+                                                    [draggable="true"], .draggable {
+                                                        position: relative !important;
+                                                        max-width: 100% !important;
+                                                        contain: layout style paint !important;
+                                                    }
+                                                    /* Prevent elements from being positioned outside the viewport */
+                                                    * {
+                                                        contain: layout style paint;
                                                     }
                                                     button, input, select, textarea { 
                                                         cursor: pointer; 
                                                         font-family: inherit;
                                                         pointer-events: auto;
+                                                        max-width: 100%;
                                                     }
                                                     /* Prevent form submission from causing page refresh */
                                                     form { 
                                                         display: inline-block; 
+                                                        max-width: 100%;
                                                     }
                                                     /* KaTeX math styling */
                                                     .katex { font-size: 1.1em; }
                                                     .katex-display { margin: 1em 0; }
+                                                    /* Container constraints */
+                                                    div, section, article, main {
+                                                        max-width: 100%;
+                                                        overflow: hidden;
+                                                    }
                                                 `;
                                                 doc.head.appendChild(style);
                                             }
@@ -356,6 +414,39 @@ const Message = ({role, content, images}) => {
                                                         }
                                                     });
                                                     
+                                                    // Prevent drag operations from expanding the container
+                                                    document.addEventListener('dragstart', function(e) {
+                                                        console.log('Drag operation detected, applying constraints');
+                                                        e.dataTransfer.effectAllowed = 'move';
+                                                    });
+                                                    
+                                                    document.addEventListener('drag', function(e) {
+                                                        // Constrain drag to viewport
+                                                        const rect = document.body.getBoundingClientRect();
+                                                        if (e.clientX < 0 || e.clientX > rect.width || 
+                                                            e.clientY < 0 || e.clientY > rect.height) {
+                                                            e.preventDefault();
+                                                        }
+                                                    });
+                                                    
+                                                    document.addEventListener('dragend', function(e) {
+                                                        // Ensure dragged element stays within bounds
+                                                        const target = e.target;
+                                                        if (target.style.position === 'absolute' || target.style.position === 'fixed') {
+                                                            const rect = document.body.getBoundingClientRect();
+                                                            const targetRect = target.getBoundingClientRect();
+                                                            
+                                                            if (targetRect.left < 0) target.style.left = '0px';
+                                                            if (targetRect.top < 0) target.style.top = '0px';
+                                                            if (targetRect.right > rect.width) {
+                                                                target.style.left = (rect.width - targetRect.width) + 'px';
+                                                            }
+                                                            if (targetRect.bottom > rect.height) {
+                                                                target.style.top = (rect.height - targetRect.height) + 'px';
+                                                            }
+                                                        }
+                                                    });
+                                                    
                                                     // Listen for DOM changes and auto-adjust height
                                                     const observer = new MutationObserver(function(mutations) {
                                                         let shouldResize = false;
@@ -411,8 +502,12 @@ const Message = ({role, content, images}) => {
                                     }}
                                 />
                             ) : (
-                                <div className="bg-gray-50 rounded border">
-                                    <pre className="p-4 text-sm language-html" style={{ overflow: 'visible', whiteSpace: 'pre-wrap' }}>
+                                <div className={`${
+                                    isInPinnedPanel ? '' : 'rounded border bg-gray-50'
+                                }`}>
+                                    <pre className={`text-sm language-html ${
+                                        isInPinnedPanel ? 'text-white' : 'p-4'
+                                    }`} style={{ overflow: 'visible', whiteSpace: 'pre-wrap' }}>
                                         <code className="language-html">{htmlCode}</code>
                                     </pre>
                                 </div>
@@ -435,7 +530,7 @@ const Message = ({role, content, images}) => {
         } else {
             // Regular Markdown rendering
             return (
-                <div className="space-y-4 w-full">
+                <div className={`space-y-4 w-full ${isInPinnedPanel ? 'text-white' : ''}`}>
                     <Markdown 
                         remarkPlugins={[remarkMath, remarkGfm]}
                         rehypePlugins={[rehypeKatex]}
@@ -449,7 +544,7 @@ const Message = ({role, content, images}) => {
     }, [content, htmlCode, htmlViewMode, processedContent, markdownComponents]);
 
   return (
-    <div className='flex flex-col items-center w-full max-w-3xl text-base'>
+    <div className={`flex flex-col items-center w-full ${isInPinnedPanel ? 'max-w-full text-lg' : 'max-w-3xl text-base'}`}>
       {/* Image preview modal */}
       {previewModal.isOpen && (
         <div 
@@ -478,15 +573,24 @@ const Message = ({role, content, images}) => {
         </div>
       )}
 
-      <div className={`flex flex-col  w-full mb-8 ${role === 'user' && 'items-end'}`}>
-        <div className={`group relative flex max-w-2xl py-3 rounded-xl ${role === 'user' ? 'bg-[#414158] px-5' : 'gap-3'}`}>
-            <div className={`opacity-0 group-hover:opacity-100 absolute ${role === 'user' ? '-left-16 top-2.5' : 'left-9 -bottom-6'} transition-all`}>
+      <div className={`flex flex-col  w-full ${isInPinnedPanel ? 'mb-6' : 'mb-8'} ${role === 'user' && 'items-end'}`}>
+        <div className={`group relative flex ${isInPinnedPanel ? 'max-w-full py-3 px-2' : 'max-w-2xl py-3'} rounded-xl ${role === 'user' ? (isInPinnedPanel ? 'px-3' : 'bg-[#414158] px-5') : 'gap-3'}`}>
+            <div className={`opacity-0 group-hover:opacity-100 absolute ${role === 'user' ? '-left-16 top-2.5' : 'left-9 -bottom-6'} transition-all ${isInPinnedPanel ? 'hidden' : ''}`}>
                 <div className='flex items-center gap-2 opacity-70'>
                     {
                         role === 'user' ? (
                             <>
                             <Image onClick={copyMessage} src={assets.copy_icon} alt='' className='w-4 cursor-pointer'/>
                             <Image src={assets.pencil_icon} alt='' className='w-4.5 cursor-pointer'/>
+                            {showPinButton && (
+                                <Image 
+                                    onClick={handlePinMessage} 
+                                    src={assets.pin_icon} 
+                                    alt={isPinned ? 'Unpin' : 'Pin'} 
+                                    className={`w-4 cursor-pointer ${isPinned ? 'opacity-100' : ''}`}
+                                    title={isPinned ? 'Unpin message' : 'Pin message'}
+                                />
+                            )}
                             </>
                         ):(
                             <>
@@ -494,6 +598,15 @@ const Message = ({role, content, images}) => {
                             <Image src={assets.regenerate_icon} alt='' className='w-4 cursor-pointer'/>
                             <Image src={assets.like_icon} alt='' className='w-4 cursor-pointer'/>
                             <Image src={assets.dislike_icon} alt='' className='w-4 cursor-pointer'/>
+                            {showPinButton && (
+                                <Image 
+                                    onClick={handlePinMessage} 
+                                    src={assets.pin_icon} 
+                                    alt={isPinned ? 'Unpin' : 'Pin'} 
+                                    className={`w-4 cursor-pointer ${isPinned ? 'opacity-100' : ''}`}
+                                    title={isPinned ? 'Unpin message' : 'Pin message'}
+                                />
+                            )}
                             </>
                         )
                     }
@@ -502,7 +615,7 @@ const Message = ({role, content, images}) => {
             {
                 role === 'user' ? 
                 (
-                    <div className='text-white/90'>
+                    <div className={isInPinnedPanel ? 'text-white' : 'text-white/90'}>
                         {/* Display images */}
                         {images && images.length > 0 && (
                             <div className='mb-3 flex flex-wrap gap-2'>
@@ -528,7 +641,7 @@ const Message = ({role, content, images}) => {
                 :
                 (
                     <>
-                    <Image src={assets.reshot_icon} alt='' className='h-9 w-9 p-1 border border-white/15 rounded-full'/>
+                    {!isInPinnedPanel && <Image src={assets.reshot_icon} alt='' className='h-9 w-9 p-1 border border-white/15 rounded-full'/>}
                     {renderedContent}
                     </>
                 )
