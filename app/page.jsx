@@ -91,19 +91,21 @@ export default function Home() {
             <div className={`flex-1 flex flex-col items-center justify-center px-4 pb-8 bg-[#292a2d] text-white relative transition-all duration-300 ${
               showPinnedPanel ? 'md:mr-[600px] lg:mr-[700px] xl:mr-[800px] mr-0' : 'mr-0'
             }`}>
-            {/* Pinned messages toggle button */}
-            <button
-              onClick={() => setShowPinnedPanel(!showPinnedPanel)}
-              className="fixed top-6 right-6 z-20 bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-colors duration-200 flex items-center gap-2"
-              title={showPinnedPanel ? 'Hide pinned messages' : 'Show pinned messages'}
-            >
-              <Image src={assets.pin_icon} alt="Pin" className="w-5 h-5" />
-              {pinnedMessages.length > 0 && (
-                <span className="bg-blue-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1">
-                  {pinnedMessages.length}
-                </span>
-              )}
-            </button>
+            {/* Pinned messages toggle button - only show when panel is closed */}
+            {!showPinnedPanel && (
+              <button
+                onClick={() => setShowPinnedPanel(true)}
+                className="fixed top-6 right-6 z-20 bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                title="Show pinned messages"
+              >
+                <Image src={assets.pin_icon} alt="Pin" className="w-5 h-5" />
+                {pinnedMessages.length > 0 && (
+                  <span className="bg-blue-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1">
+                    {pinnedMessages.length}
+                  </span>
+                )}
+              </button>
+            )}
             {/* Mobile top navigation */}
             <div className="md:hidden absolute px-4 top-6 flex items-center justify-between w-full">
               <div className="group relative">

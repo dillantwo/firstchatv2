@@ -581,7 +581,6 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                         role === 'user' ? (
                             <>
                             <Image onClick={copyMessage} src={assets.copy_icon} alt='' className='w-4 cursor-pointer'/>
-                            <Image src={assets.pencil_icon} alt='' className='w-4.5 cursor-pointer'/>
                             {showPinButton && (
                                 <Image 
                                     onClick={handlePinMessage} 
@@ -595,9 +594,6 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                         ):(
                             <>
                             <Image onClick={copyMessage} src={assets.copy_icon} alt='' className='w-4.5 cursor-pointer'/>
-                            <Image src={assets.regenerate_icon} alt='' className='w-4 cursor-pointer'/>
-                            <Image src={assets.like_icon} alt='' className='w-4 cursor-pointer'/>
-                            <Image src={assets.dislike_icon} alt='' className='w-4 cursor-pointer'/>
                             {showPinButton && (
                                 <Image 
                                     onClick={handlePinMessage} 
