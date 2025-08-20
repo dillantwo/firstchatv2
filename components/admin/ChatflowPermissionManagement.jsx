@@ -634,7 +634,7 @@ const ChatflowPermissionManagement = () => {
 // Create Permission Modal Component
 const CreatePermissionModal = ({ isOpen, onClose, onSave, chatflows, courses, roleOptions }) => {
   const [formData, setFormData] = useState({
-    chatflowId: '',
+    chatflowIds: [], // 改為支持多個 chatflow
     courseId: '',
     allowedRoles: [],
     isActive: true
@@ -644,11 +644,29 @@ const CreatePermissionModal = ({ isOpen, onClose, onSave, chatflows, courses, ro
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.chatflowId || !formData.courseId || formData.allowedRoles.length === 0) {
+    if (formData.chatflowIds.length === 0 || !formData.courseId || formData.allowedRoles.length === 0) {
       alert('Please complete all steps');
       return;
     }
-    onSave(formData);
+    
+    // 為每個選中的 chatflow 創建權限
+    const permissions = formData.chatflowIds.map(chatflowId => ({
+      chatflowId: chatflowId,
+      courseId: formData.courseId,
+      allowedRoles: formData.allowedRoles,
+      isActive: formData.isActive
+    }));
+    
+    // 批量創建權限
+    Promise.all(permissions.map(permission => onSave(permission)))
+      .then(() => {
+        // 全部成功後關閉模態框
+        handleClose();
+      })
+      .catch(error => {
+        console.error('Error creating permissions:', error);
+        alert('Error creating some permissions. Please check and try again.');
+      });
   };
 
   const handleRoleChange = (roleValue) => {
@@ -657,6 +675,15 @@ const CreatePermissionModal = ({ isOpen, onClose, onSave, chatflows, courses, ro
       allowedRoles: prev.allowedRoles.includes(roleValue)
         ? prev.allowedRoles.filter(role => role !== roleValue)
         : [...prev.allowedRoles, roleValue]
+    }));
+  };
+
+  const handleChatflowChange = (chatflowId) => {
+    setFormData(prev => ({
+      ...prev,
+      chatflowIds: prev.chatflowIds.includes(chatflowId)
+        ? prev.chatflowIds.filter(id => id !== chatflowId)
+        : [...prev.chatflowIds, chatflowId]
     }));
   };
 
@@ -678,7 +705,7 @@ const CreatePermissionModal = ({ isOpen, onClose, onSave, chatflows, courses, ro
 
   const resetModal = () => {
     setFormData({
-      chatflowId: '',
+      chatflowIds: [],
       courseId: '',
       allowedRoles: [],
       isActive: true
@@ -734,7 +761,7 @@ const CreatePermissionModal = ({ isOpen, onClose, onSave, chatflows, courses, ro
                 }`}>
                   3
                 </div>
-                <span className="ml-2 text-sm font-medium">Assign Chatflow</span>
+                <span className="ml-2 text-sm font-medium">Assign Chatflows</span>
               </div>
             </div>
           </div>
@@ -805,12 +832,12 @@ const CreatePermissionModal = ({ isOpen, onClose, onSave, chatflows, courses, ro
               </div>
             )}
 
-            {/* Step 3: Assign Chatflow */}
+            {/* Step 3: Assign Chatflows */}
             {step === 3 && (
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-lg font-medium text-gray-900 mb-2">Assign Chatflow</h4>
-                  <p className="text-sm text-gray-600 mb-4">Choose which chatflow to grant access to</p>
+                  <h4 className="text-lg font-medium text-gray-900 mb-2">Assign Chatflows</h4>
+                  <p className="text-sm text-gray-600 mb-4">Choose which chatflows to grant access to (you can select multiple)</p>
                   <div className="bg-blue-50 p-3 rounded-lg mb-4 space-y-1">
                     <p className="text-sm text-blue-700">
                       <strong>Course:</strong> {courses.find(c => c.id === formData.courseId)?.course}
@@ -820,18 +847,25 @@ const CreatePermissionModal = ({ isOpen, onClose, onSave, chatflows, courses, ro
                         roleOptions.find(r => r.value === role)?.label
                       ).join(', ')}
                     </p>
+                    {formData.chatflowIds.length > 0 && (
+                      <p className="text-sm text-blue-700">
+                        <strong>Selected Chatflows:</strong> {formData.chatflowIds.length} chatflow(s)
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {chatflows.map((chatflow) => (
-                    <label key={chatflow.id} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <label key={chatflow.id} className={`flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
+                      formData.chatflowIds.includes(chatflow.id) 
+                        ? 'border-indigo-500 bg-indigo-50' 
+                        : 'border-gray-200'
+                    }`}>
                       <input
-                        type="radio"
-                        name="chatflowId"
-                        value={chatflow.id}
-                        checked={formData.chatflowId === chatflow.id}
-                        onChange={(e) => setFormData({ ...formData, chatflowId: e.target.value })}
-                        className="mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                        type="checkbox"
+                        checked={formData.chatflowIds.includes(chatflow.id)}
+                        onChange={() => handleChatflowChange(chatflow.id)}
+                        className="mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                       />
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
