@@ -126,6 +126,69 @@ const ChatHistoryManager = ({ userPermissions }) => {
     setCurrentPage(1);
   };
 
+  const handleDownload = async (format) => {
+    if (!selectedCourse) {
+      alert('请先选择一个课程');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({
+        courseId: selectedCourse,
+        format: format
+      });
+      
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+
+      const response = await fetch(`/api/admin/chat-history/export?${params}`, {
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        
+        // 从响应头获取文件名，支持中文
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename;
+        
+        if (contentDisposition) {
+          // 从 filename*=UTF-8'' 获取文件名
+          const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/);
+          if (utf8Match) {
+            filename = decodeURIComponent(utf8Match[1]);
+          } else {
+            filename = `chat_history_${format}_${new Date().toISOString().split('T')[0]}.${format}`;
+          }
+        } else {
+          filename = `chat_history_${format}_${new Date().toISOString().split('T')[0]}.${format}`;
+        }
+        
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        // 成功提示
+        alert(`${format.toUpperCase()} 文件下载成功！`);
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '下载失败');
+      }
+    } catch (error) {
+      console.error('下载错误:', error);
+      alert(`下载失败: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Statistics Cards */}
@@ -268,6 +331,46 @@ const ChatHistoryManager = ({ userPermissions }) => {
             </button>
           </div>
         </div>
+
+        {/* Download Section */}
+        {selectedCourse && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-1">
+                  Export Chat History for Selected Course
+                </h4>
+                <p className="text-xs text-gray-500">
+                  Course: {courses.find(c => c._id === selectedCourse)?.courseName || selectedCourse}
+                  {startDate && ` | From: ${startDate}`}
+                  {endDate && ` | To: ${endDate}`}
+                </p>
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handleDownload('json')}
+                  disabled={loading}
+                  className="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  {loading ? 'Downloading...' : 'Download JSON'}
+                </button>
+                <button
+                  onClick={() => handleDownload('csv')}
+                  disabled={loading}
+                  className="inline-flex items-center px-3 py-2 bg-emerald-600 text-white text-sm rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  {loading ? 'Downloading...' : 'Download CSV'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Chat History Table */}

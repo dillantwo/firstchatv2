@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 const AdminSidebar = React.lazy(() => import('./admin/AdminSidebar'));
 const DashboardOverview = React.lazy(() => import('./admin/DashboardOverview'));
 const UserManagement = React.lazy(() => import('./admin/UserManagement'));
+const ChatflowPermissionManagement = React.lazy(() => import('./admin/ChatflowPermissionManagement'));
 const Analytics = React.lazy(() => import('./admin/Analytics'));
 
 const AdminDashboard = ({ user }) => {
@@ -22,6 +23,7 @@ const AdminDashboard = ({ user }) => {
   const availableTabs = [
     { id: 'dashboard', name: 'Dashboard', icon: '📊' },
     { id: 'users', name: 'Users', icon: '👥' },
+    { id: 'chatflow-permissions', name: 'Chatflow Permissions', icon: '🔐' },
     { id: 'analytics', name: 'Analytics', icon: '📈' }
   ];
 
@@ -76,6 +78,12 @@ const AdminDashboard = ({ user }) => {
           return (
             <React.Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
               <UserManagement />
+            </React.Suspense>
+          );
+        case 'chatflow-permissions':
+          return (
+            <React.Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+              <ChatflowPermissionManagement />
             </React.Suspense>
           );
         case 'analytics':

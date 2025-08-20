@@ -1,0 +1,4 @@
+chatflow_id,course_id,allowed_roles,is_active
+chatflow_123,course_abc,Instructor;Learner,true
+chatflow_456,course_def,Instructor,true
+chatflow_789,course_ghi,Learner;Teaching Assistant,false
