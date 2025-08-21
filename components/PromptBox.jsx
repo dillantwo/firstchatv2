@@ -1,6 +1,7 @@
 import { assets } from '@/assets/assets'
 import { useAppContext } from '@/context/AppContextLTI';
 import { useLTIAuth } from '@/context/LTIAuthContext';
+import SimpleChatflowSelector from './SimpleChatflowSelector';
 import axios from 'axios';
 import Image from 'next/image'
 import React, { useState, useRef, useEffect } from 'react'
@@ -18,7 +19,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
     const streamingRef = useRef(false); // Track streaming status
     const fileInputRef = useRef(null);
     const textareaRef = useRef(null);
-    const {user, chats, setChats, selectedChat, setSelectedChat, selectedChatflow, setSelectedChatflow, createNewChat} = useAppContext();
+    const {user, chats, setChats, selectedChat, setSelectedChat, selectedChatflow, setSelectedChatflow, createNewChat, handleChatflowChange} = useAppContext();
     const { isAuthenticated } = useLTIAuth();
 
     // Preset quick phrases
@@ -443,8 +444,13 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                         return toast.error('Failed to retrieve chat after creation.');
                     }
                 } catch (createError) {
+                    console.error('Create chat error:', createError);
                     setIsLoading(false);
                     setPrompt(contentToSend);
+                    if (createError.response?.status === 401) {
+                        // Token expired, will be handled by interceptor
+                        return;
+                    }
                     return toast.error('Failed to create new chat. Please try again.');
                 }
             } else {
@@ -602,8 +608,15 @@ const PromptBox = ({setIsLoading, isLoading}) => {
         }
 
         } catch (error) {
-            toast.error(error.message);
-            setPrompt(contentToSend);
+            console.error('Send prompt error:', error);
+            // 401 errors are automatically handled by axios interceptor
+            if (error.response?.status === 401) {
+                // Token expired, interceptor will handle the popup
+                setPrompt(contentToSend);
+            } else {
+                toast.error(error.message || 'Failed to send message');
+                setPrompt(contentToSend);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -731,24 +744,28 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             paddingRight: '8px' // Leave space for scrollbar
         }}
         placeholder={isDragging ? 'Drag images here to upload...' : isListening ? 'Continuous listening...' : 'Type a message, drag images, or use voice input...'} 
-        required 
         onChange={handleInputChange} 
         value={prompt}
         rows={2}/>
 
         <div className='flex items-center justify-between text-sm'>
             <div className='flex items-center gap-2'>
+                {/* Chatflow selector - bottom left position */}
+                <SimpleChatflowSelector 
+                    selectedChatflow={selectedChatflow} 
+                    onChatflowChange={handleChatflowChange} 
+                />
             </div>
 
             <div className='flex items-center gap-2'>
-            {/* 图片上传按钮 */}
+            {/* Image upload button */}
             <button
               type="button"
               onClick={openFileSelector}
               className='w-4 cursor-pointer hover:opacity-70 transition-opacity'
               title="Upload Image"
             >
-              <Image className='w-4' src={assets.pin_icon} alt='Upload Image'/>
+              <Image className='w-4' src={assets.file_upload} alt='Upload Image'/>
             </button>
             
             {/* Voice recognition button */}

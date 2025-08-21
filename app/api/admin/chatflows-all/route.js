@@ -1,5 +1,5 @@
-import connectDB from '../../../config/db'
-import Chatflow from '../../../models/Chatflow'
+import connectDB from '../../../../config/db.js'
+import Chatflow from '../../../../models/Chatflow.js'
 
 export async function GET() {
   try {

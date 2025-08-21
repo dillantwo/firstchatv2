@@ -14,6 +14,7 @@ import phone_icon_dull from "./phone_icon_dull.svg";
 import pencil_icon from "./pencil_icon.svg";
 import delete_icon from "./delete_icon.svg";
 import pin_icon from "./pin_icon.svg";
+import file_upload from "./file_upload.svg";
 import regenerate_icon from "./regenerate_icon.svg";
 import sidebar_icon from "./sidebar_icon.svg";
 import sidebar_close_icon from "./sidebar_close_icon.svg";
@@ -40,6 +41,7 @@ export const assets = {
   pencil_icon,
   delete_icon,
   pin_icon,
+  file_upload,
   regenerate_icon,
   sidebar_icon,
   sidebar_close_icon,

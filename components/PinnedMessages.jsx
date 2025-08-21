@@ -31,9 +31,9 @@ const PinnedMessages = ({ pinnedMessages, onUnpinMessage, isVisible, onToggleVis
         </div>
         <button
           onClick={onToggleVisibility}
-          className="text-gray-400 hover:text-white transition-colors"
+          className="text-gray-400 hover:text-white transition-colors hover:bg-gray-700 rounded-lg"
         >
-          <Image src={assets.sidebar_close_icon} alt="Close" className="w-5 h-5" />
+          <Image src={assets.sidebar_close_icon} alt="Close" className="w-8 h-8" />
         </button>
       </div>
 
@@ -51,7 +51,7 @@ const PinnedMessages = ({ pinnedMessages, onUnpinMessage, isVisible, onToggleVis
               {/* Unpin button - simplified */}
               <button
                 onClick={() => onUnpinMessage(index)}
-                className="absolute top-1 right-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                className="absolute top-1 right-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 hover:bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold shadow-lg"
                 title="Unpin message"
               >
                 ×

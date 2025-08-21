@@ -1,5 +1,5 @@
-import connectDB from '../../../config/db'
-import LTICourse from '../../../models/LTICourse'
+import connectDB from '../../../../config/db.js'
+import LTICourse from '../../../../models/LTICourse.js'
 
 export async function GET() {
   try {

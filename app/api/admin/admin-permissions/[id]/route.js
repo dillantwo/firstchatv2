@@ -1,5 +1,5 @@
-import { checkAdminPermission } from '../../../../../../middleware/adminAuth.js';
-import AdminPermission from '../../../../../../models/AdminPermission.js';
+import { checkAdminPermission } from '../../../../../middleware/adminAuth.js';
+import AdminPermission from '../../../../../models/AdminPermission.js';
 
 // PUT - Update admin permission
 export async function PUT(request, { params }) {

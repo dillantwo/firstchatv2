@@ -190,14 +190,14 @@ export async function POST(request) {
     }
     
     // === 第三部分：同步Chatflow数据 ===
-    console.log('[LTI Callback] 检查是否需要同步chatflow数据...');
+    console.log('[LTI Callback] Checking if chatflow data sync is needed...');
     try {
       const needsSync = await shouldSyncChatflows();
       if (needsSync) {
-        console.log('[LTI Callback] 开始同步chatflow数据...');
+        console.log('[LTI Callback] Starting chatflow data sync...');
         const syncResult = await syncChatflowsFromFlowise();
         if (syncResult.success) {
-          console.log(`[LTI Callback] Chatflow同步完成: 新增${syncResult.synced}, 更新${syncResult.updated}, 停用${syncResult.deactivated}`);
+          console.log(`[LTI Callback] Chatflow sync completed: added ${syncResult.synced}, updated ${syncResult.updated}, deactivated ${syncResult.deactivated}`);
         } else {
           console.log(`[LTI Callback] Chatflow同步失败: ${syncResult.error}`);
         }

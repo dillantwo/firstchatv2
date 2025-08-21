@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 
-// 动态导入组件以避免初始加载问题
+// Dynamic import components to avoid initial loading issues
 const AdminSidebar = React.lazy(() => import('./admin/AdminSidebar'));
 const DashboardOverview = React.lazy(() => import('./admin/DashboardOverview'));
 const UserManagement = React.lazy(() => import('./admin/UserManagement'));
@@ -19,7 +19,7 @@ const AdminDashboard = ({ user }) => {
     setLoading(false);
   }, []);
 
-  // 可用的标签页
+  // Available tabs
   const availableTabs = [
     { id: 'dashboard', name: 'Dashboard', icon: '📊' },
     { id: 'users', name: 'Users', icon: '👥' },

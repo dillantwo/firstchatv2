@@ -6,7 +6,7 @@ import LTICourse from "@/models/LTICourse";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { checkChatflowPermission } from "@/utils/permissionUtils";
+import { checkChatflowPermission } from "@/utils/permissionUtils.mjs";
 
 // Flowise API configuration
 const FLOWISE_BASE_URL = process.env.FLOWISE_BASE_URL;

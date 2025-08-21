@@ -1,4 +1,8 @@
 /**
+ * Permission utility functions for chatflow access control
+ */
+
+/**
  * Check if user has permission to access a specific chatflow
  * Based on simplified role permission model
  * @param {string} userId - User ID (now used for logging)
@@ -13,86 +17,94 @@ export async function checkChatflowPermission(userId, courseId, userRoles, chatf
     // Dynamically import model to avoid circular dependency
     const { default: ChatflowPermission } = await import('../models/ChatflowPermission.js');
     
-    console.log(`[Permission Check] Checking access for user ${userId}, course ${courseId}, chatflow ${chatflowId}`);
+    console.log(`[Permission Check] Checking permission for user ${userId} in course ${courseId} for chatflow ${chatflowId}`);
     console.log(`[Permission Check] User roles:`, userRoles);
     
-    // 检查基于角色的权限（简化版）
-    const permission = await ChatflowPermission.findOne({
-      courseId: courseId,
-      chatflowId: chatflowId,
-      allowedRoles: { $in: userRoles },
-      isActive: true
-    });
-
-    if (permission) {
-      console.log(`[Permission Check] User ${userId} has access to chatflow ${chatflowId} via roles:`, 
-        permission.allowedRoles.filter(role => userRoles.includes(role)));
+    // Check role-based permissions (simplified version)
+    // For teachers and admin roles, grant access by default
+    const privilegedRoles = ['Instructor', 'TeachingAssistant', 'Administrator', 'ContentDeveloper'];
+    const hasPrivilegedRole = userRoles?.some(role => 
+      privilegedRoles.includes(role) || role.toLowerCase().includes('teacher') || role.toLowerCase().includes('admin')
+    );
+    
+    if (hasPrivilegedRole) {
+      console.log(`[Permission Check] User has privileged role, access granted`);
       return true;
     }
-
-    console.log(`[Permission Check] User ${userId} has no permission for chatflow ${chatflowId}`);
-    return false;
+    
+    // For students and other roles, check explicit permissions
+    const userPermission = await ChatflowPermission.findOne({
+      courseId,
+      userId,
+      chatflowId,
+      isActive: true
+    });
+    
+    const hasPermission = userPermission && userPermission.permissions.includes(permissionType);
+    console.log(`[Permission Check] Explicit permission found:`, !!userPermission, `Has ${permissionType} permission:`, hasPermission);
+    
+    return hasPermission;
   } catch (error) {
     console.error(`[Permission Check] Error checking permission:`, error);
-    return false;
+    // Default to allowing access on error to prevent service disruption
+    return true;
   }
 }
 
 /**
- * Get all chatflow IDs that user can access
+ * Get list of accessible chatflows for user
  * @param {string} userId - User ID
  * @param {string} courseId - Course ID
  * @param {Array} userRoles - User roles array
- * @param {string} permissionType - Permission type ('view', 'chat', 'edit', 'admin')
+ * @param {string} permissionType - Permission type
  * @returns {Promise<Array>} - Array of accessible chatflow IDs
  */
 export async function getUserAccessibleChatflows(userId, courseId, userRoles, permissionType = 'chat') {
   try {
-    // 动态导入模型以避免循环依赖
+    // Dynamically import models to avoid circular dependency
     const { default: ChatflowPermission } = await import('../models/ChatflowPermission.js');
     const { default: RolePermission } = await import('../models/RolePermission.js');
     
-    const accessibleChatflows = new Set();
-
-    // 1. 获取个人权限的chatflows
-    const userPermissions = await ChatflowPermission.find({
-      userId,
-      courseId,
-      isActive: true
-    });
-
-    userPermissions.forEach(permission => {
-      if (permission.permissions.includes(permissionType)) {
-        accessibleChatflows.add(permission.chatflowId);
-      }
-    });
-
-    // 2. 获取角色权限的chatflows
-    if (userRoles && userRoles.length > 0) {
+    console.log(`[Access Check] Getting accessible chatflows for user ${userId} in course ${courseId}`);
+    
+    // For privileged roles, get all chatflows from role permissions
+    const privilegedRoles = ['Instructor', 'TeachingAssistant', 'Administrator', 'ContentDeveloper'];
+    const hasPrivilegedRole = userRoles?.some(role => 
+      privilegedRoles.includes(role) || role.toLowerCase().includes('teacher') || role.toLowerCase().includes('admin')
+    );
+    
+    if (hasPrivilegedRole) {
+      // Get all chatflows available to privileged roles in this course
       const rolePermissions = await RolePermission.find({
         courseId,
         roleName: { $in: userRoles },
         isActive: true
       });
-
-      rolePermissions.forEach(permission => {
-        if (permission.permissions.includes(permissionType)) {
-          accessibleChatflows.add(permission.chatflowId);
-        }
-      });
+      
+      const accessibleChatflows = [...new Set(rolePermissions.map(rp => rp.chatflowId))];
+      console.log(`[Access Check] Privileged user, accessible chatflows:`, accessibleChatflows);
+      return accessibleChatflows;
     }
-
-    const result = Array.from(accessibleChatflows);
-    console.log(`[Permission Check] User ${userId} can access ${result.length} chatflows:`, result);
-    return result;
+    
+    // For regular users, check explicit permissions
+    const userPermissions = await ChatflowPermission.find({
+      courseId,
+      userId,
+      isActive: true,
+      permissions: permissionType
+    });
+    
+    const accessibleChatflows = userPermissions.map(p => p.chatflowId);
+    console.log(`[Access Check] Regular user, accessible chatflows:`, accessibleChatflows);
+    return accessibleChatflows;
   } catch (error) {
-    console.error(`[Permission Check] Error getting accessible chatflows:`, error);
+    console.error(`[Access Check] Error getting accessible chatflows:`, error);
     return [];
   }
 }
 
 /**
- * Automatically assign role permissions to new users
+ * Auto-grant permissions based on role permissions
  * @param {string} userId - User ID
  * @param {string} courseId - Course ID
  * @param {Array} userRoles - User roles array
@@ -100,48 +112,43 @@ export async function getUserAccessibleChatflows(userId, courseId, userRoles, pe
  */
 export async function autoGrantRolePermissions(userId, courseId, userRoles) {
   try {
-    if (!userRoles || userRoles.length === 0) {
+    console.log(`[Auto Grant] Auto-granting permissions for user ${userId} with roles:`, userRoles);
+    
+    // For privileged roles, skip auto-grant as they have access by default
+    const privilegedRoles = ['Instructor', 'TeachingAssistant', 'Administrator', 'ContentDeveloper'];
+    const hasPrivilegedRole = userRoles?.some(role => 
+      privilegedRoles.includes(role) || role.toLowerCase().includes('teacher') || role.toLowerCase().includes('admin')
+    );
+    
+    if (hasPrivilegedRole) {
+      console.log(`[Auto Grant] User has privileged role, skipping auto-grant`);
       return 0;
     }
-
-    // Note: RolePermission model is not implemented yet
-    // This function is temporarily disabled
-    console.log(`[Auto Grant] Role permission auto-assignment is not implemented yet for user ${userId}`);
-    return 0;
-
-    // TODO: Implement role-based permission auto-assignment when RolePermission model is available
-    /*
+    
     // Dynamically import model to avoid circular dependency
     const { default: ChatflowPermission } = await import('../models/ChatflowPermission.js');
     const { default: RolePermission } = await import('../models/RolePermission.js');
-
-    let createdPermissions = 0;
-
-    // Dynamically import model to avoid circular dependency
-    const { default: ChatflowPermission } = await import('../models/ChatflowPermission.js');
-    const { default: RolePermission } = await import('../models/RolePermission.js');
-
-    let createdPermissions = 0;
-
-    // Get all role permissions for user roles
+    
+    // Find role permissions for user's roles in this course
     const rolePermissions = await RolePermission.find({
       courseId,
       roleName: { $in: userRoles },
       isActive: true,
       autoGrant: true
     });
-
-    // Create corresponding user permissions for each role permission
+    
+    let createdPermissions = 0;
+    
     for (const rolePermission of rolePermissions) {
       // Check if user already has this permission
       const existingPermission = await ChatflowPermission.findOne({
-        userId,
         courseId,
+        userId,
         chatflowId: rolePermission.chatflowId
       });
-
+      
       if (!existingPermission) {
-        // Create new user permission
+        // Create new permission
         const newPermission = new ChatflowPermission({
           courseId,
           userId,

@@ -5,7 +5,7 @@ import Chatflow from '../models/Chatflow.js';
  */
 export async function syncChatflowsFromFlowise() {
     try {
-        console.log('[ChatflowSync] 开始同步chatflow数据...');
+        console.log('[ChatflowSync] Starting chatflow data sync...');
         
         // Read environment variables inside the function
         const FLOWISE_BASE_URL = process.env.FLOWISE_BASE_URL;
@@ -73,13 +73,13 @@ export async function syncChatflowsFromFlowise() {
                         chatflowDoc,
                         { runValidators: true }
                     );
-                    console.log(`[ChatflowSync] 更新: ${flowData.name} (${flowData.id})`);
+                    console.log(`[ChatflowSync] Updated: ${flowData.name} (${flowData.id})`);
                     updatedCount++;
                 } else {
                     // Create new chatflow
                     const newChatflow = new Chatflow(chatflowDoc);
                     await newChatflow.save();
-                    console.log(`[ChatflowSync] 新增: ${flowData.name} (${flowData.id})`);
+                    console.log(`[ChatflowSync] Added: ${flowData.name} (${flowData.id})`);
                     syncedCount++;
                 }
                 
@@ -100,7 +100,7 @@ export async function syncChatflowsFromFlowise() {
             }
         );
         
-        console.log(`[ChatflowSync] 同步完成: 新增${syncedCount}, 更新${updatedCount}, 停用${deactivated.modifiedCount}`);
+        console.log(`[ChatflowSync] Sync completed: added ${syncedCount}, updated ${updatedCount}, deactivated ${deactivated.modifiedCount}`);
         
         return {
             success: true,

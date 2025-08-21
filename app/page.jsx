@@ -3,7 +3,6 @@ import { assets } from "@/assets/assets";
 import Message from "@/components/Message";
 import PromptBox from "@/components/PromptBox";
 import Sidebar from "@/components/Sidebar";
-import ChatflowSelector from "@/components/ChatflowSelector";
 import LTIAuthGuard from "@/components/LTIAuthGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import PinnedMessages from "@/components/PinnedMessages";
@@ -117,12 +116,11 @@ export default function Home() {
                 </div>
               </div>
               
-              {/* Mobile ChatflowSelector in the middle of navigation */}
-              <div className="flex-1 mx-4 max-w-xs">
-                <ChatflowSelector 
-                  selectedChatflow={selectedChatflow} 
-                  onChatflowChange={handleChatflowChange} 
-                />
+              {/* Display current selected chatflow name */}
+              <div className="flex-1 mx-4 max-w-xs text-center">
+                <span className="text-sm text-gray-400">
+                  {selectedChatflow ? selectedChatflow.name : 'No AI Selected'}
+                </span>
               </div>
               
               <div className="group relative">
@@ -137,14 +135,6 @@ export default function Home() {
                   <div className="w-3 h-3 absolute bg-black rotate-45 right-4 -top-1.5"></div>
                 </div>
               </div>
-            </div>
-
-            {/* Desktop ChatflowSelector */}
-            <div className="hidden md:block absolute top-6 left-6 z-10">
-              <ChatflowSelector 
-                selectedChatflow={selectedChatflow} 
-                onChatflowChange={handleChatflowChange} 
-              />
             </div>
 
             {/* Mobile ChatflowSelector - removed as it's now shown in the middle when chatting */}
