@@ -273,7 +273,26 @@ export async function POST(req){
 
         console.log('Flowise response type:', typeof completion);
         console.log('Flowise response keys:', completion ? Object.keys(completion) : 'null');
-        console.log('Flowise full response:', JSON.stringify(completion, null, 2));
+        console.log('Flowise full response (first 500 chars):', completion ? JSON.stringify(completion).substring(0, 500) + '...' : 'null');
+        
+        // Log the actual content length for debugging
+        let debugResponseContent = '';
+        if (typeof completion === 'string') {
+            debugResponseContent = completion;
+        } else if (completion && typeof completion === 'object') {
+            debugResponseContent = completion.text || 
+                             completion.response || 
+                             completion.answer || 
+                             completion.data || 
+                             completion.result ||
+                             completion.message ||
+                             (typeof completion.content === 'string' ? completion.content : '') ||
+                             JSON.stringify(completion);
+        }
+        
+        console.log('📏 Response content length:', debugResponseContent ? debugResponseContent.length : 0);
+        console.log('📏 Response content (first 200 chars):', debugResponseContent ? debugResponseContent.substring(0, 200) + '...' : 'empty');
+        console.log('📏 Response content (last 200 chars):', debugResponseContent && debugResponseContent.length > 200 ? '...' + debugResponseContent.substring(debugResponseContent.length - 200) : debugResponseContent);
         
         // Extract token usage information if available
         let tokenUsage = null;
@@ -379,12 +398,18 @@ export async function POST(req){
             responseContent = "Sorry, I couldn't generate a response.";
         }
         
+        console.log('🎯 Final response content length:', responseContent.length);
+        console.log('🎯 Final response content (first 100 chars):', responseContent.substring(0, 100));
+        console.log('🎯 Final response content (last 100 chars):', responseContent.length > 100 ? responseContent.substring(responseContent.length - 100) : responseContent);
+        
         const message = {
             role: "assistant",
             content: responseContent,
             timestamp: Date.now(),
             ...(extractedTokenUsage && { tokenUsage: extractedTokenUsage })
         };
+        
+        console.log('📨 Final message object content length:', message.content.length);
         
         data.messages.push(message);
         

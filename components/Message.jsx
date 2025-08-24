@@ -586,7 +586,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                     onClick={handlePinMessage} 
                                     src={assets.pin_icon} 
                                     alt={isPinned ? 'Unpin' : 'Pin'} 
-                                    className={`w-4 cursor-pointer ${isPinned ? 'opacity-100' : ''}`}
+                                    className={`w-5 cursor-pointer ${isPinned ? 'opacity-100' : ''}`}
                                     title={isPinned ? 'Unpin message' : 'Pin message'}
                                 />
                             )}
@@ -599,7 +599,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                     onClick={handlePinMessage} 
                                     src={assets.pin_icon} 
                                     alt={isPinned ? 'Unpin' : 'Pin'} 
-                                    className={`w-4 cursor-pointer ${isPinned ? 'opacity-100' : ''}`}
+                                    className={`w-5 cursor-pointer ${isPinned ? 'opacity-100' : ''}`}
                                     title={isPinned ? 'Unpin message' : 'Pin message'}
                                 />
                             )}

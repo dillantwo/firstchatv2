@@ -24,11 +24,8 @@ const PromptBox = ({setIsLoading, isLoading}) => {
 
     // Preset quick phrases
     const quickPrompts = [
-        { text: 'Good', content: 'Good! ' },
         { text: "Let's learn", content: "Let's learn！" },
-        { text: 'Please recommend', content: 'Please recommend！' },
-        { text: 'Please continue', content: 'Please continue ' },
-        { text: 'Free to chat', content: 'Free to chat ' }
+        { text: 'Please continue', content: 'Please continue ' }
     ];
 
     // Handle quick phrase click - send message directly
@@ -496,6 +493,12 @@ const PromptBox = ({setIsLoading, isLoading}) => {
 
         if(data.success){
             const message = data.data.content;
+            console.log('🔍 Received message from API:', {
+                length: message.length,
+                first100: message.substring(0, 100),
+                last100: message.length > 100 ? message.substring(message.length - 100) : message
+            });
+            
             const messageTokens = message.split(" ");
             let assistantMessage = {
                 role: 'assistant',
@@ -527,28 +530,40 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             }
 
             // Optimized streaming effect - fix state update issues and add cleanup mechanism
+            // Improved for Chinese character support
             const streamMessage = (fullContent) => {
                 streamingRef.current = true; // Start streaming
-                const chars = fullContent.split('');
+                
+                // Use Array.from to properly handle Unicode characters including Chinese
+                const chars = Array.from(fullContent);
                 let currentIndex = 0;
-                const baseSpeed = 20; // Slightly slower to reduce frequent updates
+                const baseSpeed = 30; // Slightly slower to ensure proper rendering
                 
                 const typeNextChunk = () => {
                     if (!streamingRef.current || currentIndex >= chars.length) {
                         streamingRef.current = false;
+                        // Final update to ensure complete content is displayed
+                        setSelectedChat((prev) => {
+                            if (!prev) return prev;
+                            const updatedMessages = [
+                                ...prev.messages.slice(0, -1),
+                                { ...assistantMessage, content: fullContent }
+                            ];
+                            return { ...prev, messages: updatedMessages };
+                        });
                         return;
                     }
                     
-                    // Display 2-5 characters at a time to reduce update frequency
-                    let chunkSize = 2;
+                    // Display 1-3 characters at a time for better Chinese character support
+                    let chunkSize = 1;
                     const remainingChars = chars.length - currentIndex;
                     
                     if (remainingChars > 200) {
-                        chunkSize = Math.min(5, remainingChars); // Fast display for long content
+                        chunkSize = Math.min(3, remainingChars); // Fast display for long content
                     } else if (remainingChars > 50) {
-                        chunkSize = Math.min(3, remainingChars); // Medium display for medium content
+                        chunkSize = Math.min(2, remainingChars); // Medium display for medium content
                     } else {
-                        chunkSize = Math.min(2, remainingChars); // Slower display for short content
+                        chunkSize = 1; // Slower display for short content, character by character
                     }
                     
                     currentIndex += chunkSize;
@@ -574,7 +589,11 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                         let delay = baseSpeed;
                         const currentChar = chars[currentIndex - 1];
                         
-                        if (currentChar === '.' || currentChar === '!' || currentChar === '?') {
+                        // Check if current character is Chinese
+                        const isChineseChar = /[\u4e00-\u9fff]/.test(currentChar);
+                        if (isChineseChar) {
+                            delay = baseSpeed * 1.2; // Slightly slower for Chinese characters
+                        } else if (currentChar === '.' || currentChar === '!' || currentChar === '?') {
                             delay = baseSpeed * 2; // Brief pause after period
                         } else if (currentChar === ',' || currentChar === ';') {
                             delay = baseSpeed * 1.5; // Light pause after comma
