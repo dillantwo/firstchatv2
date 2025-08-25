@@ -13,7 +13,7 @@ const Sidebar = ({expand, setExpand}) => {
     const [showUserMenu, setShowUserMenu] = useState(false)
 
   return (
-    <div className={`flex flex-col justify-between bg-[#212327] pt-7 transition-all z-50 max-md:absolute max-md:h-screen overflow-hidden ${expand ? 'p-4 w-64 min-w-64' : 'md:w-20 w-0 max-md:overflow-hidden'}`}>
+    <div className={`flex flex-col justify-between bg-[#212327] pt-7 transition-all z-50 max-md:absolute max-md:h-screen max-md:h-[100vh] max-md:h-[-webkit-fill-available] overflow-hidden ${expand ? 'p-4 w-64 min-w-64' : 'md:w-20 w-0 max-md:overflow-hidden'}`}>
       <div className="flex flex-col min-h-0 flex-1">
         <div className={`flex ${expand ? "flex-row gap-10" : "flex-col items-center gap-8"}`}>
             <Image className={expand ? "w-36" : "w-10"} src={expand ? assets.logo_text : assets.reshot_icon} alt=''/>
