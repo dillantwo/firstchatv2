@@ -693,15 +693,15 @@ textarea {
   .max-md\:h-screen {
     height: 100vh !important;
     height: -webkit-fill-available !important;
-    min-height: calc(100vh + 20px); /* 增加20px高度 */
-    min-height: calc(-webkit-fill-available + 20px);
+    min-height: calc(100vh - 30px); /* 减少30px，与底部文字对齐 */
+    min-height: calc(-webkit-fill-available - 30px);
   }
   
   /* 确保绝对定位的Sidebar完全覆盖 */
   .max-md\:absolute {
-    top: -10px; /* 向上扩展10px */
+    top: 0;
     left: 0;
-    bottom: -10px; /* 向下扩展10px */
+    bottom: 30px; /* 底部留出30px空间给"AI-generated"文字 */
   }
 }
 
