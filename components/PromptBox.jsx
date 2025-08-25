@@ -53,7 +53,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                 if (isChrome) {
                     const promptContainer = document.querySelector('.prompt-container');
                     if (promptContainer) {
-                        promptContainer.style.marginBottom = 'max(40px, env(safe-area-inset-bottom))';
+                        promptContainer.style.marginBottom = 'max(16px, env(safe-area-inset-bottom))';
                     }
                 }
             };
@@ -724,8 +724,8 @@ const PromptBox = ({setIsLoading, isLoading}) => {
   return (
     <div className={`w-full px-2 sm:px-0 ${selectedChat?.messages.length > 0 ? "max-w-3xl" : "max-w-2xl"} transition-all prompt-container`}
          style={{
-           paddingBottom: 'max(env(safe-area-inset-bottom, 20px), 30px)',
-           marginBottom: '20px',
+           paddingBottom: 'max(env(safe-area-inset-bottom, 8px), 12px)',
+           marginBottom: '8px',
            position: 'relative',
            zIndex: 10
          }}>
