@@ -34,11 +34,6 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
             // Handle escaped dollar signs that should remain as math delimiters
             .replace(/\\\$/g, '$');
             
-        // Debug: if content was modified, output to console
-        if (processed !== text) {
-            console.log('Math content processed:', { original: text, processed });
-        }
-            
         return processed;
     };
 
@@ -227,7 +222,6 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                                 try {` + 
                                                     (isInPinnedPanel ? `
                                                     // Don't auto-adjust height in pinned panel to prevent expansion
-                                                    console.log('Height adjustment disabled in pinned panel');
                                                     return;` : `
                                                     // Get actual content height including all elements
                                                     const bodyHeight = doc.body.scrollHeight;
@@ -241,11 +235,9 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                                     
                                                     // Allow appropriate scrolling inside iframe in case content grows dynamically
                                                     doc.body.style.overflow = 'auto';
-                                                    doc.documentElement.style.overflow = 'auto';
-                                                    
-                                                    console.log('Iframe height adjusted to:', finalHeight);`) + `
+                                                    doc.documentElement.style.overflow = 'auto';`) + `
                                                 } catch (innerError) {
-                                                    console.log('Height adjustment failed:', innerError);
+                                                    // Height adjustment failed
                                                 }
                                             };
                                             
@@ -280,7 +272,6 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                                         // Initialize KaTeX auto-render after both scripts load
                                                         setTimeout(() => {
                                                             if (doc.defaultView && doc.defaultView.renderMathInElement) {
-                                                                console.log('Initializing KaTeX math rendering...');
                                                                 doc.defaultView.renderMathInElement(doc.body, {
                                                                     delimiters: [
                                                                         {left: '$$', right: '$$', display: true},
@@ -290,7 +281,6 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                                                     ],
                                                                     throwOnError: false
                                                                 });
-                                                                console.log('KaTeX math rendering completed');
                                                                 // Re-adjust height after math rendering
                                                                 setTimeout(adjustHeight, 300);
                                                             }
@@ -362,10 +352,8 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                                 script.textContent = `
                                                     // Function to render math formulas
                                                     function renderMath() {
-                                                        console.log('Attempting to render math...');
                                                         // Wait for KaTeX to be available
                                                         if (window.renderMathInElement && window.katex) {
-                                                            console.log('KaTeX libraries found, rendering math...');
                                                             window.renderMathInElement(document.body, {
                                                                 delimiters: [
                                                                     {left: '$$', right: '$$', display: true},
@@ -375,9 +363,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                                                 ],
                                                                 throwOnError: false
                                                             });
-                                                            console.log('Math rendering completed');
                                                         } else {
-                                                            console.log('KaTeX not yet available, retrying in 200ms...');
                                                             setTimeout(renderMath, 200);
                                                         }
                                                     }

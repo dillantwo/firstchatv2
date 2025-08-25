@@ -6,7 +6,7 @@ import LTICourse from "@/models/LTICourse";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { checkChatflowPermission } from "@/utils/permissionUtils.mjs";
+import { checkChatflowPermission } from "@/utils/permissionUtilsNew.mjs";
 
 // Flowise API configuration
 const FLOWISE_BASE_URL = process.env.FLOWISE_BASE_URL;
@@ -94,8 +94,6 @@ export async function POST(req){
         // Extract chatId, prompt, images, and chatflowId from the request body
         const { chatId, prompt, images, chatflowId } = await req.json();
 
-        console.log('Received request:', { userId, chatId, prompt, imagesCount: images?.length, chatflowId });
-
         // Validate required parameters
         if(!prompt?.trim()){
             return NextResponse.json({
@@ -130,14 +128,11 @@ export async function POST(req){
         }).sort({ updatedAt: -1 }); // Get most recent course association
 
         if (!courseAssociation) {
-            console.log(`[Chat AI] No course association found for user ${userId}`);
             return NextResponse.json({
                 success: false,
                 message: "No course association found",
             });
         }
-
-        console.log(`[Chat AI] User course context: ${courseAssociation.context_id}, roles:`, courseAssociation.roles);
 
         // Check if user has permission to use this chatflow
         const hasPermission = await checkChatflowPermission(
@@ -149,19 +144,15 @@ export async function POST(req){
         );
 
         if (!hasPermission) {
-            console.log(`[Chat AI] Permission denied for user ${userId} to use chatflow ${chatflowId}`);
             return NextResponse.json({
                 success: false,
                 message: "您没有权限使用此聊天流",
             });
         }
 
-        console.log(`[Chat AI] Permission granted for user ${userId} to use chatflow ${chatflowId}`);
-
         // Generate session ID for this chat conversation
         // Same chat will always have the same session ID for context continuity
         const sessionId = createSessionId(userId, chatId);
-        console.log('Generated session ID for chat:', sessionId);
 
         // Find the chat document in the database based on userId and chatId
         const data = await Chat.findOne({userId, _id: chatId})
@@ -173,15 +164,13 @@ export async function POST(req){
               });
         }
 
-        // Log image information for debugging
+        // Process images if provided
+        let processedImages = [];
         if (images && images.length > 0) {
-            console.log('Received images:', images.map((img, index) => ({
-                index,
-                isBase64: typeof img === 'string' && img.startsWith('data:'),
-                isUrl: typeof img === 'string' && (img.startsWith('http') || img.startsWith('blob:')),
-                type: typeof img,
-                preview: typeof img === 'string' ? img.substring(0, 50) + '...' : 'object'
-            })));
+            processedImages = images.filter(img => {
+                return (typeof img === 'string' && img.startsWith('data:')) ||
+                       (typeof img === 'string' && (img.startsWith('http') || img.startsWith('blob:')));
+            });
         }
 
         // Create a user message object
@@ -250,31 +239,12 @@ export async function POST(req){
                     name: `image_${index + 1}.png`, // Give the image a name
                     mime: img.startsWith('data:image/') ? img.split(';')[0].split(':')[1] : 'image/png' // Extract MIME type from data URL
                 };
-                console.log(`Upload ${index + 1}:`, {
-                    type: upload.type,
-                    name: upload.name,
-                    mime: upload.mime,
-                    dataLength: upload.data.length,
-                    dataPrefix: upload.data.substring(0, 50) + '...'
-                });
                 return upload;
             });
         }
         
-        console.log('Sending request to Flowise:', {
-            question: requestData.question,
-            sessionId: requestData.overrideConfig.sessionId,
-            uploadsCount: requestData.uploads?.length || 0,
-            fullRequest: JSON.stringify(requestData),
-            chatflowId: chatflowId
-        });
-        
         const completion = await queryFlowise(requestData, chatflowId);
 
-        console.log('Flowise response type:', typeof completion);
-        console.log('Flowise response keys:', completion ? Object.keys(completion) : 'null');
-        console.log('Flowise full response (first 500 chars):', completion ? JSON.stringify(completion).substring(0, 500) + '...' : 'null');
-        
         // Log the actual content length for debugging
         let debugResponseContent = '';
         if (typeof completion === 'string') {
@@ -290,16 +260,11 @@ export async function POST(req){
                              JSON.stringify(completion);
         }
         
-        console.log('📏 Response content length:', debugResponseContent ? debugResponseContent.length : 0);
-        console.log('📏 Response content (first 200 chars):', debugResponseContent ? debugResponseContent.substring(0, 200) + '...' : 'empty');
-        console.log('📏 Response content (last 200 chars):', debugResponseContent && debugResponseContent.length > 200 ? '...' + debugResponseContent.substring(debugResponseContent.length - 200) : debugResponseContent);
-        
         // Extract token usage information if available
         let tokenUsage = null;
         if (completion && typeof completion === 'object') {
             // First, try to extract from agentFlowExecutedData (Flowise specific)
             if (completion.agentFlowExecutedData && Array.isArray(completion.agentFlowExecutedData)) {
-                console.log('🔍 Checking agentFlowExecutedData for token usage...');
                 
                 for (let i = 0; i < completion.agentFlowExecutedData.length; i++) {
                     const executedData = completion.agentFlowExecutedData[i];
@@ -307,7 +272,6 @@ export async function POST(req){
                     // Check in data.outputs.output.usageMetadata (correct path based on actual response)
                     if (executedData.data && executedData.data.outputs && executedData.data.outputs.output && executedData.data.outputs.output.usageMetadata) {
                         const usage = executedData.data.outputs.output.usageMetadata;
-                        console.log(`✅ Found token usage in agentFlowExecutedData[${i}].data.outputs.output.usageMetadata:`, usage);
                         tokenUsage = {
                             input_tokens: usage.input_tokens || 0,
                             output_tokens: usage.output_tokens || 0,
@@ -320,7 +284,6 @@ export async function POST(req){
                     // Also check alternative path data.output.usageMetadata
                     else if (executedData.data && executedData.data.output && executedData.data.output.usageMetadata) {
                         const usage = executedData.data.output.usageMetadata;
-                        console.log(`✅ Found token usage in agentFlowExecutedData[${i}].data.output.usageMetadata:`, usage);
                         tokenUsage = {
                             input_tokens: usage.input_tokens || 0,
                             output_tokens: usage.output_tokens || 0,
@@ -345,20 +308,10 @@ export async function POST(req){
             }
             
             if (tokenUsage) {
-                console.log('🔢 Token usage found:', JSON.stringify(tokenUsage, null, 2));
-                
                 // Log detailed token information
                 const promptTokens = tokenUsage.prompt_tokens || tokenUsage.input_tokens || tokenUsage.prompt || 0;
                 const completionTokens = tokenUsage.completion_tokens || tokenUsage.output_tokens || tokenUsage.completion || 0;
                 const totalTokens = tokenUsage.total_tokens || tokenUsage.total || (promptTokens + completionTokens);
-                
-                console.log(`📊 Token breakdown - Prompt: ${promptTokens}, Completion: ${completionTokens}, Total: ${totalTokens}`);
-            } else {
-                console.log('ℹ️  No token usage information found in Flowise response');
-                // Log all top-level keys to help identify where token info might be
-                if (completion && typeof completion === 'object') {
-                    console.log('🔍 Available response fields:', Object.keys(completion));
-                }
             }
         }
         
@@ -391,16 +344,10 @@ export async function POST(req){
                 if (!extractedTokenUsage.totalTokens && (extractedTokenUsage.promptTokens || extractedTokenUsage.completionTokens)) {
                     extractedTokenUsage.totalTokens = extractedTokenUsage.promptTokens + extractedTokenUsage.completionTokens;
                 }
-                
-                console.log('💾 Saving token usage:', extractedTokenUsage);
             }
         } else {
             responseContent = "Sorry, I couldn't generate a response.";
         }
-        
-        console.log('🎯 Final response content length:', responseContent.length);
-        console.log('🎯 Final response content (first 100 chars):', responseContent.substring(0, 100));
-        console.log('🎯 Final response content (last 100 chars):', responseContent.length > 100 ? responseContent.substring(responseContent.length - 100) : responseContent);
         
         const message = {
             role: "assistant",
@@ -408,8 +355,6 @@ export async function POST(req){
             timestamp: Date.now(),
             ...(extractedTokenUsage && { tokenUsage: extractedTokenUsage })
         };
-        
-        console.log('📨 Final message object content length:', message.content.length);
         
         data.messages.push(message);
         
@@ -428,8 +373,6 @@ export async function POST(req){
             data.totalTokenUsage.completionTokens += extractedTokenUsage.completionTokens;
             data.totalTokenUsage.totalTokens += extractedTokenUsage.totalTokens;
             data.totalTokenUsage.lastUpdated = new Date();
-            
-            console.log(`📈 Updated chat total tokens: ${data.totalTokenUsage.totalTokens} (prompt: ${data.totalTokenUsage.promptTokens}, completion: ${data.totalTokenUsage.completionTokens})`);
         }
         
         await data.save();
@@ -442,7 +385,6 @@ export async function POST(req){
             ...(extractedTokenUsage && { tokenUsage: extractedTokenUsage }) // Include token usage in response
         })
     } catch (error) {
-        console.error('Error in AI chat API:', error);
         return NextResponse.json({ 
             success: false, 
             message: error.message || 'An error occurred while processing your request',

@@ -17,9 +17,6 @@ export async function checkChatflowPermission(userId, courseId, userRoles, chatf
     // Dynamically import model to avoid circular dependency
     const { default: ChatflowPermission } = await import('../models/ChatflowPermission.js');
     
-    console.log(`[Permission Check] Checking permission for user ${userId} in course ${courseId} for chatflow ${chatflowId}`);
-    console.log(`[Permission Check] User roles:`, userRoles);
-    
     // Check role-based permissions (simplified version)
     // For teachers and admin roles, grant access by default
     const privilegedRoles = ['Instructor', 'TeachingAssistant', 'Administrator', 'ContentDeveloper'];
@@ -28,7 +25,6 @@ export async function checkChatflowPermission(userId, courseId, userRoles, chatf
     );
     
     if (hasPrivilegedRole) {
-      console.log(`[Permission Check] User has privileged role, access granted`);
       return true;
     }
     
@@ -41,11 +37,9 @@ export async function checkChatflowPermission(userId, courseId, userRoles, chatf
     });
     
     const hasPermission = userPermission && userPermission.permissions.includes(permissionType);
-    console.log(`[Permission Check] Explicit permission found:`, !!userPermission, `Has ${permissionType} permission:`, hasPermission);
     
     return hasPermission;
   } catch (error) {
-    console.error(`[Permission Check] Error checking permission:`, error);
     // Default to allowing access on error to prevent service disruption
     return true;
   }
@@ -65,8 +59,6 @@ export async function getUserAccessibleChatflows(userId, courseId, userRoles, pe
     const { default: ChatflowPermission } = await import('../models/ChatflowPermission.js');
     const { default: RolePermission } = await import('../models/RolePermission.js');
     
-    console.log(`[Access Check] Getting accessible chatflows for user ${userId} in course ${courseId}`);
-    
     // For privileged roles, get all chatflows from role permissions
     const privilegedRoles = ['Instructor', 'TeachingAssistant', 'Administrator', 'ContentDeveloper'];
     const hasPrivilegedRole = userRoles?.some(role => 
@@ -82,7 +74,6 @@ export async function getUserAccessibleChatflows(userId, courseId, userRoles, pe
       });
       
       const accessibleChatflows = [...new Set(rolePermissions.map(rp => rp.chatflowId))];
-      console.log(`[Access Check] Privileged user, accessible chatflows:`, accessibleChatflows);
       return accessibleChatflows;
     }
     
@@ -95,10 +86,8 @@ export async function getUserAccessibleChatflows(userId, courseId, userRoles, pe
     });
     
     const accessibleChatflows = userPermissions.map(p => p.chatflowId);
-    console.log(`[Access Check] Regular user, accessible chatflows:`, accessibleChatflows);
     return accessibleChatflows;
   } catch (error) {
-    console.error(`[Access Check] Error getting accessible chatflows:`, error);
     return [];
   }
 }
@@ -112,7 +101,6 @@ export async function getUserAccessibleChatflows(userId, courseId, userRoles, pe
  */
 export async function autoGrantRolePermissions(userId, courseId, userRoles) {
   try {
-    console.log(`[Auto Grant] Auto-granting permissions for user ${userId} with roles:`, userRoles);
     
     // For privileged roles, skip auto-grant as they have access by default
     const privilegedRoles = ['Instructor', 'TeachingAssistant', 'Administrator', 'ContentDeveloper'];
@@ -121,7 +109,6 @@ export async function autoGrantRolePermissions(userId, courseId, userRoles) {
     );
     
     if (hasPrivilegedRole) {
-      console.log(`[Auto Grant] User has privileged role, skipping auto-grant`);
       return 0;
     }
     
@@ -159,14 +146,11 @@ export async function autoGrantRolePermissions(userId, courseId, userRoles) {
 
         await newPermission.save();
         createdPermissions++;
-        console.log(`[Auto Grant] Created permission for user ${userId}, chatflow ${rolePermission.chatflowId}`);
       }
     }
 
-    console.log(`[Auto Grant] Created ${createdPermissions} permissions for user ${userId}`);
     return createdPermissions;
   } catch (error) {
-    console.error(`[Auto Grant] Error auto-granting permissions:`, error);
     return 0;
   }
 }
@@ -223,14 +207,12 @@ export async function applyRolePermissionToAllUsers(courseId, roleName, chatflow
 
         affectedUsers++;
       } catch (userError) {
-        console.error(`[Batch Apply] Error for user ${user._id}:`, userError);
+        // Handle error silently
       }
     }
 
-    console.log(`[Batch Apply] Applied role permission to ${affectedUsers} users`);
     return affectedUsers;
   } catch (error) {
-    console.error(`[Batch Apply] Error applying role permissions:`, error);
     return 0;
   }
 }

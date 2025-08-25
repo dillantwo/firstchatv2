@@ -28,7 +28,6 @@ export async function POST(req) {
 
         // 獲取請求體大小
         const contentLength = req.headers.get('content-length');
-        console.log('File upload request size:', contentLength, 'bytes');
         
         // 檢查是否超過限制（50MB = 52428800 bytes）
         if (contentLength && parseInt(contentLength) > 52428800) {
@@ -78,7 +77,6 @@ export async function POST(req) {
         });
         
     } catch (error) {
-        console.error('File upload error:', error);
         return NextResponse.json({
             success: false,
             message: error.message || 'Failed to process file upload'

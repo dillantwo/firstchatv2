@@ -76,7 +76,6 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                 
                 recognition.onstart = () => {
                     setIsListening(true);
-                    console.log('Speech recognition started, current language:', recognition.lang);
                 };
                 
                 recognition.onresult = (event) => {
@@ -95,19 +94,17 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                     
                     // Only update input box when there's final result
                     if (finalTranscript) {
-                        console.log('Final recognition result:', finalTranscript);
                         setPrompt(prev => prev + finalTranscript + ' ');
                         setTimeout(adjustTextareaHeight, 0);
                     }
                     
                     // Can display interim results here (optional)
                     if (interimTranscript) {
-                        console.log('Interim result:', interimTranscript);
+                        // Interim results processing
                     }
                 };
                 
                 recognition.onerror = (event) => {
-                    console.error('Speech recognition error:', event.error);
                     
                     if (event.error === 'not-allowed') {
                         setIsListening(false);
@@ -117,25 +114,21 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                         toast.error('Network error, please check network connection');
                     } else if (event.error === 'language-not-supported') {
                         // If Cantonese is not supported, automatically switch to English
-                        console.log('Cantonese not supported, switching to English');
                         recognition.lang = 'en-US';
                         toast.error('Cantonese recognition not supported, switched to English recognition');
                     } else if (event.error === 'no-speech') {
                         // No speech detected, no need to stop in continuous mode
-                        console.log('No speech detected, continue waiting...');
                     } else if (event.error === 'aborted') {
                         // User manually stopped, don't show error
-                        console.log('Speech recognition stopped by user');
                     } else {
                         // Other errors, try to restart (if still in listening state)
-                        console.log('Speech recognition error, trying to restart:', event.error);
                         if (isListening) {
                             setTimeout(() => {
                                 if (isListening) {
                                     try {
                                         recognition.start();
                                     } catch (e) {
-                                        console.log('Failed to restart speech recognition:', e);
+                                        // Failed to restart
                                     }
                                 }
                             }, 1000);
@@ -144,16 +137,13 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                 };
                 
                 recognition.onend = () => {
-                    console.log('Speech recognition ended');
                     // In continuous mode, if still in listening state, automatically restart
                     if (isListening) {
-                        console.log('Auto restarting speech recognition...');
                         setTimeout(() => {
                             if (isListening) {
                                 try {
                                     recognition.start();
                                 } catch (e) {
-                                    console.log('Failed to restart speech recognition:', e);
                                     setIsListening(false);
                                 }
                             }
@@ -163,7 +153,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                 
                 setSpeechRecognition(recognition);
             } else {
-                console.warn('Browser does not support speech recognition feature');
+                // Browser does not support speech recognition
             }
         }
     }, []);
@@ -235,20 +225,17 @@ const PromptBox = ({setIsLoading, isLoading}) => {
         
         if (isListening) {
             // Stop speech recognition
-            console.log('User manually stopped speech recognition');
             setIsListening(false);
             speechRecognition.stop();
         } else {
             // Start speech recognition
             navigator.mediaDevices.getUserMedia({ audio: true })
                 .then(() => {
-                    console.log('Starting continuous speech recognition');
                     speechRecognition.lang = 'zh-yue-HK';
                     setIsListening(true);
                     speechRecognition.start();
                 })
                 .catch((error) => {
-                    console.error('Microphone permission denied:', error);
                     toast.error('Please allow microphone access permission');
                 });
         }
@@ -366,13 +353,8 @@ const PromptBox = ({setIsLoading, isLoading}) => {
         e.preventDefault();
         
         try {
-            console.log('[PromptBox Auth Debug] user:', user);
-            console.log('[PromptBox Auth Debug] isAuthenticated:', isAuthenticated);
-            console.log('[PromptBox Auth Debug] user exists?', !!user);
-            console.log('[PromptBox Auth Debug] isAuthenticated?', !!isAuthenticated);
             
             if(!user || !isAuthenticated) {
-                console.log('[PromptBox Auth Debug] Authentication check failed');
                 toast.error('Please access this tool through Moodle LTI');
                 return;
             }
@@ -382,35 +364,27 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             // If no chat is selected, automatically create a new chat
             let currentChat = selectedChat;
             if(!currentChat) {
-                console.log('[PromptBox] No chat selected, creating new chat');
-                console.log('[PromptBox] Selected chatflow:', selectedChatflow);
-                
                 setIsLoading(true);
                 setPrompt(""); // Clear input to prevent duplicate submission
                 
                 try {
                     // Create new chat
                     const chatData = selectedChatflow ? { chatflowId: selectedChatflow.id } : {};
-                    console.log('[PromptBox] Creating chat with data:', chatData);
                     
                     const createResponse = await axios.post('/api/chat/create', chatData, {
                         withCredentials: true
                     });
-                    console.log('[PromptBox] Create response:', createResponse.data);
                     
                     if (!createResponse.data.success) {
-                        console.log('[PromptBox] Chat creation failed:', createResponse.data.message);
                         setIsLoading(false);
                         setPrompt(contentToSend); // Restore input content
                         return toast.error('Failed to create new chat. Please try again.');
                     }
                     
                     // Get newly created chat
-                    console.log('[PromptBox] Fetching updated chat list');
                     const chatsResponse = await axios.get('/api/chat/get', {
                         withCredentials: true
                     });
-                    console.log('[PromptBox] Chats response:', chatsResponse.data);
                     
                     if (chatsResponse.data.success && chatsResponse.data.data.length > 0) {
                         // Find the newly created chat (latest one)
@@ -441,7 +415,6 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                         return toast.error('Failed to retrieve chat after creation.');
                     }
                 } catch (createError) {
-                    console.error('Create chat error:', createError);
                     setIsLoading(false);
                     setPrompt(contentToSend);
                     if (createError.response?.status === 401) {
@@ -493,11 +466,6 @@ const PromptBox = ({setIsLoading, isLoading}) => {
 
         if(data.success){
             const message = data.data.content;
-            console.log('🔍 Received message from API:', {
-                length: message.length,
-                first100: message.substring(0, 100),
-                last100: message.length > 100 ? message.substring(message.length - 100) : message
-            });
             
             const messageTokens = message.split(" ");
             let assistantMessage = {
@@ -627,7 +595,6 @@ const PromptBox = ({setIsLoading, isLoading}) => {
         }
 
         } catch (error) {
-            console.error('Send prompt error:', error);
             // 401 errors are automatically handled by axios interceptor
             if (error.response?.status === 401) {
                 // Token expired, interceptor will handle the popup

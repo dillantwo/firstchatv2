@@ -21,7 +21,6 @@ export const LTIAuthProvider = ({ children }) => {
 
   // Handle 401 errors (token expired)
   const handleTokenExpired = () => {
-    console.log('[LTI Auth] Token expired, showing logout modal');
     setUser(null);
     setIsAuthenticated(false);
     setShowLogoutModal(true);
@@ -36,23 +35,16 @@ export const LTIAuthProvider = ({ children }) => {
   const checkAuth = async () => {
     try {
       setIsLoading(true);
-      console.log('[LTI Auth] Checking authentication...');
       const response = await axios.get('/api/lti/session');
-      console.log('[LTI Auth] Session response:', response.data);
       
       if (response.data.authenticated) {
-        console.log('[LTI Auth] User authenticated:', response.data.user.name);
         setUser(response.data.user);
         setIsAuthenticated(true);
-        console.log('[LTI Auth] Authentication state set to true');
-        console.log('[LTI Auth] User object set:', response.data.user);
       } else {
-        console.log('[LTI Auth] User not authenticated');
         setUser(null);
         setIsAuthenticated(false);
       }
     } catch (error) {
-      console.error('[LTI Auth] Auth check failed:', error);
       if (error.response?.status === 401) {
         handleTokenExpired();
       } else {
@@ -61,7 +53,6 @@ export const LTIAuthProvider = ({ children }) => {
       }
     } finally {
       setIsLoading(false);
-      console.log('[LTI Auth] Loading state set to false');
     }
   };
 
@@ -72,7 +63,7 @@ export const LTIAuthProvider = ({ children }) => {
       setUser(null);
       setIsAuthenticated(false);
     } catch (error) {
-      console.error('Logout failed:', error);
+      // Handle logout error silently
     }
   };
 

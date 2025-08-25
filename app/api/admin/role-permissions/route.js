@@ -3,7 +3,7 @@ import connectDB from '../../../../config/db.js';
 import RolePermission from '../../../../models/RolePermission.js';
 import ChatflowPermission from '../../../../models/ChatflowPermission.js';
 import LTIUser from '../../../../models/LTIUser.js';
-import { applyRolePermissionToAllUsers } from '../../../../utils/permissionUtils.mjs';
+import { applyRolePermissionToAllUsers } from '../../../../utils/permissionUtilsNew.mjs';
 
 // GET /api/admin/role-permissions - 获取角色权限配置
 export async function GET(request) {
