@@ -225,3 +225,182 @@ table td * {
 [class*="z-[9999]"] {
   z-index: 99999 !important;
 }
+
+/* iPad Safari 特定优化 */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari 特定样式 */
+  html, body {
+    height: 100vh;
+    height: -webkit-fill-available;
+    overflow-x: hidden;
+  }
+  
+  /* 修复iOS Safari中100vh的问题 */
+  .h-screen {
+    height: 100vh;
+    height: -webkit-fill-available;
+  }
+  
+  /* 防止iOS Safari中的橡皮筋效果 */
+  body {
+    position: fixed;
+    width: 100%;
+    overflow: hidden;
+  }
+  
+  /* 确保主容器可以滚动 */
+  .main-container {
+    height: 100vh;
+    height: -webkit-fill-available;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* iPad 专用样式 (iPad 和 iPad Pro) */
+@media only screen 
+  and (min-device-width: 768px) 
+  and (max-device-width: 1366px) 
+  and (-webkit-min-device-pixel-ratio: 1) {
+  
+  /* 确保界面完全适应iPad屏幕 */
+  html, body {
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+  
+  /* iPad Portrait */
+  @media (orientation: portrait) {
+    .chat-container {
+      max-width: 100%;
+      padding: 0 16px;
+    }
+    
+    /* 调整固定按钮位置 */
+    .fixed {
+      position: absolute;
+    }
+    
+    /* 确保输入框不被虚拟键盘遮挡 */
+    .prompt-container {
+      padding-bottom: 20px;
+    }
+  }
+  
+  /* iPad Landscape */
+  @media (orientation: landscape) {
+    .chat-container {
+      max-width: 90%;
+      margin: 0 auto;
+    }
+    
+    /* 横屏时侧边栏自动显示 */
+    .sidebar-auto-expand {
+      display: block;
+    }
+  }
+}
+
+/* 通用移动设备优化 */
+@media (max-width: 1024px) {
+  /* 防止水平滚动 */
+  * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* 优化触摸目标大小 */
+  button, 
+  [role="button"],
+  input,
+  textarea {
+    min-height: 44px; /* Apple HIG 推荐的最小触摸目标 */
+    min-width: 44px;
+  }
+  
+  /* 改善滚动性能 */
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
+/* 修复Safari中的输入框问题 */
+input, textarea {
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 0;
+}
+
+/* 防止Safari中的缩放 */
+input[type="text"],
+input[type="search"],
+textarea {
+  font-size: 16px; /* 防止iOS Safari自动缩放 */
+}
+
+/* 优化选择器下拉菜单在移动设备上的显示 */
+@media (max-width: 768px) {
+  select {
+    font-size: 16px;
+    padding: 12px;
+  }
+}
+
+/* 专门针对 iPad Safari 的修复 */
+@media screen and (min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 1) {
+  /* iPad 特定修复 */
+  .flex.h-screen {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+  
+  /* 确保聊天容器不会被截断 */
+  .chat-container {
+    min-height: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  /* 修复 iPad 上的 textarea 缩放问题 */
+  textarea {
+    transform: translateZ(0); /* 强制硬件加速 */
+    -webkit-transform: translateZ(0);
+  }
+}
+
+/* 通用的防止缩放样式 */
+@media (max-width: 1024px) {
+  /* 防止意外的水平滚动 */
+  body {
+    overflow-x: hidden;
+  }
+  
+  /* 确保所有容器都不会超出视口 */
+  .container, .flex, div {
+    max-width: 100vw;
+    box-sizing: border-box;
+  }
+  
+  /* 优化按钮大小以适合触摸 */
+  button {
+    min-height: 44px;
+    padding: 8px 12px;
+  }
+  
+  /* 修复移动端固定定位 */
+  .fixed {
+    position: absolute;
+  }
+  
+  /* 优化移动端的消息容器 */
+  .message-container {
+    padding: 8px 12px;
+    max-width: calc(100vw - 24px);
+  }
+}

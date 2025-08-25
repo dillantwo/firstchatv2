@@ -14,6 +14,13 @@ const inter = Inter({
 export const metadata = {
   title: "FirstChat",
   description: "QEF FirstChat",
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false, // 防止用户缩放导致布局问题
+    viewportFit: 'cover', // 适配有notch的设备
+  },
 };
 
 export default function RootLayout({ children }) {

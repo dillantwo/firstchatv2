@@ -689,7 +689,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
     }
 
   return (
-    <div className={`w-full ${selectedChat?.messages.length > 0 ? "max-w-3xl" : "max-w-2xl"} transition-all`}>
+    <div className={`w-full px-2 sm:px-0 ${selectedChat?.messages.length > 0 ? "max-w-3xl" : "max-w-2xl"} transition-all prompt-container`}>
       {/* Image preview area */}
       {uploadedImages.length > 0 && (
         <div className="mb-3 p-3 bg-[#404045] rounded-2xl">
@@ -743,7 +743,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
       )}
 
       {/* Quick phrase buttons */}
-      <div className="flex items-center gap-2 mb-3 flex-wrap">
+      <div className="flex items-center gap-2 mb-3 flex-wrap px-1">
         {quickPrompts
           .filter((item) => {
             // For new chat state (no selected chat or empty messages), only show "Let's learn" button
@@ -800,14 +800,15 @@ const PromptBox = ({setIsLoading, isLoading}) => {
         ref={textareaRef}
         onKeyDown={handleKeyDown}
         onPaste={handlePaste}
-        className='outline-none w-full resize-none bg-transparent leading-6 text-sm placeholder:text-gray-400 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent textarea-smooth'
+        className='outline-none w-full resize-none bg-transparent leading-6 text-sm sm:text-base placeholder:text-gray-400 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent textarea-smooth'
         style={{ 
             minHeight: '48px', // Minimum height for 2 lines
             maxHeight: '192px', // Maximum height for 8 lines
             overflowY: 'hidden',
             lineHeight: '24px',
             wordWrap: 'break-word',
-            paddingRight: '8px' // Leave space for scrollbar
+            paddingRight: '8px', // Leave space for scrollbar
+            fontSize: '16px' // 防止 iOS Safari 自动缩放
         }}
         placeholder={isDragging ? 'Drag images here to upload...' : isListening ? 'Continuous listening...' : 'Type a message, drag images, or use voice input...'} 
         onChange={handleInputChange} 

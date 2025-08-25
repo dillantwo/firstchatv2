@@ -84,10 +84,10 @@ export default function Home() {
   return (
     <LTIAuthGuard>
       <ErrorBoundary>
-        <div>
+        <div className="main-container">
           <div className="flex h-screen">
             <Sidebar expand={expand} setExpand={setExpand}/>
-            <div className={`flex-1 flex flex-col items-center justify-center px-4 pb-8 bg-[#292a2d] text-white relative transition-all duration-300 ${
+            <div className={`flex-1 flex flex-col items-center justify-center px-2 sm:px-4 pb-8 bg-[#292a2d] text-white relative transition-all duration-300 chat-container ${
               showPinnedPanel ? 'md:mr-[600px] lg:mr-[700px] xl:mr-[800px] mr-0' : 'mr-0'
             }`}>
             {/* Pinned messages toggle button - only show when panel is closed */}
@@ -106,19 +106,19 @@ export default function Home() {
               </button>
             )}
             {/* Mobile top navigation */}
-            <div className="md:hidden absolute px-4 top-6 flex items-center justify-between w-full">
+            <div className="md:hidden absolute px-2 sm:px-4 top-4 sm:top-6 flex items-center justify-between w-full z-30">
               <div className="group relative">
                 <Image onClick={()=> (expand ? setExpand(false) : setExpand(true))}
-                 className="rotate-180 cursor-pointer" src={assets.menu_icon} alt=""/>
-                <div className="absolute w-max top-10 left-0 opacity-0 group-hover:opacity-100 transition bg-black text-white text-sm px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]">
+                 className="rotate-180 cursor-pointer w-6 h-6" src={assets.menu_icon} alt=""/>
+                <div className="absolute w-max top-10 left-0 opacity-0 group-hover:opacity-100 transition bg-black text-white text-xs sm:text-sm px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]">
                   {expand ? 'Close menu' : 'Open menu'}
                   <div className="w-3 h-3 absolute bg-black rotate-45 left-4 -top-1.5"></div>
                 </div>
               </div>
               
               {/* Display current selected chatflow name */}
-              <div className="flex-1 mx-4 max-w-xs text-center">
-                <span className="text-sm text-gray-400">
+              <div className="flex-1 mx-2 sm:mx-4 max-w-xs text-center">
+                <span className="text-xs sm:text-sm text-gray-400 truncate block">
                   {selectedChatflow ? selectedChatflow.name : 'No AI Selected'}
                 </span>
               </div>
@@ -126,11 +126,11 @@ export default function Home() {
               <div className="group relative">
                 <Image 
                   onClick={createNewChat}
-                  className="opacity-70 cursor-pointer hover:opacity-100 transition-opacity" 
+                  className="opacity-70 cursor-pointer hover:opacity-100 transition-opacity w-6 h-6" 
                   src={assets.chat_icon} 
                   alt="New chat"
                 />
-                <div className="absolute w-max top-10 right-0 opacity-0 group-hover:opacity-100 transition bg-black text-white text-sm px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]">
+                <div className="absolute w-max top-10 right-0 opacity-0 group-hover:opacity-100 transition bg-black text-white text-xs sm:text-sm px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]">
                   New chat
                   <div className="w-3 h-3 absolute bg-black rotate-45 right-4 -top-1.5"></div>
                 </div>
@@ -140,12 +140,12 @@ export default function Home() {
             {/* Mobile ChatflowSelector - removed as it's now shown in the middle when chatting */}
 
             {messages.length === 0 || !selectedChat ? (
-              <div className="mt-16 md:mt-8 mb-24 md:mb-32">
+              <div className="mt-16 sm:mt-16 md:mt-8 mb-24 md:mb-32 px-4">
               <div className="flex items-center gap-3">
-                <Image src={assets.reshot_icon} alt="" className="h-10"/>
-                <p className="text-2xl font-medium">Hi, I'm FirstChat.</p>
+                <Image src={assets.reshot_icon} alt="" className="h-8 sm:h-10 w-8 sm:w-10"/>
+                <p className="text-xl sm:text-2xl font-medium">Hi, I'm FirstChat.</p>
               </div>
-              <p className="text-sm mt-2 ml-13">
+              <p className="text-xs sm:text-sm mt-2 ml-11 sm:ml-13">
                 {selectedChatflow 
                   ? `How can I help you with ${selectedChatflow.name}?` 
                   : 'How can I help you today?'
