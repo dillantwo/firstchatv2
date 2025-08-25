@@ -48,21 +48,36 @@ const PinnedMessages = ({ pinnedMessages, onUnpinMessage, isVisible, onToggleVis
         ) : (
           pinnedMessages.map((msg, index) => (
             <div key={`pinned-${index}`} className="relative group mb-6 sm:mb-8">
-              {/* Unpin button - simplified */}
-              <button
-                onClick={() => onUnpinMessage(index)}
-                className="absolute top-1 right-1 z-20 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center text-sm sm:text-lg font-bold shadow-lg"
-                title="Unpin message"
-              >
-                ×
-              </button>
-              
-              {/* Message metadata - simplified */}
-              <div className="text-xs text-gray-400 mb-1 px-1">
-                <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1 ${
-                  msg.role === 'user' ? 'bg-blue-400' : 'bg-green-400'
-                }`}></span>
-                {msg.role === 'user' ? 'You' : 'AI'}
+              {/* Message Header with Unpin button - always visible */}
+              <div className="flex items-center justify-between mb-2 px-1">
+                {/* Message metadata */}
+                <div className="text-xs text-gray-400 flex items-center">
+                  <span className={`inline-block w-1.5 h-1.5 rounded-full mr-2 ${
+                    msg.role === 'user' ? 'bg-blue-400' : 'bg-green-400'
+                  }`}></span>
+                  {msg.role === 'user' ? 'You' : 'AI'}
+                </div>
+                
+                {/* Unpin button - always visible with beautiful design */}
+                <button
+                  onClick={() => onUnpinMessage(index)}
+                  className="unpin-button relative flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-red-400 rounded-md border border-gray-600 hover:border-red-400/50"
+                  title="Unpin message"
+                >
+                  <svg 
+                    className="w-3 h-3" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="m9 21 3-6 3 6" />
+                    <path d="M15 3a3 3 0 0 0-6 0l-.84 4.2a3 3 0 0 0 2.34 3.56L12 17l1.5-6.24a3 3 0 0 0 2.34-3.56L15 3Z" />
+                  </svg>
+                  <span className="hidden sm:inline font-medium">Unpin</span>
+                </button>
               </div>
               
               {/* Full Message component - no borders */}

@@ -22,6 +22,9 @@ export const viewport = {
   maximumScale: 1,
   userScalable: false, // 防止用户缩放导致布局问题
   viewportFit: 'cover', // 适配有notch的设备
+  minimumScale: 1, // 防止Chrome自动缩小
+  targetDensityDpi: 'device-dpi', // 确保正确的像素密度
+  interactiveWidget: 'resizes-content', // 新标准：处理虚拟键盘
 };
 
 export default function RootLayout({ children }) {

@@ -9,6 +9,8 @@ html{
   margin: 0;
   padding: 0;
   background-color: #292a2d; /* 确保整个页面都有正确的背景色 */
+  /* 支持动态视口高度 */
+  --vh: 1vh;
 }
 
 body {
@@ -298,27 +300,32 @@ table td * {
   }
 }
 
-/* iPad 专用样式 (iPad 和 iPad Pro) */
+/* iPad 专用样式 (iPad 和 iPad Pro) - 适用于所有浏览器 */
 @media only screen 
   and (min-device-width: 768px) 
   and (max-device-width: 1366px) 
-  and (-webkit-min-device-pixel-ratio: 1) {
+  and (-webkit-min-device-pixel-ratio: 1),
+  screen and (min-width: 768px) and (max-width: 1024px) and (pointer: coarse) {
   
-  /* 确保界面完全适应iPad屏幕 */
+  /* 确保界面完全适应iPad屏幕 - 兼容Chrome和Safari */
   html, body {
     width: 100%;
     height: 100vh;
+    height: calc(var(--vh, 1vh) * 100); /* 使用动态视口高度 */
+    height: 100svh; /* 新的视口单位，适用于动态视口 */
     margin: 0;
     padding: 0;
     overflow-x: hidden;
     background-color: #292a2d;
   }
   
-  /* iPad Portrait */
+  /* iPad Portrait - 适用于所有浏览器 */
   @media (orientation: portrait) {
     .chat-container {
       max-width: 100%;
       padding: 0 16px;
+      min-height: 100vh;
+      min-height: 100svh;
     }
     
     /* 调整固定按钮位置 */
@@ -328,11 +335,20 @@ table td * {
     
     /* 确保输入框不被虚拟键盘遮挡 */
     .prompt-container {
-      padding-bottom: 20px;
+      padding-bottom: env(safe-area-inset-bottom, 20px);
+      margin-bottom: 20px;
+    }
+    
+    /* 主容器添加安全区域适配 */
+    .main-container {
+      height: 100vh;
+      height: calc(var(--vh, 1vh) * 100);
+      height: 100svh;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
   }
   
-  /* iPad Landscape - 修复白线问题 */
+  /* iPad Landscape - 修复白线问题，兼容Chrome */
   @media (orientation: landscape) {
     /* 强制设置根元素背景 */
     * {
@@ -342,6 +358,7 @@ table td * {
     html, body, #__next {
       width: 100vw;
       height: 100vh;
+      height: 100svh; /* 新的视口单位 */
       margin: 0;
       padding: 0;
       background-color: #292a2d !important;
@@ -351,15 +368,21 @@ table td * {
     .main-container {
       width: 100vw;
       height: 100vh;
+      height: calc(var(--vh, 1vh) * 100);
+      height: 100svh;
       background-color: #292a2d !important;
       margin: 0;
       padding: 0;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
     
     .chat-container {
       max-width: 90%;
       margin: 0 auto;
       background-color: #292a2d !important;
+      min-height: calc(100vh - 80px);
+      min-height: calc((var(--vh, 1vh) * 100) - 80px);
+      min-height: calc(100svh - 80px);
     }
     
     /* 横屏时侧边栏自动显示 */
@@ -371,14 +394,20 @@ table td * {
     .flex.h-screen {
       width: 100vw;
       height: 100vh;
+      height: 100svh;
       background-color: #292a2d !important;
       margin: 0;
       padding: 0;
     }
+    
+    /* 确保底部内容不被浏览器UI遮挡 */
+    .prompt-container {
+      margin-bottom: max(20px, env(safe-area-inset-bottom));
+    }
   }
 }
 
-/* 通用移动设备优化 */
+/* 通用移动设备优化 - 包括iPad Chrome */
 @media (max-width: 1024px) {
   /* 防止水平滚动 */
   * {
@@ -399,6 +428,27 @@ table td * {
   .overflow-y-auto {
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
+  }
+  
+  /* iPad Chrome特定：确保界面完整显示 */
+  .main-container {
+    min-height: 100vh;
+    min-height: 100svh;
+    position: relative;
+  }
+  
+  /* 确保底部输入框可见 */
+  .prompt-container {
+    position: relative;
+    z-index: 10;
+    margin-bottom: max(env(safe-area-inset-bottom, 20px), 30px);
+  }
+  
+  /* 聊天容器适配 */
+  .chat-container {
+    padding-bottom: 120px; /* 为输入框预留足够空间 */
+    min-height: calc(100vh - 200px);
+    min-height: calc(100svh - 200px);
   }
 }
 
@@ -424,11 +474,13 @@ textarea {
   }
 }
 
-/* 专门针对 iPad Safari 的修复 */
-@media screen and (min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 1) {
-  /* iPad 特定修复 */
+/* 专门针对 iPad Safari 和 Chrome 的修复 */
+@media screen and (min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 1),
+       screen and (min-width: 768px) and (max-width: 1024px) and (pointer: coarse) {
+  /* iPad 特定修复 - 兼容Chrome和Safari */
   .flex.h-screen {
     min-height: 100vh;
+    min-height: 100svh; /* 新的视口单位 */
     min-height: -webkit-fill-available;
   }
   
@@ -440,46 +492,73 @@ textarea {
     flex-direction: column;
     width: 100%;
     background-color: #292a2d; /* 确保背景色完全覆盖 */
+    padding-bottom: env(safe-area-inset-bottom, 20px);
   }
   
   /* 修复 iPad 上的 textarea 缩放问题 */
   textarea {
     transform: translateZ(0); /* 强制硬件加速 */
     -webkit-transform: translateZ(0);
+    font-size: 16px !important; /* 防止Chrome自动缩放 */
   }
   
-  /* 修复横屏时的白线问题 */
+  /* 修复横屏时的白线问题 - Chrome兼容 */
   @media (orientation: landscape) {
     body {
       margin: 0;
       padding: 0;
       background-color: #292a2d;
       overflow-x: hidden;
+      min-height: 100vh;
+      min-height: 100svh;
     }
     
     html {
       margin: 0;
       padding: 0;
       background-color: #292a2d;
+      min-height: 100vh;
+      min-height: 100svh;
     }
     
     /* 确保主容器完全填充屏幕 */
     .main-container {
       width: 100vw;
       height: 100vh;
+      height: 100svh;
       height: -webkit-fill-available;
       margin: 0;
       padding: 0;
       background-color: #292a2d;
+      padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
     }
     
     /* 确保flex容器没有边距 */
     .flex.h-screen {
       width: 100%;
       height: 100vh;
+      height: 100svh;
       height: -webkit-fill-available;
       margin: 0;
       background-color: #292a2d;
+    }
+    
+    /* Chrome特定：确保底部内容可见 */
+    .prompt-container {
+      position: relative;
+      margin-bottom: max(env(safe-area-inset-bottom, 20px), 40px);
+      padding-bottom: 10px;
+    }
+  }
+  
+  /* Portrait模式的Chrome优化 */
+  @media (orientation: portrait) {
+    .main-container {
+      padding-bottom: max(env(safe-area-inset-bottom, 20px), 30px);
+    }
+    
+    .prompt-container {
+      margin-bottom: max(env(safe-area-inset-bottom, 20px), 25px);
     }
   }
 }
@@ -529,4 +608,62 @@ textarea {
     left: 0;
     bottom: 0;
   }
+}
+
+/* 取消固定按钮美化样式 */
+.unpin-button {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.15));
+  backdrop-filter: blur(8px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.unpin-button:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.25));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.2);
+}
+
+.unpin-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 取消固定按钮图标动画 */
+.unpin-button svg {
+  transition: transform 0.2s ease-in-out;
+}
+
+.unpin-button:hover svg {
+  transform: rotate(45deg) scale(1.1);
+}
+
+/* 确保在触摸设备上按钮足够大 */
+@media (max-width: 640px) {
+  .unpin-button {
+    min-height: 36px;
+    min-width: 36px;
+    padding: 8px 10px;
+    font-size: 0.75rem;
+  }
+}
+
+/* iPad 和平板优化 */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .unpin-button {
+    min-height: 32px;
+    padding: 6px 12px;
+    font-size: 0.75rem;
+  }
+}
+
+/* 增强触摸区域 */
+.unpin-button::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  background: transparent;
 }

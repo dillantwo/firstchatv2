@@ -6,6 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import LTIAuthGuard from "@/components/LTIAuthGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import PinnedMessages from "@/components/PinnedMessages";
+import ViewportHandler from "@/components/ViewportHandler";
 import { useAppContext } from "@/context/AppContextLTI";
 import { useHydration } from "@/utils/useHydration";
 import Image from "next/image";
@@ -84,6 +85,7 @@ export default function Home() {
   return (
     <LTIAuthGuard>
       <ErrorBoundary>
+        <ViewportHandler />
         <div className="main-container bg-[#292a2d]">
           <div className="flex h-screen bg-[#292a2d]">
             <Sidebar expand={expand} setExpand={setExpand}/>

@@ -38,6 +38,39 @@ const PromptBox = ({setIsLoading, isLoading}) => {
         }
     }, []);
 
+    // iPad Chrome viewport optimization
+    useEffect(() => {
+        const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
+        const isChrome = /Chrome/.test(navigator.userAgent);
+        
+        if (isIPad) {
+            // 动态调整视口高度，适应iPad Chrome
+            const adjustViewport = () => {
+                const vh = window.innerHeight * 0.01;
+                document.documentElement.style.setProperty('--vh', `${vh}px`);
+                
+                // 为iPad Chrome添加额外的底部边距
+                if (isChrome) {
+                    const promptContainer = document.querySelector('.prompt-container');
+                    if (promptContainer) {
+                        promptContainer.style.marginBottom = 'max(40px, env(safe-area-inset-bottom))';
+                    }
+                }
+            };
+            
+            adjustViewport();
+            window.addEventListener('resize', adjustViewport);
+            window.addEventListener('orientationchange', () => {
+                setTimeout(adjustViewport, 100);
+            });
+            
+            return () => {
+                window.removeEventListener('resize', adjustViewport);
+                window.removeEventListener('orientationchange', adjustViewport);
+            };
+        }
+    }, []);
+
     // Preset quick phrases
     const quickPrompts = [
         { text: "Let's learn", content: "Let's learn！" },
@@ -689,7 +722,13 @@ const PromptBox = ({setIsLoading, isLoading}) => {
     }
 
   return (
-    <div className={`w-full px-2 sm:px-0 ${selectedChat?.messages.length > 0 ? "max-w-3xl" : "max-w-2xl"} transition-all prompt-container`}>
+    <div className={`w-full px-2 sm:px-0 ${selectedChat?.messages.length > 0 ? "max-w-3xl" : "max-w-2xl"} transition-all prompt-container`}
+         style={{
+           paddingBottom: 'max(env(safe-area-inset-bottom, 20px), 30px)',
+           marginBottom: '20px',
+           position: 'relative',
+           zIndex: 10
+         }}>
       {/* Image preview area */}
       {uploadedImages.length > 0 && (
         <div className="mb-3 p-3 bg-[#404045] rounded-2xl">
@@ -808,7 +847,11 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             lineHeight: '24px',
             wordWrap: 'break-word',
             paddingRight: '8px', // Leave space for scrollbar
-            fontSize: '16px' // 防止 iOS Safari 自动缩放
+            fontSize: '16px', // 防止 iOS Safari 和 Chrome 自动缩放
+            transform: 'translateZ(0)', // 硬件加速，防止渲染问题
+            WebkitTransform: 'translateZ(0)',
+            touchAction: 'manipulation', // 优化触摸响应
+            WebkitTapHighlightColor: 'transparent' // 移除点击高亮
         }}
         placeholder={isDragging ? 'Drag images here to upload...' : isListening ? 'Continuous listening...' : 'Type a message, drag images, or use voice input...'} 
         onChange={handleInputChange} 
