@@ -561,31 +561,31 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
 
       <div className={`flex flex-col  w-full ${isInPinnedPanel ? 'mb-6' : 'mb-8'} ${role === 'user' && 'items-end'}`}>
         <div className={`group relative flex ${isInPinnedPanel ? 'max-w-full py-3 px-2' : 'max-w-2xl py-3'} rounded-xl ${role === 'user' ? (isInPinnedPanel ? 'px-3' : 'bg-[#414158] px-5') : 'gap-3'}`}>
-            <div className={`opacity-0 group-hover:opacity-100 absolute ${role === 'user' ? '-left-16 top-2.5' : 'left-9 -bottom-6'} transition-all ${isInPinnedPanel ? 'hidden' : ''}`}>
-                <div className='flex items-center gap-2 opacity-70'>
+            <div className={`opacity-70 hover:opacity-100 absolute ${role === 'user' ? '-left-16 top-2.5' : 'left-9 -bottom-6'} transition-all ${isInPinnedPanel ? 'hidden' : ''}`}>
+                <div className='flex items-center gap-2'>
                     {
                         role === 'user' ? (
                             <>
-                            <Image onClick={copyMessage} src={assets.copy_icon} alt='' className='w-4 cursor-pointer'/>
+                            <Image onClick={copyMessage} src={assets.copy_icon} alt='' className='w-4 cursor-pointer hover:scale-110 transition-transform'/>
                             {showPinButton && (
                                 <Image 
                                     onClick={handlePinMessage} 
                                     src={assets.pin_icon} 
                                     alt={isPinned ? 'Unpin' : 'Pin'} 
-                                    className={`w-5 cursor-pointer ${isPinned ? 'opacity-100' : ''}`}
+                                    className={`w-5 cursor-pointer hover:scale-110 transition-transform ${isPinned ? 'opacity-100' : ''}`}
                                     title={isPinned ? 'Unpin message' : 'Pin message'}
                                 />
                             )}
                             </>
                         ):(
                             <>
-                            <Image onClick={copyMessage} src={assets.copy_icon} alt='' className='w-4.5 cursor-pointer'/>
+                            <Image onClick={copyMessage} src={assets.copy_icon} alt='' className='w-4.5 cursor-pointer hover:scale-110 transition-transform'/>
                             {showPinButton && (
                                 <Image 
                                     onClick={handlePinMessage} 
                                     src={assets.pin_icon} 
                                     alt={isPinned ? 'Unpin' : 'Pin'} 
-                                    className={`w-5 cursor-pointer ${isPinned ? 'opacity-100' : ''}`}
+                                    className={`w-5 cursor-pointer hover:scale-110 transition-transform ${isPinned ? 'opacity-100' : ''}`}
                                     title={isPinned ? 'Unpin message' : 'Pin message'}
                                 />
                             )}

@@ -88,7 +88,7 @@ export default function Home() {
           <div className="flex h-screen bg-[#292a2d]">
             <Sidebar expand={expand} setExpand={setExpand}/>
             <div className={`flex-1 flex flex-col items-center justify-center px-2 sm:px-4 pb-8 bg-[#292a2d] text-white relative transition-all duration-300 chat-container ${
-              showPinnedPanel ? 'md:mr-[600px] lg:mr-[700px] xl:mr-[800px] mr-0' : 'mr-0'
+              showPinnedPanel ? 'sm:mr-[450px] md:mr-[500px] lg:mr-[600px] xl:mr-[700px] mr-0' : 'mr-0'
             }`}>
             {/* Pinned messages toggle button - only show when panel is closed */}
             {!showPinnedPanel && (
