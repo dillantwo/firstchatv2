@@ -18,8 +18,8 @@ const PinnedMessages = ({ pinnedMessages, onUnpinMessage, isVisible, onToggleVis
         />
       )}
       
-      {/* Pinned panel */}
-      <div className={`fixed right-0 top-0 h-full w-full sm:w-[450px] md:w-[500px] lg:w-[600px] xl:w-[700px] bg-gray-800 border-l border-gray-600 z-10 transform transition-transform duration-300 shadow-2xl flex flex-col ${
+      {/* Pinned panel - responsive width with custom CSS classes */}
+      <div className={`fixed right-0 top-0 h-full w-full pinned-panel-layout bg-gray-800 border-l border-gray-600 z-10 transform transition-transform duration-300 shadow-2xl flex flex-col ${
         isVisible ? 'translate-x-0' : 'translate-x-full'
       }`}>
       {/* Header */}

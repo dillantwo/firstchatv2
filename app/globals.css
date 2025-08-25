@@ -49,6 +49,38 @@ body {
   overflow: hidden;
 }
 
+/* Pinned Messages 自适应布局 - 1.5倍关系 */
+@media (min-width: 640px) {
+  .pinned-panel-layout {
+    width: 60%; /* Pinned Messages 占 60% */
+  }
+  
+  .chat-container-with-pinned {
+    margin-right: 60%; /* Chat 区域右边距 60%，实际可用空间 40% */
+  }
+}
+
+/* 在更大屏幕上微调比例以保持良好的用户体验 */
+@media (min-width: 1024px) {
+  .pinned-panel-layout {
+    width: 58%; /* 稍微减少以在大屏幕上提供更好的阅读体验 */
+  }
+  
+  .chat-container-with-pinned {
+    margin-right: 58%;
+  }
+}
+
+@media (min-width: 1280px) {
+  .pinned-panel-layout {
+    width: 55%; /* 在超大屏幕上进一步优化 */
+  }
+  
+  .chat-container-with-pinned {
+    margin-right: 55%;
+  }
+}
+
 .line-clamp-4 {
   display: -webkit-box;
   -webkit-line-clamp: 4;
