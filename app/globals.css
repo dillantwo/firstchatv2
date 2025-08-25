@@ -360,7 +360,7 @@ table td * {
     
     /* 由于隐藏了标题，减少聊天容器的顶部边距 */
     .relative.flex.flex-col.items-center.justify-start {
-      margin-top: 60px !important; /* 减少顶部边距 */
+      margin-top: 45px !important; /* 减少顶部边距，为聊天区域留更多空间 */
     }
     
     /* iPad竖屏：调整pin按钮位置，增加与下方内容的间距 */
@@ -447,7 +447,7 @@ table td * {
     
     /* 由于隐藏了标题，减少聊天容器的顶部边距 */
     .relative.flex.flex-col.items-center.justify-start {
-      margin-top: 40px !important; /* 横屏时更少的顶部边距 */
+      margin-top: 30px !important; /* 横屏时更少的顶部边距，为聊天区域留更多空间 */
     }
     
     /* iPad横屏：调整pin按钮位置，增加与下方内容的间距 */
