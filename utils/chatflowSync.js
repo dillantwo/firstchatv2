@@ -1,7 +1,7 @@
 import Chatflow from '../models/Chatflow.js';
 
 /**
- * 从Flowise API同步chatflow数据到数据库
+ * Sync chatflow data from Flowise API to database
  */
 export async function syncChatflowsFromFlowise() {
     try {
@@ -12,10 +12,10 @@ export async function syncChatflowsFromFlowise() {
         const FLOWISE_API_KEY = process.env.FLOWISE_API_KEY;
         
         console.log(`[ChatflowSync] Flowise URL: ${FLOWISE_BASE_URL}`);
-        console.log(`[ChatflowSync] API Key: ${FLOWISE_API_KEY ? '***已配置***' : '❌未配置'}`);
+        console.log(`[ChatflowSync] API Key: ${FLOWISE_API_KEY ? '***Configured***' : '❌Not Configured'}`);
         
         if (!FLOWISE_BASE_URL || !FLOWISE_API_KEY) {
-            throw new Error('Flowise配置不完整');
+            throw new Error('Incomplete Flowise configuration');
         }
         
         // Fetch chatflows from Flowise API
@@ -29,11 +29,11 @@ export async function syncChatflowsFromFlowise() {
         
         if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Flowise API错误: ${response.status} ${response.statusText} - ${errorText}`);
+            throw new Error(`Flowise API error: ${response.status} ${response.statusText} - ${errorText}`);
         }
         
         const chatflows = await response.json();
-        console.log(`[ChatflowSync] 获取到 ${chatflows.length} 个chatflow`);
+        console.log(`[ChatflowSync] Retrieved ${chatflows.length} chatflows`);
         
         let syncedCount = 0;
         let updatedCount = 0;
@@ -84,7 +84,7 @@ export async function syncChatflowsFromFlowise() {
                 }
                 
             } catch (error) {
-                console.error(`[ChatflowSync] 同步失败: ${flowData.name} - ${error.message}`);
+                console.error(`[ChatflowSync] Sync failed: ${flowData.name} - ${error.message}`);
             }
         }
         
@@ -111,7 +111,7 @@ export async function syncChatflowsFromFlowise() {
         };
         
     } catch (error) {
-        console.error('[ChatflowSync] 同步失败:', error);
+        console.error('[ChatflowSync] Sync failed:', error);
         return {
             success: false,
             error: error.message
@@ -120,7 +120,7 @@ export async function syncChatflowsFromFlowise() {
 }
 
 /**
- * 获取指定用户可访问的chatflow列表
+ * Get list of chatflows accessible to specified user
  */
 export async function getUserChatflows(userId, courseId, userRoles, permissionType = 'chat') {
     try {
@@ -141,13 +141,13 @@ export async function getUserChatflows(userId, courseId, userRoles, permissionTy
         }));
         
     } catch (error) {
-        console.error('[ChatflowSync] 获取用户chatflow失败:', error);
+        console.error('[ChatflowSync] Failed to get user chatflows:', error);
         return [];
     }
 }
 
 /**
- * 检查是否需要同步chatflow数据
+ * Check if chatflow data sync is needed
  */
 export async function shouldSyncChatflows() {
     try {
@@ -160,7 +160,7 @@ export async function shouldSyncChatflows() {
         
         return !recentSync;
     } catch (error) {
-        console.error('[ChatflowSync] 检查同步状态失败:', error);
+        console.error('[ChatflowSync] Failed to check sync status:', error);
         return true; // Default to sync if check fails
     }
 }
