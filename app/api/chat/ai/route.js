@@ -80,10 +80,12 @@ export async function POST(req){
             });
         }
 
-        let userId;
+        let userId, currentContextId;
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
             userId = decoded.userId;
+            currentContextId = decoded.context_id; // 从token获取当前课程ID
+            console.log('[Chat AI] Using context from token:', currentContextId);
         } catch (error) {
             return NextResponse.json({
                 success: false,
@@ -91,8 +93,8 @@ export async function POST(req){
             });
         }
 
-        // Extract chatId, prompt, images, and chatflowId from the request body
-        const { chatId, prompt, images, chatflowId } = await req.json();
+        // Extract chatId, prompt, images, chatflowId, and optional courseId from the request body
+        const { chatId, prompt, images, chatflowId, courseId } = await req.json();
 
         // Validate required parameters
         if(!prompt?.trim()){
@@ -122,10 +124,33 @@ export async function POST(req){
         }
 
         // Get user's course association to find roles and course context
-        // Use the correct field names: user_id and context_id
-        const courseAssociation = await LTICourse.findOne({ 
-            user_id: user._id 
-        }).sort({ updatedAt: -1 }); // Get most recent course association
+        let courseAssociation;
+        
+        // Priority 1: Use context_id from JWT token (current LTI session)
+        if (currentContextId) {
+            courseAssociation = await LTICourse.findOne({ 
+                user_id: user._id,
+                context_id: currentContextId
+            });
+            console.log('[Chat AI] Using JWT token context:', currentContextId);
+        }
+        
+        // Priority 2: Use courseId from request body (if provided)
+        if (!courseAssociation && courseId) {
+            courseAssociation = await LTICourse.findOne({ 
+                user_id: user._id,
+                context_id: courseId
+            });
+            console.log('[Chat AI] Using request courseId:', courseId);
+        }
+        
+        // Priority 3: Fallback to most recently accessed course
+        if (!courseAssociation) {
+            courseAssociation = await LTICourse.findOne({ 
+                user_id: user._id 
+            }).sort({ last_access: -1 });
+            console.log('[Chat AI] Using fallback - most recent course');
+        }
 
         if (!courseAssociation) {
             return NextResponse.json({

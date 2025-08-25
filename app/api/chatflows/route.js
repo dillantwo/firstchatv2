@@ -54,18 +54,21 @@ export async function GET(request) {
             username: user.username
         });
 
-        // Get user's current course context - try course association first, then user context
-        let contextId = user.context_id; // Default from user
-        let userRoles = user.roles || [];
+        // Get user's current course context from JWT token first
+        let contextId = decoded.context_id; // Use context from JWT token (current LTI session)
+        let userRoles = decoded.roles || [];
         
-        // Check for course association for more recent context
+        console.log('[Chatflows API] Using JWT token context:', contextId);
+        
+        // Get course association details for additional info
         const courseAssociation = await LTICourse.findOne({
-            user_id: user._id
-        }).sort({ last_access: -1 });
+            user_id: user._id,
+            context_id: contextId
+        });
         
         if (courseAssociation) {
-            contextId = courseAssociation.context_id;
-            userRoles = courseAssociation.roles || user.roles || [];
+            // Use roles from course association if available
+            userRoles = courseAssociation.roles || decoded.roles || [];
             console.log('[Chatflows API] Course association found:', {
                 course: courseAssociation.context_title,
                 roles: userRoles

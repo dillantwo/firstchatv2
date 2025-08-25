@@ -17,11 +17,12 @@ export async function POST(req){
             return NextResponse.json({success: false, message: "User not authenticated"})
         }
 
-        let userId;
+        let userId, currentContextId;
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
             userId = decoded.userId;
-            console.log('[Chat Create] Decoded userId:', userId);
+            currentContextId = decoded.context_id; // 从token获取当前课程ID
+            console.log('[Chat Create] Decoded userId:', userId, 'contextId:', currentContextId);
         } catch (error) {
             console.log('[Chat Create] Token verification failed:', error.message);
             return NextResponse.json({success: false, message: "Invalid session"})
@@ -41,19 +42,21 @@ export async function POST(req){
             return NextResponse.json({success: false, message: "User not found"});
         }
 
-        // Get user's current course context - try course association first, then user context
-        let courseId = user.context_id; // Default from user
+        // Get user's current course context from JWT token
+        let courseId = currentContextId; // Use context from JWT token (current LTI session)
         
-        // Check for course association for more recent context
+        console.log('[Chat Create] Using JWT token context:', courseId);
+        
+        // Get course association for additional details if needed
         const courseAssociation = await LTICourse.findOne({
-            user_id: user._id
-        }).sort({ last_access: -1 });
+            user_id: user._id,
+            context_id: courseId
+        });
 
         if (courseAssociation) {
-            courseId = courseAssociation.context_id;
-            console.log('[Chat Create] Using course association context:', courseId);
+            console.log('[Chat Create] Course association found:', courseAssociation.context_title);
         } else {
-            console.log('[Chat Create] Using user default context:', courseId);
+            console.log('[Chat Create] No course association found for context:', courseId);
         }
 
         // Prepare the chat data to be saved in the database

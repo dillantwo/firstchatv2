@@ -3,7 +3,7 @@ module.exports = {
     name: 'qef-chatbot',
     script: 'npm',
     args: 'start',
-    cwd: '/var/www/qef-chatbot',
+    cwd: '/var/www/qef-chatbot/firstchatv2',
     instances: 'max',
     exec_mode: 'cluster',
     env: {
@@ -12,7 +12,9 @@ module.exports = {
       // Application Gateway 優化環境變數
       TRUST_PROXY: true,
       NGINX_REVERSE_PROXY: true,
-      CLUSTER_MODE: true
+      CLUSTER_MODE: true,
+      LOG_LEVEL: 'info',
+      ENABLE_METRICS: true
     },
     error_file: '/var/log/pm2/qef-chatbot-error.log',
     out_file: '/var/log/pm2/qef-chatbot-out.log',
@@ -49,27 +51,6 @@ module.exports = {
     // 錯誤處理
     autorestart: true,
     max_restarts: 10,
-    restart_delay: 4000,
-    
-    // 環境特定配置
-    env_production: {
-      NODE_ENV: 'production',
-      PORT: 3000,
-      TRUST_PROXY: true,
-      NGINX_REVERSE_PROXY: true,
-      CLUSTER_MODE: true,
-      // 日誌級別
-      LOG_LEVEL: 'info',
-      // 性能監控
-      ENABLE_METRICS: true
-    },
-    
-    // 開發環境配置
-    env_development: {
-      NODE_ENV: 'development',
-      PORT: 3000,
-      TRUST_PROXY: false,
-      LOG_LEVEL: 'info'
-    }
+    restart_delay: 4000
   }]
 };

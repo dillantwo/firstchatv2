@@ -20,7 +20,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
     const fileInputRef = useRef(null);
     const textareaRef = useRef(null);
     const {user, chats, setChats, selectedChat, setSelectedChat, selectedChatflow, setSelectedChatflow, createNewChat, handleChatflowChange} = useAppContext();
-    const { isAuthenticated } = useLTIAuth();
+    const { isAuthenticated, user: authUser } = useLTIAuth();
 
     // Preset quick phrases
     const quickPrompts = [
@@ -462,7 +462,14 @@ const PromptBox = ({setIsLoading, isLoading}) => {
         // Only add chatflowId when a chatflow is selected
         if (selectedChatflow?.id) {
             sendData.chatflowId = selectedChatflow.id;
-        }        const {data} = await axios.post('/api/chat/ai', sendData)
+        }
+        
+        // Add current course context if available
+        if (authUser?.context_id) {
+            sendData.courseId = authUser.context_id;
+        }        
+        
+        const {data} = await axios.post('/api/chat/ai', sendData)
 
         if(data.success){
             const message = data.data.content;
