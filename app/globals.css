@@ -364,7 +364,7 @@ table td * {
     }
     
     /* iPad竖屏：调整pin按钮位置，增加与下方内容的间距 */
-    button.fixed.top-6.right-6 {
+    button.fixed.top-3.right-4 {
       top: 2rem !important; /* 保持距离顶部的距离 */
       right: 2rem !important; /* 增加右侧间距 */
       margin-bottom: 20px !important; /* 增加底部间距 */
@@ -451,7 +451,7 @@ table td * {
     }
     
     /* iPad横屏：调整pin按钮位置，增加与下方内容的间距 */
-    button.fixed.top-6.right-6 {
+    button.fixed.top-3.right-4 {
       top: 1.5rem !important; /* 横屏时距离顶部更近一些 */
       right: 2rem !important; /* 增加右侧间距 */
       margin-bottom: 16px !important; /* 增加底部间距 */

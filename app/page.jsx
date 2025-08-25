@@ -96,7 +96,7 @@ export default function Home() {
             {!showPinnedPanel && (
               <button
                 onClick={() => setShowPinnedPanel(true)}
-                className="fixed top-6 right-6 z-20 bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                className="fixed top-3 right-4 z-20 bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-colors duration-200 flex items-center gap-2"
                 title="Show pinned messages"
               >
                 <Image src={assets.pin_icon} alt="Pin" className="w-5 h-5" />
@@ -108,7 +108,7 @@ export default function Home() {
               </button>
             )}
             {/* Mobile top navigation */}
-            <div className="md:hidden absolute px-2 sm:px-4 top-4 sm:top-6 flex items-center justify-between w-full z-30">
+            <div className="md:hidden absolute px-2 sm:px-4 top-2 sm:top-3 flex items-center justify-between w-full z-30">
               <div className="group relative">
                 <Image onClick={()=> (expand ? setExpand(false) : setExpand(true))}
                  className="rotate-180 cursor-pointer w-6 h-6" src={assets.menu_icon} alt=""/>
