@@ -19,11 +19,11 @@ const PinnedMessages = ({ pinnedMessages, onUnpinMessage, isVisible, onToggleVis
       )}
       
       {/* Pinned panel */}
-      <div className={`fixed right-0 top-0 h-full w-full md:w-[600px] lg:w-[700px] xl:w-[800px] bg-gray-800 border-l border-gray-600 z-10 transform transition-transform duration-300 shadow-2xl ${
+      <div className={`fixed right-0 top-0 h-full w-full md:w-[600px] lg:w-[700px] xl:w-[800px] bg-gray-800 border-l border-gray-600 z-10 transform transition-transform duration-300 shadow-2xl flex flex-col ${
         isVisible ? 'translate-x-0' : 'translate-x-full'
       }`}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-600">
+      <div className="flex items-center justify-between p-4 border-b border-gray-600 flex-shrink-0">
         <div className="flex items-center gap-2">
           <Image src={assets.pin_icon} alt="Pinned" className="w-6 h-6" />
           <h3 className="text-white font-medium">Pinned Messages</h3>
@@ -38,7 +38,7 @@ const PinnedMessages = ({ pinnedMessages, onUnpinMessage, isVisible, onToggleVis
       </div>
 
       {/* Pinned Messages List */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent min-h-0">
         {pinnedMessages.length === 0 ? (
           <div className="text-center text-gray-400 mt-8">
             <Image src={assets.pin_icon} alt="No pins" className="w-8 h-8 mx-auto mb-2 opacity-50" />
