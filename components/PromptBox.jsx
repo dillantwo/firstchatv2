@@ -483,21 +483,20 @@ const PromptBox = ({setIsLoading, isLoading}) => {
 
             // If backend returned updated chat name, update related state
             if(data.chatName && data.chatName !== currentChat.name) {
-                // Update chat name in chats array
+                // Update chat name in chats array - but don't add the message yet, wait for streaming
                 setChats((prevChats)=>prevChats.map((chat)=>
                     chat._id === currentChat._id 
-                        ? {...chat, messages: [...chat.messages, data.data], name: data.chatName} 
+                        ? {...chat, name: data.chatName} 
                         : chat
                 ))
-                // Update currently selected chat name
+                // Update currently selected chat name and add empty assistant message for streaming
                 setSelectedChat((prev) => ({
                     ...prev,
                     name: data.chatName,
                     messages: [...prev.messages, assistantMessage],
                 }))
             } else {
-                // Only update messages, not name
-                setChats((prevChats)=>prevChats.map((chat)=>chat._id === currentChat._id ? {...chat, messages: [...chat.messages, data.data]} : chat))
+                // Only add empty assistant message for streaming, don't add the backend message yet
                 setSelectedChat((prev) => ({
                     ...prev,
                     messages: [...prev.messages, assistantMessage],
@@ -515,8 +514,13 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                 const baseSpeed = 30; // Slightly slower to ensure proper rendering
                 
                 const typeNextChunk = () => {
-                    if (!streamingRef.current || currentIndex >= chars.length) {
+                    if (!streamingRef.current) {
+                        return;
+                    }
+                    
+                    if (currentIndex >= chars.length) {
                         streamingRef.current = false;
+                        console.log('Streaming complete. Full content length:', fullContent.length, 'Last 10 chars:', fullContent.slice(-10));
                         // Final update to ensure complete content is displayed
                         setSelectedChat((prev) => {
                             if (!prev) return prev;
@@ -526,6 +530,16 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                             ];
                             return { ...prev, messages: updatedMessages };
                         });
+                        
+                        // Also update the chats array with final content
+                        setChats((prevChats) => prevChats.map((chat) =>
+                            chat._id === currentChat._id 
+                                ? {
+                                    ...chat, 
+                                    messages: [...chat.messages, { ...assistantMessage, content: fullContent }]
+                                } 
+                                : chat
+                        ));
                         return;
                     }
                     
@@ -542,6 +556,11 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                     }
                     
                     currentIndex += chunkSize;
+                    // Ensure we don't go beyond the content length
+                    if (currentIndex > chars.length) {
+                        currentIndex = chars.length;
+                    }
+                    
                     const currentContent = chars.slice(0, currentIndex).join('');
                     
                     // Use requestAnimationFrame to avoid frequent state updates
@@ -582,8 +601,31 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                         }
                         
                         setTimeout(typeNextChunk, delay);
-                    } else {
-                        streamingRef.current = false;
+                    } else if (currentIndex >= chars.length) {
+                        // Reached the end, trigger final update
+                        setTimeout(() => {
+                            if (streamingRef.current) {
+                                streamingRef.current = false;
+                                setSelectedChat((prev) => {
+                                    if (!prev) return prev;
+                                    const updatedMessages = [
+                                        ...prev.messages.slice(0, -1),
+                                        { ...assistantMessage, content: fullContent }
+                                    ];
+                                    return { ...prev, messages: updatedMessages };
+                                });
+                                
+                                // Also update the chats array with final content
+                                setChats((prevChats) => prevChats.map((chat) =>
+                                    chat._id === currentChat._id 
+                                        ? {
+                                            ...chat, 
+                                            messages: [...chat.messages, { ...assistantMessage, content: fullContent }]
+                                        } 
+                                        : chat
+                                ));
+                            }
+                        }, 50);
                     }
                 };
                 
@@ -593,6 +635,9 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             
             // Start streaming
             streamMessage(message);
+            
+            // Debug log to check message length
+            console.log('AI response length:', message.length, 'Last 10 chars:', message.slice(-10));
 
             // Clear uploaded images
             setUploadedImages([]);
