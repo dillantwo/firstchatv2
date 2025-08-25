@@ -41,31 +41,49 @@ function createSessionId(userId, chatId) {
 async function queryFlowise(data, chatflowId) {
     const FLOWISE_API_URL = `${FLOWISE_BASE_URL}/api/v1/prediction/${chatflowId}`;
     
-    const response = await fetch(FLOWISE_API_URL, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            ...(FLOWISE_API_KEY && { "Authorization": `Bearer ${FLOWISE_API_KEY}` })
-        },
-        body: JSON.stringify(data)
-    });
+    // 添加超时控制和重试机制
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 45000); // 45秒超时
     
-    if (!response.ok) {
-        // Get detailed error information
-        let errorMessage = `Flowise API error: ${response.status} ${response.statusText}`;
-        try {
-            const errorBody = await response.text();
-            if (errorBody) {
-                errorMessage += ` - ${errorBody}`;
+    try {
+        const response = await fetch(FLOWISE_API_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...(FLOWISE_API_KEY && { "Authorization": `Bearer ${FLOWISE_API_KEY}` })
+            },
+            body: JSON.stringify(data),
+            signal: controller.signal,
+            // 添加额外的网络优化选项
+            keepalive: true,
+            cache: 'no-cache'
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            // Get detailed error information
+            let errorMessage = `Flowise API error: ${response.status} ${response.statusText}`;
+            try {
+                const errorBody = await response.text();
+                if (errorBody) {
+                    errorMessage += ` - ${errorBody}`;
+                }
+            } catch (e) {
+                // Ignore errors when parsing error response body
             }
-        } catch (e) {
-            // Ignore errors when parsing error response body
+            throw new Error(errorMessage);
         }
-        throw new Error(errorMessage);
+        
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            throw new Error('Request timeout - AI service took too long to respond');
+        }
+        throw error;
     }
-    
-    const result = await response.json();
-    return result;
 }
 
 export async function POST(req){
@@ -114,42 +132,22 @@ export async function POST(req){
         // Connect to database and get user information
         await connectDB();
         
-        // Get user information for permission checking (using new split table structure)
-        const user = await LTIUser.findById(userId);
+        // 优化：并行查询用户信息和课程关联，减少数据库查询时间
+        const [user, courseAssociation] = await Promise.all([
+            LTIUser.findById(userId).lean(), // 使用 lean() 减少内存开销
+            LTICourse.findOne({ 
+                user_id: userId,
+                context_id: currentContextId || courseId
+            }).lean() || LTICourse.findOne({ 
+                user_id: userId 
+            }).sort({ last_access: -1 }).lean()
+        ]);
+        
         if (!user) {
             return NextResponse.json({
                 success: false,
                 message: "User not found",
             });
-        }
-
-        // Get user's course association to find roles and course context
-        let courseAssociation;
-        
-        // Priority 1: Use context_id from JWT token (current LTI session)
-        if (currentContextId) {
-            courseAssociation = await LTICourse.findOne({ 
-                user_id: user._id,
-                context_id: currentContextId
-            });
-            console.log('[Chat AI] Using JWT token context:', currentContextId);
-        }
-        
-        // Priority 2: Use courseId from request body (if provided)
-        if (!courseAssociation && courseId) {
-            courseAssociation = await LTICourse.findOne({ 
-                user_id: user._id,
-                context_id: courseId
-            });
-            console.log('[Chat AI] Using request courseId:', courseId);
-        }
-        
-        // Priority 3: Fallback to most recently accessed course
-        if (!courseAssociation) {
-            courseAssociation = await LTICourse.findOne({ 
-                user_id: user._id 
-            }).sort({ last_access: -1 });
-            console.log('[Chat AI] Using fallback - most recent course');
         }
 
         if (!courseAssociation) {

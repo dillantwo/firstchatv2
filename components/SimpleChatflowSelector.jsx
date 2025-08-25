@@ -115,7 +115,7 @@ const SimpleChatflowSelector = ({ selectedChatflow, onChatflowChange }) => {
 
             {/* Simple dropdown menu with solid background */}
             {isOpen && !isLoading && (
-                <div className="absolute bottom-full left-0 mb-1 w-48 bg-[#2f2f35] border border-gray-500 rounded-md shadow-xl z-50 max-h-40 overflow-y-auto">
+                <div className="absolute bottom-full left-0 mb-1 min-w-[300px] max-w-[400px] bg-[#2f2f35] border border-gray-500 rounded-md shadow-xl z-[9999] max-h-40 overflow-y-auto">
                     {chatflows.length === 0 ? (
                         <div className="px-3 py-2 text-xs text-gray-400">
                             No available chatflows
@@ -130,13 +130,13 @@ const SimpleChatflowSelector = ({ selectedChatflow, onChatflowChange }) => {
                                 }`}
                             >
                                 <div className="flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-white truncate font-medium">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
+                                    <div className="flex-1">
+                                        <div className="text-white font-medium whitespace-nowrap overflow-hidden text-ellipsis">
                                             {chatflow.name}
                                         </div>
                                         {chatflow.description && (
-                                            <div className="text-gray-400 truncate text-xs">
+                                            <div className="text-gray-400 text-xs whitespace-nowrap overflow-hidden text-ellipsis">
                                                 {chatflow.description}
                                             </div>
                                         )}

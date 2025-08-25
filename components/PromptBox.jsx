@@ -6,6 +6,7 @@ import axios from 'axios';
 import Image from 'next/image'
 import React, { useState, useRef, useEffect } from 'react'
 import toast from 'react-hot-toast';
+import { performanceMonitor, withPerformanceTracking } from '@/utils/performanceMonitor';
 
 const PromptBox = ({setIsLoading, isLoading}) => {
 
@@ -21,6 +22,21 @@ const PromptBox = ({setIsLoading, isLoading}) => {
     const textareaRef = useRef(null);
     const {user, chats, setChats, selectedChat, setSelectedChat, selectedChatflow, setSelectedChatflow, createNewChat, handleChatflowChange} = useAppContext();
     const { isAuthenticated, user: authUser } = useLTIAuth();
+
+    // Add performance monitoring effect
+    useEffect(() => {
+        // Show performance summary every 10 API calls
+        const metrics = performanceMonitor.getMetrics();
+        if (metrics.apiCalls > 0 && metrics.apiCalls % 10 === 0) {
+            performanceMonitor.logSummary();
+            
+            // Show warning if average response time is too high
+            if (metrics.averageResponseTime > 8000) {
+                console.warn(`⚠️ High average response time: ${metrics.averageResponseTime.toFixed(2)}ms`);
+                toast.error('AI 响应速度较慢，建议检查网络连接', { duration: 3000 });
+            }
+        }
+    }, []);
 
     // Preset quick phrases
     const quickPrompts = [
@@ -469,7 +485,17 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             sendData.courseId = authUser.context_id;
         }        
         
-        const {data} = await axios.post('/api/chat/ai', sendData)
+        // 优化：添加超时配置和错误处理，集成性能监控
+        const chatId = `chat-${currentChat._id}-${Date.now()}`;
+        const {data} = await withPerformanceTracking(chatId, () => 
+            axios.post('/api/chat/ai', sendData, {
+                timeout: 60000, // 60秒超时
+                withCredentials: true,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+        );
 
         if(data.success){
             const message = data.data.content;
@@ -503,15 +529,14 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                 }))
             }
 
-            // Optimized streaming effect - fix state update issues and add cleanup mechanism
-            // Improved for Chinese character support
+            // Optimized streaming effect - 提升显示速度
             const streamMessage = (fullContent) => {
                 streamingRef.current = true; // Start streaming
                 
                 // Use Array.from to properly handle Unicode characters including Chinese
                 const chars = Array.from(fullContent);
                 let currentIndex = 0;
-                const baseSpeed = 30; // Slightly slower to ensure proper rendering
+                const baseSpeed = 15; // 加快速度：从30改为15ms
                 
                 const typeNextChunk = () => {
                     if (!streamingRef.current) {
@@ -543,11 +568,14 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                         return;
                     }
                     
-                    // Display 1-3 characters at a time for better Chinese character support
-                    let chunkSize = 1;
+                    // 优化：增加每次显示的字符数量，减少更新频率
+                    let chunkSize = 2; // 从1改为2
                     const remainingChars = chars.length - currentIndex;
                     
-                    if (remainingChars > 200) {
+                    if (remainingChars > 300) {
+                        chunkSize = 4; // 长文本显示更快
+                    } else if (remainingChars > 100) {
+                        chunkSize = 3;
                         chunkSize = Math.min(3, remainingChars); // Fast display for long content
                     } else if (remainingChars > 50) {
                         chunkSize = Math.min(2, remainingChars); // Medium display for medium content
