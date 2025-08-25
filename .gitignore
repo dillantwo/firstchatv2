@@ -38,6 +38,8 @@ yarn-error.log*
 
 # pm2 ecosystem config (server-specific)
 ecosystem.config.js
+ecosystem.config.cjs
+ecosystem.config.mjs
 
 # typescript
 *.tsbuildinfo
