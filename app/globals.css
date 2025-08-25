@@ -324,8 +324,8 @@ table td * {
     .chat-container {
       max-width: 100%;
       padding: 0 16px;
-      min-height: 100vh;
-      min-height: 100svh;
+      min-height: calc(100vh - 20px); /* 稍微减少bottom margin，增加高度 */
+      min-height: calc(100svh - 20px);
     }
     
     /* 调整固定按钮位置 */
@@ -335,8 +335,8 @@ table td * {
     
     /* 确保输入框不被虚拟键盘遮挡 */
     .prompt-container {
-      padding-bottom: env(safe-area-inset-bottom, 20px);
-      margin-bottom: 20px;
+      padding-bottom: env(safe-area-inset-bottom, 15px); /* 从20px减少到15px */
+      margin-bottom: 15px; /* 从20px减少到15px */
     }
     
     /* 主容器添加安全区域适配 */
@@ -345,6 +345,22 @@ table td * {
       height: calc(var(--vh, 1vh) * 100);
       height: 100svh;
       padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    
+    /* iPad竖屏：隐藏chat title和chatflow title */
+    p.fixed {
+      display: none !important;
+    }
+    
+    /* 更具体的选择器：隐藏固定位置的标题 */
+    p.fixed.top-8,
+    p.fixed.top-20 {
+      display: none !important;
+    }
+    
+    /* 由于隐藏了标题，减少聊天容器的顶部边距 */
+    .relative.flex.flex-col.items-center.justify-start {
+      margin-top: 60px !important; /* 减少顶部边距 */
     }
   }
   
@@ -380,9 +396,9 @@ table td * {
       max-width: 90%;
       margin: 0 auto;
       background-color: #292a2d !important;
-      min-height: calc(100vh - 80px);
-      min-height: calc((var(--vh, 1vh) * 100) - 80px);
-      min-height: calc(100svh - 80px);
+      min-height: calc(100vh - 60px); /* 从80px减少到60px，增加20px高度 */
+      min-height: calc((var(--vh, 1vh) * 100) - 60px);
+      min-height: calc(100svh - 60px);
     }
     
     /* 横屏时侧边栏自动显示 */
@@ -403,6 +419,22 @@ table td * {
     /* 确保底部内容不被浏览器UI遮挡 */
     .prompt-container {
       margin-bottom: max(20px, env(safe-area-inset-bottom));
+    }
+    
+    /* iPad横屏：隐藏chat title和chatflow title */
+    p.fixed {
+      display: none !important;
+    }
+    
+    /* 更具体的选择器：隐藏固定位置的标题 */
+    p.fixed.top-8,
+    p.fixed.top-20 {
+      display: none !important;
+    }
+    
+    /* 由于隐藏了标题，减少聊天容器的顶部边距 */
+    .relative.flex.flex-col.items-center.justify-start {
+      margin-top: 40px !important; /* 横屏时更少的顶部边距 */
     }
   }
 }
