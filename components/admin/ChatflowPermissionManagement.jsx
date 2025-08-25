@@ -90,6 +90,32 @@ const ChatflowPermissionManagement = () => {
     }
   };
 
+  // 手动同步Chatflows
+  const handleSyncChatflows = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/admin/sync-chatflows', {
+        method: 'POST',
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        await fetchChatflows(); // 重新获取chatflows列表
+        await fetchPermissions(); // 重新获取权限列表
+        setError(null);
+        // 显示同步结果
+        alert(`Chatflow sync completed:\n- Added: ${data.synced}\n- Updated: ${data.updated}\n- Deactivated: ${data.deactivated}`);
+      } else {
+        setError(data.error || 'Failed to sync chatflows');
+      }
+    } catch (err) {
+      setError('Failed to sync chatflows');
+      console.error('Error syncing chatflows:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 获取课程列表
   const fetchCourses = async () => {
     try {
@@ -382,6 +408,17 @@ const ChatflowPermissionManagement = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
           <span>Add Permission</span>
+        </button>
+        
+        <button
+          onClick={handleSyncChatflows}
+          disabled={loading}
+          className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span>{loading ? 'Syncing...' : 'Sync Chatflows'}</span>
         </button>
         
         <button
