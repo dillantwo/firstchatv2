@@ -358,6 +358,18 @@ table td * {
       display: none !important;
     }
     
+    /* iPad竖屏：减少移动端导航栏高度 */
+    .md\\:hidden.absolute {
+      top: 0.25rem !important; /* 更靠近顶部 */
+      height: 2rem !important; /* 固定高度 */
+    }
+    
+    /* iPad竖屏：调整Pin按钮位置 */
+    button.fixed.top-3.right-4 {
+      top: 0.5rem !important; /* 更靠近顶部 */
+      right: 1rem !important;
+    }
+    
     /* 由于隐藏了标题，减少聊天容器的顶部边距 */
     .relative.flex.flex-col.items-center.justify-start {
       margin-top: 30px !important; /* 减少顶部边距，为聊天区域留更多空间 */
@@ -450,12 +462,18 @@ table td * {
       margin-top: 30px !important; /* 横屏时更少的顶部边距，为聊天区域留更多空间 */
     }
     
+    /* iPad横屏：减少移动端导航栏高度 */
+    .md\\:hidden.absolute {
+      top: 0.25rem !important; /* 更靠近顶部 */
+      height: 1.75rem !important; /* 横屏时稍微更小 */
+    }
+    
     /* iPad横屏：调整pin按钮位置，增加与下方内容的间距 */
     button.fixed.top-3.right-4 {
-      top: 1.5rem !important; /* 横屏时距离顶部更近一些 */
-      right: 2rem !important; /* 增加右侧间距 */
-      margin-bottom: 16px !important; /* 增加底部间距 */
-      transform: translateY(8px); /* 额外向下移动一点 */
+      top: 0.5rem !important; /* 横屏时距离顶部更近一些 */
+      right: 1rem !important; /* 减少右侧间距 */
+      margin-bottom: 12px !important; /* 减少底部间距 */
+      transform: translateY(4px); /* 减少向下移动 */
     }
     
     /* 确保pin按钮不与其他内容重叠 */
@@ -529,6 +547,25 @@ textarea {
   select {
     font-size: 16px;
     padding: 12px;
+  }
+  
+  /* 移动端：减少顶部导航栏高度 */
+  .md\\:hidden.absolute.px-2.sm\\:px-4 {
+    top: 0.25rem !important; /* 减少顶部距离 */
+    height: 2rem !important; /* 固定高度为32px */
+  }
+  
+  /* 移动端：调整Pin按钮位置 */
+  button.fixed.top-3.right-4 {
+    top: 0.5rem !important; /* 更靠近顶部 */
+    right: 1rem !important;
+    padding: 0.375rem !important; /* 减少内边距 */
+  }
+  
+  /* 移动端：减少图标大小 */
+  .md\\:hidden img {
+    width: 1.25rem !important; /* 20px */
+    height: 1.25rem !important; /* 20px */
   }
 }
 
