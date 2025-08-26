@@ -161,7 +161,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                     {htmlViewMode === 'rendered' ? '' : 'HTML Code'}
                                 </span>
                                 <div className="flex gap-2">
-                                    <button
+                                    {/* <button
                                         onClick={() => setHtmlViewMode('rendered')}
                                         className={`px-3 py-1 text-xs rounded ${
                                             htmlViewMode === 'rendered' 
@@ -189,7 +189,36 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                         className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
                                     >
                                         Copy
-                                    </button>
+                                    </button> */}
+                                    {showPinButton && (
+                                        <button
+                                            onClick={() => {
+                                                if (onPinMessage) {
+                                                    onPinMessage({
+                                                        role,
+                                                        content: `\`\`\`html\n${htmlCode}\n\`\`\``,
+                                                        images: null,
+                                                        timestamp: Date.now(),
+                                                        isHtmlOnly: true
+                                                    });
+                                                    toast.success(isPinned ? 'HTML content unpinned' : 'HTML content pinned');
+                                                }
+                                            }}
+                                            className={`px-3 py-1 text-xs rounded flex items-center gap-1 ${
+                                                isPinned 
+                                                    ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                                                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                                            }`}
+                                            title={isPinned ? 'Unpin HTML content' : 'Pin HTML content'}
+                                        >
+                                            <Image 
+                                                src={assets.pin_icon} 
+                                                alt={isPinned ? 'Unpin' : 'Pin'} 
+                                                className="w-3 h-3 brightness-0 invert"
+                                            />
+                                            {isPinned ? 'Unpin' : 'Pin'}
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         )}

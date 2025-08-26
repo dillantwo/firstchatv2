@@ -73,9 +73,23 @@ export default function Home() {
   // Check if a message is pinned
   const isMessagePinned = (message) => {
     const messageId = `${message.role}-${message.content?.slice(0, 100)?.replace(/\s/g, '')}`;
-    return pinnedMessages.some(pinned => 
+    const isFullMessagePinned = pinnedMessages.some(pinned => 
       `${pinned.role}-${pinned.content?.slice(0, 100)?.replace(/\s/g, '')}` === messageId
     );
+    
+    // Also check if HTML content is pinned separately
+    const htmlCodeRegex = /```html\s*\n([\s\S]*?)\n```/gi;
+    const htmlMatch = htmlCodeRegex.exec(message.content || '');
+    if (htmlMatch && htmlMatch[1]) {
+      const htmlContent = `\`\`\`html\n${htmlMatch[1].trim()}\n\`\`\``;
+      const htmlMessageId = `${message.role}-${htmlContent.slice(0, 100).replace(/\s/g, '')}`;
+      const isHtmlPinned = pinnedMessages.some(pinned => 
+        `${pinned.role}-${pinned.content?.slice(0, 100)?.replace(/\s/g, '')}` === htmlMessageId
+      );
+      return isFullMessagePinned || isHtmlPinned;
+    }
+    
+    return isFullMessagePinned;
   };
 
   // Don't render until hydrated to prevent mismatches
