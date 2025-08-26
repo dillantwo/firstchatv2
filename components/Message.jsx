@@ -90,34 +90,34 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
             </div>
         ),
         thead: ({ children }) => (
-            <thead className={isInPinnedPanel ? 'bg-gray-600' : 'bg-gray-50'}>
+            <thead className={isInPinnedPanel ? (isDark ? 'bg-gray-600' : 'bg-gray-200') : 'bg-gray-50'}>
                 {children}
             </thead>
         ),
         tbody: ({ children }) => (
             <tbody className={`divide-y ${
-                isInPinnedPanel ? 'bg-gray-700 divide-gray-500' : 'bg-white divide-gray-200'
+                isInPinnedPanel ? (isDark ? 'bg-gray-700 divide-gray-500' : 'bg-gray-50 divide-gray-300') : 'bg-white divide-gray-200'
             }`}>
                 {children}
             </tbody>
         ),
         tr: ({ children }) => (
             <tr className={`transition-colors duration-150 ${
-                isInPinnedPanel ? 'hover:bg-gray-600' : 'hover:bg-gray-50'
+                isInPinnedPanel ? (isDark ? 'hover:bg-gray-600' : 'hover:bg-gray-100') : 'hover:bg-gray-50'
             }`}>
                 {children}
             </tr>
         ),
         th: ({ children }) => (
             <th className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider border-r last:border-r-0 break-words min-w-0 whitespace-normal ${
-                isInPinnedPanel ? 'text-white border-gray-500' : 'text-gray-500 border-gray-200'
+                isInPinnedPanel ? (isDark ? 'text-white border-gray-500' : 'text-gray-800 border-gray-400') : 'text-gray-500 border-gray-200'
             }`}>
                 {children}
             </th>
         ),
         td: ({ children }) => (
             <td className={`px-4 py-3 text-sm border-r last:border-r-0 break-words min-w-0 whitespace-normal leading-relaxed ${
-                isInPinnedPanel ? 'text-white border-gray-500' : 'text-gray-900 border-gray-200'
+                isInPinnedPanel ? (isDark ? 'text-white border-gray-500' : 'text-gray-900 border-gray-400') : 'text-gray-900 border-gray-200'
             }`}>
                 {children}
             </td>
@@ -128,7 +128,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                 {children}
             </div>
         ),
-    }), []);
+    }), [isInPinnedPanel, isDark]);
 
     // Render Markdown content, handle HTML code blocks - optimized with useMemo
     const renderedContent = useMemo(() => {
@@ -139,7 +139,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
             const afterHTML = parts[1] || '';
             
             return (
-                <div className={`space-y-4 w-full ${isInPinnedPanel ? 'text-white' : ''}`}>
+                <div className={`space-y-4 w-full ${isInPinnedPanel ? (isDark ? 'text-white' : 'text-gray-900') : ''}`}>
                     {/* Content before HTML code block */}
                     {beforeHTML && (
                         <Markdown 
@@ -518,7 +518,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
         } else {
             // Regular Markdown rendering
             return (
-                <div className={`space-y-4 w-full ${isInPinnedPanel ? 'text-white' : ''}`}>
+                <div className={`space-y-4 w-full ${isInPinnedPanel ? (isDark ? 'text-white' : 'text-gray-900') : ''}`}>
                     <Markdown 
                         remarkPlugins={[remarkMath, remarkGfm]}
                         rehypePlugins={[rehypeKatex]}
@@ -529,7 +529,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                 </div>
             );
         }
-    }, [content, htmlCode, htmlViewMode, processedContent, markdownComponents]);
+    }, [content, htmlCode, htmlViewMode, processedContent, markdownComponents, isInPinnedPanel, isDark]);
 
   return (
     <div className={`flex flex-col items-center w-full ${isInPinnedPanel ? 'max-w-full text-lg' : 'max-w-3xl text-base'}`}>
@@ -635,7 +635,11 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
             {
                 role === 'user' ? 
                 (
-                    <div className={isInPinnedPanel ? `${isDark ? 'text-white' : 'text-gray-900'}` : `${isDark ? 'text-white/90' : 'text-gray-800'}`}>
+                    <div className={
+                        isInPinnedPanel ? 
+                            `${isDark ? 'text-white' : 'text-gray-900'} ${isDark ? '' : 'bg-gray-50 p-3 rounded-lg border border-gray-200'}` : 
+                            `${isDark ? 'text-white/90' : 'text-gray-800'}`
+                    }>
                         {/* Display images */}
                         {images && images.length > 0 && (
                             <div className='mb-3 flex flex-wrap gap-2'>

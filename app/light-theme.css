@@ -118,3 +118,31 @@
   background-color: #e9ecef !important;
   color: #212529 !important;
 }
+
+/* Light theme for pinned messages */
+.light .pinned-message-container {
+  color: #1a1a1a !important;
+}
+
+.light .pinned-message-container p,
+.light .pinned-message-container span,
+.light .pinned-message-container div,
+.light .pinned-message-container li,
+.light .pinned-message-container h1,
+.light .pinned-message-container h2,
+.light .pinned-message-container h3,
+.light .pinned-message-container h4,
+.light .pinned-message-container h5,
+.light .pinned-message-container h6 {
+  color: #1a1a1a !important;
+}
+
+.light .pinned-message-container strong,
+.light .pinned-message-container b {
+  color: #000000 !important;
+}
+
+.light .pinned-message-container em,
+.light .pinned-message-container i {
+  color: #2d2d2d !important;
+}
