@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 const ChatflowPermissionManagement = () => {
   const [permissions, setPermissions] = useState([]);
@@ -679,6 +679,25 @@ const CreatePermissionModal = ({ isOpen, onClose, onSave, chatflows, courses, ro
 
   const [step, setStep] = useState(1); // 1: Select Course, 2: Select Roles, 3: Assign Chatflow
 
+  // 每次模态框打开时重置状态
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        chatflowIds: [],
+        courseId: '',
+        allowedRoles: [],
+        isActive: true
+      });
+      setStep(1);
+      console.log('Modal opened, state reset');
+    }
+  }, [isOpen]);
+
+  // 监控 formData 变化
+  useEffect(() => {
+    console.log('FormData changed:', formData);
+  }, [formData]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (formData.chatflowIds.length === 0 || !formData.courseId || formData.allowedRoles.length === 0) {
@@ -707,24 +726,43 @@ const CreatePermissionModal = ({ isOpen, onClose, onSave, chatflows, courses, ro
   };
 
   const handleRoleChange = (roleValue) => {
-    setFormData(prev => ({
-      ...prev,
-      allowedRoles: prev.allowedRoles.includes(roleValue)
+    console.log('Role change clicked:', roleValue);
+    setFormData(prev => {
+      const isCurrentlySelected = prev.allowedRoles.includes(roleValue);
+      const newRoles = isCurrentlySelected
         ? prev.allowedRoles.filter(role => role !== roleValue)
-        : [...prev.allowedRoles, roleValue]
-    }));
+        : [...prev.allowedRoles, roleValue];
+      
+      console.log('Previous roles:', prev.allowedRoles);
+      console.log('New roles:', newRoles);
+      
+      return {
+        ...prev,
+        allowedRoles: newRoles
+      };
+    });
   };
 
   const handleChatflowChange = (chatflowId) => {
-    setFormData(prev => ({
-      ...prev,
-      chatflowIds: prev.chatflowIds.includes(chatflowId)
+    console.log('Chatflow change clicked:', chatflowId);
+    setFormData(prev => {
+      const isCurrentlySelected = prev.chatflowIds.includes(chatflowId);
+      const newChatflowIds = isCurrentlySelected
         ? prev.chatflowIds.filter(id => id !== chatflowId)
-        : [...prev.chatflowIds, chatflowId]
-    }));
+        : [...prev.chatflowIds, chatflowId];
+      
+      console.log('Previous chatflows:', prev.chatflowIds);
+      console.log('New chatflows:', newChatflowIds);
+      
+      return {
+        ...prev,
+        chatflowIds: newChatflowIds
+      };
+    });
   };
 
   const handleNext = () => {
+    console.log('handleNext called, current step:', step, 'formData:', formData);
     if (step === 1 && !formData.courseId) {
       alert('Please select a course first');
       return;
@@ -756,6 +794,14 @@ const CreatePermissionModal = ({ isOpen, onClose, onSave, chatflows, courses, ro
   };
 
   if (!isOpen) return null;
+
+  // 调试信息
+  console.log('CreatePermissionModal - Data check:', {
+    courses: courses?.length || 0,
+    chatflows: chatflows?.length || 0,
+    roleOptions: roleOptions?.length || 0,
+    formData
+  });
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -810,24 +856,51 @@ const CreatePermissionModal = ({ isOpen, onClose, onSave, chatflows, courses, ro
                 <div>
                   <h4 className="text-lg font-medium text-gray-900 mb-2">Choose a Course</h4>
                   <p className="text-sm text-gray-600 mb-4">Select which course this permission will apply to</p>
+                  {formData.courseId && (
+                    <div className="bg-green-50 p-3 rounded-lg mb-4">
+                      <p className="text-sm text-green-700">
+                        ✓ Selected: {courses.find(c => c.id === formData.courseId)?.course}
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {courses.map((course) => (
-                    <label key={course.id} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                  {courses && courses.length > 0 ? courses.map((course) => (
+                    <div key={course.id} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                         onClick={() => {
+                           console.log('Course div clicked:', course.id);
+                           setFormData(prev => ({
+                             ...prev,
+                             courseId: course.id
+                           }));
+                         }}>
                       <input
                         type="radio"
                         name="courseId"
                         value={course.id}
                         checked={formData.courseId === course.id}
-                        onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          const selectedCourseId = e.target.value;
+                          console.log('Course radio changed:', selectedCourseId);
+                          setFormData(prev => ({
+                            ...prev,
+                            courseId: selectedCourseId
+                          }));
+                        }}
                         className="mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                        style={{ pointerEvents: 'auto' }}
                       />
                       <div>
                         <div className="text-sm font-medium text-gray-900">{course.course}</div>
                         <div className="text-xs text-gray-500">ID: {course.id}</div>
                       </div>
-                    </label>
-                  ))}
+                    </div>
+                  )) : (
+                    <div className="text-center py-4 text-gray-500">
+                      No courses available. Please sync chatflows first.
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -843,15 +916,54 @@ const CreatePermissionModal = ({ isOpen, onClose, onSave, chatflows, courses, ro
                       <strong>Selected Course:</strong> {courses.find(c => c.id === formData.courseId)?.course}
                     </p>
                   </div>
+                  {formData.allowedRoles.length > 0 && (
+                    <div className="bg-green-50 p-3 rounded-lg mb-4">
+                      <p className="text-sm text-green-700">
+                        ✓ Selected Roles ({formData.allowedRoles.length}): {formData.allowedRoles.map(role => 
+                          roleOptions.find(r => r.value === role)?.label
+                        ).join(', ')}
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  {roleOptions.map((role) => (
-                    <label key={role.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                  {roleOptions && roleOptions.length > 0 ? roleOptions.map((role) => (
+                    <div key={role.value} className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                         onClick={() => {
+                           console.log('Role div clicked:', role.value);
+                           const isCurrentlySelected = formData.allowedRoles.includes(role.value);
+                           if (isCurrentlySelected) {
+                             setFormData(prev => ({
+                               ...prev,
+                               allowedRoles: prev.allowedRoles.filter(r => r !== role.value)
+                             }));
+                           } else {
+                             setFormData(prev => ({
+                               ...prev,
+                               allowedRoles: [...prev.allowedRoles, role.value]
+                             }));
+                           }
+                         }}>
                       <input
                         type="checkbox"
                         checked={formData.allowedRoles.includes(role.value)}
-                        onChange={() => handleRoleChange(role.value)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          console.log('Role checkbox clicked:', role.value, 'checked:', e.target.checked);
+                          if (e.target.checked) {
+                            setFormData(prev => ({
+                              ...prev,
+                              allowedRoles: [...prev.allowedRoles, role.value]
+                            }));
+                          } else {
+                            setFormData(prev => ({
+                              ...prev,
+                              allowedRoles: prev.allowedRoles.filter(r => r !== role.value)
+                            }));
+                          }
+                        }}
                         className="mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        style={{ pointerEvents: 'auto' }}
                       />
                       <div>
                         <div className="text-sm font-medium text-gray-900">{role.label}</div>
@@ -863,8 +975,12 @@ const CreatePermissionModal = ({ isOpen, onClose, onSave, chatflows, courses, ro
                            'System administrators'}
                         </div>
                       </div>
-                    </label>
-                  ))}
+                    </div>
+                  )) : (
+                    <div className="text-center py-4 text-gray-500">
+                      No role options available.
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -892,17 +1008,47 @@ const CreatePermissionModal = ({ isOpen, onClose, onSave, chatflows, courses, ro
                   </div>
                 </div>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {chatflows.map((chatflow) => (
-                    <label key={chatflow.id} className={`flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
+                  {chatflows && chatflows.length > 0 ? chatflows.map((chatflow) => (
+                    <div key={chatflow.id} className={`flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
                       formData.chatflowIds.includes(chatflow.id) 
                         ? 'border-indigo-500 bg-indigo-50' 
                         : 'border-gray-200'
-                    }`}>
+                    }`}
+                    onClick={() => {
+                      console.log('Chatflow div clicked:', chatflow.id);
+                      const isCurrentlySelected = formData.chatflowIds.includes(chatflow.id);
+                      if (isCurrentlySelected) {
+                        setFormData(prev => ({
+                          ...prev,
+                          chatflowIds: prev.chatflowIds.filter(id => id !== chatflow.id)
+                        }));
+                      } else {
+                        setFormData(prev => ({
+                          ...prev,
+                          chatflowIds: [...prev.chatflowIds, chatflow.id]
+                        }));
+                      }
+                    }}>
                       <input
                         type="checkbox"
                         checked={formData.chatflowIds.includes(chatflow.id)}
-                        onChange={() => handleChatflowChange(chatflow.id)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          console.log('Chatflow checkbox clicked:', chatflow.id, 'checked:', e.target.checked);
+                          if (e.target.checked) {
+                            setFormData(prev => ({
+                              ...prev,
+                              chatflowIds: [...prev.chatflowIds, chatflow.id]
+                            }));
+                          } else {
+                            setFormData(prev => ({
+                              ...prev,
+                              chatflowIds: prev.chatflowIds.filter(id => id !== chatflow.id)
+                            }));
+                          }
+                        }}
                         className="mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        style={{ pointerEvents: 'auto' }}
                       />
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
@@ -919,8 +1065,12 @@ const CreatePermissionModal = ({ isOpen, onClose, onSave, chatflows, courses, ro
                           {chatflow.category || 'No Category'} • ID: {chatflow.id}
                         </div>
                       </div>
-                    </label>
-                  ))}
+                    </div>
+                  )) : (
+                    <div className="text-center py-4 text-gray-500">
+                      No chatflows available. Please sync chatflows first.
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -950,14 +1100,27 @@ const CreatePermissionModal = ({ isOpen, onClose, onSave, chatflows, courses, ro
                   <button
                     type="button"
                     onClick={handleNext}
-                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors"
+                    disabled={
+                      (step === 1 && !formData.courseId) ||
+                      (step === 2 && formData.allowedRoles.length === 0)
+                    }
+                    className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors ${
+                      (step === 1 && !formData.courseId) || (step === 2 && formData.allowedRoles.length === 0)
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-indigo-600 hover:bg-indigo-700'
+                    }`}
                   >
                     Next
                   </button>
                 ) : (
                   <button
                     type="submit"
-                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+                    disabled={formData.chatflowIds.length === 0}
+                    className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors ${
+                      formData.chatflowIds.length === 0
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-green-600 hover:bg-green-700'
+                    }`}
                   >
                     Create Permission
                   </button>
