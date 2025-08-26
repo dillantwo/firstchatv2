@@ -563,14 +563,14 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
 
       <div className={`flex flex-col  w-full ${isInPinnedPanel ? 'mb-6' : 'mb-8'} ${role === 'user' && 'items-end'}`}>
         <div className={`group relative flex ${isInPinnedPanel ? 'max-w-full py-3 px-2' : 'max-w-2xl py-3'} rounded-xl ${role === 'user' ? (isInPinnedPanel ? 'px-3' : `${isDark ? 'bg-[#414158]' : 'bg-blue-100'} px-5`) : 'gap-3'}`}>
-            <div className={`opacity-70 hover:opacity-100 absolute ${role === 'user' ? `${isDark ? '-left-16' : '-left-20'} top-2.5` : 'left-9 -bottom-6'} transition-all ${isInPinnedPanel ? 'hidden' : ''}`}>
+            <div className={`absolute ${role === 'user' ? `${isDark ? '-left-20' : '-left-24'} top-2.5` : 'left-9 -bottom-6'} transition-all ${isInPinnedPanel ? 'hidden' : ''}`}>
                 <div className='flex items-center gap-2'>
                     {
                         role === 'user' ? (
                             <>
                             <button
                                 onClick={copyMessage}
-                                className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
+                                className={`opacity-70 hover:opacity-100 w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
                                     isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm'
                                 }`}
                                 title="Copy message"
@@ -586,7 +586,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                     onClick={handlePinMessage}
                                     className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
                                         isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm'
-                                    } ${isPinned ? 'opacity-100' : ''}`}
+                                    } ${isPinned ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
                                     title={isPinned ? 'Unpin message' : 'Pin message'}
                                 >
                                     <Image 
@@ -601,7 +601,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                             <>
                             <button
                                 onClick={copyMessage}
-                                className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
+                                className={`opacity-70 hover:opacity-100 w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
                                     isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm'
                                 }`}
                                 title="Copy message"
@@ -617,7 +617,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                     onClick={handlePinMessage}
                                     className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
                                         isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm'
-                                    } ${isPinned ? 'opacity-100' : ''}`}
+                                    } ${isPinned ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
                                     title={isPinned ? 'Unpin message' : 'Pin message'}
                                 >
                                     <Image 
