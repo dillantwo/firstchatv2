@@ -3,52 +3,54 @@ import Image from 'next/image'
 import React, { useState } from 'react'
 import { useLTIAuth } from '@/context/LTIAuthContext'
 import { useAppContext } from '@/context/AppContextLTI'
+import { useTheme } from '@/context/ThemeContext'
 import ChatLabel from './ChatLabel'
 
 const Sidebar = ({expand, setExpand}) => {
 
     const { user, logout } = useLTIAuth()
     const {filteredChats, selectedChatflow, createNewChat} = useAppContext()
+    const { isDark } = useTheme()
     const [openMenu, setOpenMenu] = useState({id: 0, open: false})
     const [showUserMenu, setShowUserMenu] = useState(false)
 
   return (
-    <div className={`flex flex-col justify-between bg-[#212327] pt-7 transition-all z-50 max-md:absolute max-md:h-screen max-md:h-[100vh] max-md:h-[-webkit-fill-available] overflow-hidden ${expand ? 'p-4 w-64 min-w-64' : 'md:w-20 w-0 max-md:overflow-hidden'}`}>
+    <div className={`flex flex-col justify-between ${isDark ? 'bg-[#212327]' : 'bg-gray-50 border-r border-gray-200'} pt-7 transition-all z-50 max-md:absolute max-md:h-screen max-md:h-[100vh] max-md:h-[-webkit-fill-available] overflow-hidden ${expand ? 'p-4 w-64 min-w-64' : 'md:w-20 w-0 max-md:overflow-hidden'}`}>
       <div className="flex flex-col min-h-0 flex-1">
         <div className={`flex ${expand ? "flex-row gap-10" : "flex-col items-center gap-8"}`}>
             <Image className={expand ? "w-36" : "w-10"} src={expand ? assets.logo_text : assets.reshot_icon} alt=''/>
 
             <div onClick={()=> expand ? setExpand(false) : setExpand(true)}
-             className='group relative flex items-center justify-center hover:bg-gray-500/20 transition-all duration-300 h-9 w-9 aspect-square rounded-lg cursor-pointer'>
+             className={`group relative flex items-center justify-center ${isDark ? 'hover:bg-gray-500/20' : 'hover:bg-gray-300'} transition-all duration-300 h-9 w-9 aspect-square rounded-lg cursor-pointer`}>
                 <Image src={assets.menu_icon} alt='' className='md:hidden'/>
                 <Image src={expand ? assets.sidebar_close_icon : assets.sidebar_icon} alt='' className='hidden md:block w-7'/>
             </div>
         </div>
 
-        <button onClick={createNewChat} className={`mt-8 flex items-center justify-center cursor-pointer ${expand ? "bg-primary hover:opacity-90 rounded-2xl gap-2 p-2.5 w-max" : "group relative h-9 w-9 mx-auto hover:bg-gray-500/30 rounded-lg"}`}>
+        <button onClick={createNewChat} className={`mt-8 flex items-center justify-center cursor-pointer ${expand ? "bg-primary hover:opacity-90 rounded-2xl gap-2 p-2.5 w-max" : `group relative h-9 w-9 mx-auto ${isDark ? 'hover:bg-gray-500/30' : 'hover:bg-gray-300'} rounded-lg`}`}>
             <Image className={expand ? 'w-6' : 'w-7'} src={expand ? assets.chat_icon : assets.chat_icon_dull} alt=''/>
             {!expand && (
-                <div className='absolute w-max -top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition bg-black text-white text-sm px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]'>
+                <div className={`absolute w-max -top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition ${isDark ? 'bg-black text-white' : 'bg-gray-800 text-white'} text-sm px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]`}>
                     New chat
-                    <div className='w-3 h-3 absolute bg-black rotate-45 left-1/2 -bottom-1.5 -translate-x-1/2'></div>
+                    <div className={`w-3 h-3 absolute ${isDark ? 'bg-black' : 'bg-gray-800'} rotate-45 left-1/2 -bottom-1.5 -translate-x-1/2`}></div>
                 </div>
             )}
-            {expand && <p className='text-white text font-medium'>New chat</p>}
+            {expand && <p className={`${isDark ? 'text-white' : 'text-white'} text font-medium`}>New chat</p>}
         </button>
 
-        <div className={`mt-8 text-white/25 text-sm flex-1 flex flex-col min-h-0 ${expand ? "block" : "hidden"}`}>
+        <div className={`mt-8 ${isDark ? 'text-white/25' : 'text-gray-500'} text-sm flex-1 flex flex-col min-h-0 ${expand ? "block" : "hidden"}`}>
             {/* 显示当前 chatflow 名称 */}
             {selectedChatflow && (
-                <div className="mb-4 p-3 bg-[#2a2b2f] rounded-lg border border-gray-600/30 flex-shrink-0">
+                <div className={`mb-4 p-3 ${isDark ? 'bg-[#2a2b2f] border-gray-600/30' : 'bg-gray-100 border-gray-200'} rounded-lg border flex-shrink-0`}>
                     <div className="flex items-center gap-2 mb-1">
                         <div className={`w-2 h-2 rounded-full ${selectedChatflow.deployed ? 'bg-green-500' : 'bg-gray-500'}`} />
-                        <p className="text-white text-sm font-medium truncate">{selectedChatflow.name}</p>
+                        <p className={`${isDark ? 'text-white' : 'text-gray-900'} text-sm font-medium truncate`}>{selectedChatflow.name}</p>
                     </div>
-                    <p className="text-xs text-gray-400 truncate">{selectedChatflow.category}</p>
+                    <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} truncate`}>{selectedChatflow.category}</p>
                 </div>
             )}
             
-            <div className='my-1 flex-shrink-0 text-white text-sm font-medium'>
+            <div className={`my-1 flex-shrink-0 ${isDark ? 'text-white' : 'text-gray-900'} text-sm font-medium`}>
                 {selectedChatflow ? `${selectedChatflow.name} Chats` : 'Recent Chats'}
             </div>
             <div className="flex-1 chat-list-container min-h-0 pr-2">
@@ -58,13 +60,13 @@ const Sidebar = ({expand, setExpand}) => {
                     )
                 ) : (
                     <div className="text-center py-8">
-                        <p className="text-gray-400 text-sm mb-2">
+                        <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-sm mb-2`}>
                             {selectedChatflow 
                                 ? `No chats for ${selectedChatflow.name}` 
                                 : 'No chats available'
                             }
                         </p>
-                        <p className="text-gray-500 text-xs">
+                        <p className={`${isDark ? 'text-gray-500' : 'text-gray-400'} text-xs`}>
                             {selectedChatflow 
                                 ? 'Start a new conversation with this chatflow' 
                                 : 'Create your first chat to get started'
@@ -77,7 +79,7 @@ const Sidebar = ({expand, setExpand}) => {
       </div>
 
     <div className="flex-shrink-0">
-        <div className={`relative flex items-center ${expand ? ' hover:bg-white/10 rounded-lg' : 'justify-center w-full'} gap-3 text-white/60 text-sm p-2 cursor-pointer`}>
+        <div className={`relative flex items-center ${expand ? ` ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-200'} rounded-lg` : 'justify-center w-full'} gap-3 ${isDark ? 'text-white/60' : 'text-gray-600'} text-sm p-2 cursor-pointer`}>
             {user ? (
                 <>
                     <div 
@@ -99,18 +101,18 @@ const Sidebar = ({expand, setExpand}) => {
                     </div>
                     
                     {showUserMenu && expand && (
-                        <div className="absolute bottom-full left-0 right-0 mb-2 bg-[#2a2b2f] border border-gray-600/30 rounded-lg p-3 shadow-lg">
+                        <div className={`absolute bottom-full left-0 right-0 mb-2 ${isDark ? 'bg-[#2a2b2f] border-gray-600/30' : 'bg-white border-gray-200'} border rounded-lg p-3 shadow-lg`}>
                             <div className="mb-3">
-                                <p className="text-white text-sm font-medium truncate">{user.username || user.name}</p>
-                                <p className="text-gray-400 text-xs truncate">{user.email}</p>
+                                <p className={`${isDark ? 'text-white' : 'text-gray-900'} text-sm font-medium truncate`}>{user.username || user.name}</p>
+                                <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-xs truncate`}>{user.email}</p>
                                 {user.context_title && (
-                                    <p className="text-gray-500 text-xs truncate mt-1">{user.context_title}</p>
+                                    <p className={`${isDark ? 'text-gray-500' : 'text-gray-400'} text-xs truncate mt-1`}>{user.context_title}</p>
                                 )}
                             </div>
                             
                             <button
                                 onClick={logout}
-                                className="w-full text-left text-red-400 hover:text-red-300 text-sm py-1 px-2 rounded hover:bg-red-900/20 transition-colors"
+                                className={`w-full text-left text-red-400 hover:text-red-300 text-sm py-1 px-2 rounded ${isDark ? 'hover:bg-red-900/20' : 'hover:bg-red-50'} transition-colors`}
                             >
                                 Logout
                             </button>

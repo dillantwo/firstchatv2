@@ -7,12 +7,14 @@ import remarkGfm from 'remark-gfm'
 import rehypeKatex from 'rehype-katex'
 import Prism from 'prismjs'
 import toast from 'react-hot-toast'
+import { useTheme } from '@/context/ThemeContext'
 
 const Message = ({role, content, images, onPinMessage, isPinned = false, showPinButton = true, isInPinnedPanel = false}) => {
 
     const [previewModal, setPreviewModal] = useState({ isOpen: false, image: null });
     const [htmlViewMode, setHtmlViewMode] = useState('rendered'); // 'rendered' | 'code'
     const iframeRef = React.useRef(null);
+    const { isDark } = useTheme();
 
     useEffect(()=>{
         Prism.highlightAll()
@@ -560,34 +562,70 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
       )}
 
       <div className={`flex flex-col  w-full ${isInPinnedPanel ? 'mb-6' : 'mb-8'} ${role === 'user' && 'items-end'}`}>
-        <div className={`group relative flex ${isInPinnedPanel ? 'max-w-full py-3 px-2' : 'max-w-2xl py-3'} rounded-xl ${role === 'user' ? (isInPinnedPanel ? 'px-3' : 'bg-[#414158] px-5') : 'gap-3'}`}>
-            <div className={`opacity-70 hover:opacity-100 absolute ${role === 'user' ? '-left-16 top-2.5' : 'left-9 -bottom-6'} transition-all ${isInPinnedPanel ? 'hidden' : ''}`}>
+        <div className={`group relative flex ${isInPinnedPanel ? 'max-w-full py-3 px-2' : 'max-w-2xl py-3'} rounded-xl ${role === 'user' ? (isInPinnedPanel ? 'px-3' : `${isDark ? 'bg-[#414158]' : 'bg-blue-100'} px-5`) : 'gap-3'}`}>
+            <div className={`opacity-70 hover:opacity-100 absolute ${role === 'user' ? `${isDark ? '-left-16' : '-left-20'} top-2.5` : 'left-9 -bottom-6'} transition-all ${isInPinnedPanel ? 'hidden' : ''}`}>
                 <div className='flex items-center gap-2'>
                     {
                         role === 'user' ? (
                             <>
-                            <Image onClick={copyMessage} src={assets.copy_icon} alt='' className='w-4 cursor-pointer hover:scale-110 transition-transform'/>
-                            {showPinButton && (
+                            <button
+                                onClick={copyMessage}
+                                className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
+                                    isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm'
+                                }`}
+                                title="Copy message"
+                            >
                                 <Image 
-                                    onClick={handlePinMessage} 
-                                    src={assets.pin_icon} 
-                                    alt={isPinned ? 'Unpin' : 'Pin'} 
-                                    className={`w-5 cursor-pointer hover:scale-110 transition-transform ${isPinned ? 'opacity-100' : ''}`}
-                                    title={isPinned ? 'Unpin message' : 'Pin message'}
+                                    src={assets.copy_icon} 
+                                    alt='Copy' 
+                                    className={`w-4 transition-all ${isDark ? '' : 'brightness-0 invert'}`}
                                 />
+                            </button>
+                            {showPinButton && (
+                                <button
+                                    onClick={handlePinMessage}
+                                    className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
+                                        isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm'
+                                    } ${isPinned ? 'opacity-100' : ''}`}
+                                    title={isPinned ? 'Unpin message' : 'Pin message'}
+                                >
+                                    <Image 
+                                        src={assets.pin_icon} 
+                                        alt={isPinned ? 'Unpin' : 'Pin'} 
+                                        className={`w-5 transition-all ${isDark ? '' : 'brightness-0 invert'}`}
+                                    />
+                                </button>
                             )}
                             </>
                         ):(
                             <>
-                            <Image onClick={copyMessage} src={assets.copy_icon} alt='' className='w-4.5 cursor-pointer hover:scale-110 transition-transform'/>
-                            {showPinButton && (
+                            <button
+                                onClick={copyMessage}
+                                className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
+                                    isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm'
+                                }`}
+                                title="Copy message"
+                            >
                                 <Image 
-                                    onClick={handlePinMessage} 
-                                    src={assets.pin_icon} 
-                                    alt={isPinned ? 'Unpin' : 'Pin'} 
-                                    className={`w-5 cursor-pointer hover:scale-110 transition-transform ${isPinned ? 'opacity-100' : ''}`}
-                                    title={isPinned ? 'Unpin message' : 'Pin message'}
+                                    src={assets.copy_icon} 
+                                    alt='Copy' 
+                                    className={`w-4 transition-all ${isDark ? '' : 'brightness-0 invert'}`}
                                 />
+                            </button>
+                            {showPinButton && (
+                                <button
+                                    onClick={handlePinMessage}
+                                    className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
+                                        isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm'
+                                    } ${isPinned ? 'opacity-100' : ''}`}
+                                    title={isPinned ? 'Unpin message' : 'Pin message'}
+                                >
+                                    <Image 
+                                        src={assets.pin_icon} 
+                                        alt={isPinned ? 'Unpin' : 'Pin'} 
+                                        className={`w-5 transition-all ${isDark ? '' : 'brightness-0 invert'}`}
+                                    />
+                                </button>
                             )}
                             </>
                         )
@@ -597,7 +635,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
             {
                 role === 'user' ? 
                 (
-                    <div className={isInPinnedPanel ? 'text-white' : 'text-white/90'}>
+                    <div className={isInPinnedPanel ? `${isDark ? 'text-white' : 'text-gray-900'}` : `${isDark ? 'text-white/90' : 'text-gray-800'}`}>
                         {/* Display images */}
                         {images && images.length > 0 && (
                             <div className='mb-3 flex flex-wrap gap-2'>
@@ -606,7 +644,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                         <img 
                                             src={image.url} 
                                             alt={image.name || `Image ${index + 1}`}
-                                            className='max-w-48 max-h-48 object-cover rounded-lg border border-gray-600 cursor-pointer hover:opacity-90 transition-opacity'
+                                            className={`max-w-48 max-h-48 object-cover rounded-lg border ${isDark ? 'border-gray-600' : 'border-gray-300'} cursor-pointer hover:opacity-90 transition-opacity`}
                                             onClick={() => openPreviewModal(image)}
                                         />
                                         <div className='absolute bottom-1 left-1 bg-black/70 text-xs px-1 py-0.5 rounded text-white/70 opacity-0 group-hover:opacity-100 transition-opacity'>
@@ -623,7 +661,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                 :
                 (
                     <>
-                    {!isInPinnedPanel && <Image src={assets.reshot_icon} alt='' className='h-9 w-9 p-1 border border-white/15 rounded-full'/>}
+                    {!isInPinnedPanel && <Image src={assets.reshot_icon} alt='' className={`h-9 w-9 p-1 border ${isDark ? 'border-white/15' : 'border-gray-300'} rounded-full`}/>}
                     {renderedContent}
                     </>
                 )

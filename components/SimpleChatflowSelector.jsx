@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { assets } from '@/assets/assets';
 import { useHydration } from '@/utils/useHydration';
 import { useLTIAuth } from '@/context/LTIAuthContext';
+import { useTheme } from '@/context/ThemeContext';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
@@ -12,6 +13,7 @@ const SimpleChatflowSelector = ({ selectedChatflow, onChatflowChange }) => {
     const [isLoading, setIsLoading] = useState(false);
     const hasHydrated = useHydration();
     const { user, isAuthenticated } = useLTIAuth();
+    const { isDark } = useTheme();
 
     // Fetch chatflows function
     const fetchChatflows = async () => {
@@ -84,11 +86,11 @@ const SimpleChatflowSelector = ({ selectedChatflow, onChatflowChange }) => {
         return (
             <div className="relative">
                 <button
-                    className="flex items-center gap-2 px-2 py-1.5 bg-[#404045] border border-gray-500 rounded-md text-xs"
+                    className={`flex items-center gap-2 px-2 py-1.5 ${isDark ? 'bg-[#404045] border-gray-500 text-white' : 'bg-gray-800 border-gray-600 text-gray-100 opacity-70'} border rounded-md text-xs shadow-sm`}
                     disabled={true}
                 >
                     <Image src={assets.chat_icon} alt="" className="w-3 h-3" />
-                    <span className="text-white">Please login</span>
+                    <span>Please login</span>
                 </button>
             </div>
         );
@@ -99,11 +101,11 @@ const SimpleChatflowSelector = ({ selectedChatflow, onChatflowChange }) => {
             {/* Simple selection button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 px-2 py-1.5 bg-[#404045] border border-gray-500 rounded-md hover:bg-gray-600 transition-colors text-xs"
+                className={`flex items-center gap-2 px-2 py-1.5 ${isDark ? 'bg-[#404045] border-gray-500 text-white hover:bg-gray-600' : 'bg-gray-800 border-gray-600 text-gray-100 hover:bg-gray-900 opacity-70 hover:opacity-100'} border rounded-md transition-all text-xs shadow-sm`}
                 disabled={isLoading}
             >
                 <Image src={assets.chat_icon} alt="" className="w-3 h-3" />
-                <span className="text-white truncate max-w-[120px]">
+                <span className="truncate max-w-[120px]">
                     {isLoading ? 'Loading...' : (selectedChatflow?.name || 'Select AI')}
                 </span>
                 <Image 
@@ -115,9 +117,9 @@ const SimpleChatflowSelector = ({ selectedChatflow, onChatflowChange }) => {
 
             {/* Simple dropdown menu with solid background */}
             {isOpen && !isLoading && (
-                <div className="absolute bottom-full left-0 mb-1 min-w-[300px] max-w-[400px] bg-[#2f2f35] border border-gray-500 rounded-md shadow-xl z-[9999] max-h-40 overflow-y-auto">
+                <div className={`absolute bottom-full left-0 mb-1 min-w-[300px] max-w-[400px] ${isDark ? 'bg-[#2f2f35] border-gray-500' : 'bg-white border-gray-300'} border rounded-md shadow-xl z-[9999] max-h-40 overflow-y-auto`}>
                     {chatflows.length === 0 ? (
-                        <div className="px-3 py-2 text-xs text-gray-400">
+                        <div className={`px-3 py-2 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                             No available chatflows
                         </div>
                     ) : (
@@ -125,18 +127,18 @@ const SimpleChatflowSelector = ({ selectedChatflow, onChatflowChange }) => {
                             <button
                                 key={chatflow.id}
                                 onClick={() => handleSelect(chatflow)}
-                                className={`w-full text-left px-3 py-2 hover:bg-gray-600 transition-colors text-xs border-b border-gray-600 last:border-b-0 ${
-                                    selectedChatflow?.id === chatflow.id ? 'bg-gray-600' : ''
+                                className={`w-full text-left px-3 py-2 ${isDark ? 'hover:bg-gray-600 border-gray-600' : 'hover:bg-gray-100 border-gray-200'} transition-colors text-xs border-b last:border-b-0 ${
+                                    selectedChatflow?.id === chatflow.id ? (isDark ? 'bg-gray-600' : 'bg-gray-100') : ''
                                 }`}
                             >
                                 <div className="flex items-center gap-2">
                                     <div className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
                                     <div className="flex-1">
-                                        <div className="text-white font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+                                        <div className={`${isDark ? 'text-white' : 'text-gray-900'} font-medium whitespace-nowrap overflow-hidden text-ellipsis`}>
                                             {chatflow.name}
                                         </div>
                                         {chatflow.description && (
-                                            <div className="text-gray-400 text-xs whitespace-nowrap overflow-hidden text-ellipsis">
+                                            <div className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-xs whitespace-nowrap overflow-hidden text-ellipsis`}>
                                                 {chatflow.description}
                                             </div>
                                         )}

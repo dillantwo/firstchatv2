@@ -1,0 +1,120 @@
+/* Light Theme Code Highlighting */
+.light pre {
+  background-color: #f8f9fa !important;
+  border: 1px solid #e9ecef;
+}
+
+.light code {
+  background-color: #f8f9fa !important;
+  color: #495057 !important;
+  border: 1px solid #e9ecef;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.light pre code {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+/* Light theme syntax highlighting */
+.light .token.comment,
+.light .token.prolog,
+.light .token.doctype,
+.light .token.cdata {
+  color: #6c757d;
+}
+
+.light .token.punctuation {
+  color: #495057;
+}
+
+.light .token.property,
+.light .token.tag,
+.light .token.boolean,
+.light .token.number,
+.light .token.constant,
+.light .token.symbol,
+.light .token.deleted {
+  color: #d63384;
+}
+
+.light .token.selector,
+.light .token.attr-name,
+.light .token.string,
+.light .token.char,
+.light .token.builtin,
+.light .token.inserted {
+  color: #198754;
+}
+
+.light .token.operator,
+.light .token.entity,
+.light .token.url,
+.light .language-css .token.string,
+.light .style .token.string {
+  color: #fd7e14;
+}
+
+.light .token.atrule,
+.light .token.attr-value,
+.light .token.keyword {
+  color: #0d6efd;
+}
+
+.light .token.function,
+.light .token.class-name {
+  color: #6f42c1;
+}
+
+.light .token.regex,
+.light .token.important,
+.light .token.variable {
+  color: #e83e8c;
+}
+
+/* Light theme scrollbar */
+.light ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.light ::-webkit-scrollbar-track {
+  background: #f1f3f4;
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Light theme specific adjustments */
+.light .bg-primary {
+  background-color: #0d6efd !important;
+}
+
+.light .text-primary {
+  color: #0d6efd !important;
+}
+
+/* Light theme for code copy button */
+.light .code-block-header {
+  background-color: #e9ecef !important;
+  border-bottom: 1px solid #dee2e6 !important;
+}
+
+.light .copy-button {
+  background-color: #f8f9fa !important;
+  color: #495057 !important;
+  border: 1px solid #ced4da !important;
+}
+
+.light .copy-button:hover {
+  background-color: #e9ecef !important;
+  color: #212529 !important;
+}

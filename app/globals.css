@@ -4,19 +4,49 @@
   --color-primary: #4d6bfe;
 }
 
+/* CSS Variables for Theme Support */
+:root {
+  /* Dark theme colors (default) */
+  --bg-primary: #292a2d;
+  --bg-secondary: #3a3b3e;
+  --bg-tertiary: #4a4b4e;
+  --text-primary: #ffffff;
+  --text-secondary: #e5e5e5;
+  --text-muted: #9ca3af;
+  --border-color: rgba(255, 255, 255, 0.15);
+  --hover-bg: rgba(255, 255, 255, 0.1);
+  --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Light theme colors */
+.light {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+  --text-primary: #1a1a1a;
+  --text-secondary: #2d2d2d;
+  --text-muted: #6b7280;
+  --border-color: rgba(0, 0, 0, 0.15);
+  --hover-bg: rgba(0, 0, 0, 0.05);
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
 html{
   @apply scroll-smooth;
   margin: 0;
   padding: 0;
-  background-color: #292a2d; /* 确保整个页面都有正确的背景色 */
+  background-color: var(--bg-primary);
   /* 支持动态视口高度 */
   --vh: 1vh;
+  transition: background-color 0.3s ease;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: #292a2d; /* 确保body也有正确的背景色 */
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 ::-webkit-scrollbar{
@@ -175,27 +205,68 @@ pre{
 table {
   width: 100%;
   border-collapse: collapse;
-  background-color: white;
   border-radius: 0.5rem;
   overflow: hidden;
   table-layout: auto;
   word-break: break-word;
 }
 
-/* 表头样式 */
-table thead {
+/* Dark theme table styles */
+.dark table {
+  background-color: #2d2d2d;
+  color: #e5e5e5;
+}
+
+.dark table thead {
+  background-color: #3a3a3a;
+}
+
+.dark table th {
+  color: #9ca3af;
+  border-bottom: 1px solid #4b5563;
+}
+
+.dark table td {
+  color: #e5e5e5;
+  border-bottom: 1px solid #4b5563;
+}
+
+.dark table tbody tr:hover {
+  background-color: #3a3a3a;
+}
+
+/* Light theme table styles */
+.light table {
+  background-color: white;
+  color: #1f2937;
+}
+
+.light table thead {
   background-color: #f9fafb;
 }
 
+.light table th {
+  color: #6b7280;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.light table td {
+  color: #1f2937;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.light table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+/* 表头样式 */
 table th {
   padding: 0.75rem 1rem;
   text-align: left;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-bottom: 1px solid #e5e7eb;
   word-wrap: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
@@ -207,20 +278,12 @@ table th {
 table td {
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
-  color: #1f2937;
-  border-bottom: 1px solid #e5e7eb;
   word-wrap: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
   white-space: normal;
   line-height: 1.6;
   vertical-align: top;
-}
-
-/* 表格行悬停效果 */
-table tbody tr:hover {
-  background-color: #f9fafb;
-  transition: background-color 0.15s ease-in-out;
 }
 
 /* 最后一行去掉下边框 */

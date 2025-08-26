@@ -2,8 +2,11 @@ import React, { Fragment } from 'react';
 import { assets } from '@/assets/assets';
 import Image from 'next/image';
 import Message from './Message';
+import { useTheme } from '@/context/ThemeContext';
 
 const PinnedMessages = ({ pinnedMessages, onUnpinMessage, isVisible, onToggleVisibility }) => {
+  const { isDark } = useTheme();
+  
   if (!isVisible && pinnedMessages.length === 0) {
     return null;
   }
@@ -19,19 +22,19 @@ const PinnedMessages = ({ pinnedMessages, onUnpinMessage, isVisible, onToggleVis
       )}
       
       {/* Pinned panel - responsive width with custom CSS classes */}
-      <div className={`fixed right-0 top-0 h-full w-full pinned-panel-layout bg-gray-800 border-l border-gray-600 z-10 transform transition-transform duration-300 shadow-2xl flex flex-col ${
+      <div className={`fixed right-0 top-0 h-full w-full pinned-panel-layout ${isDark ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'} border-l z-10 transform transition-transform duration-300 shadow-2xl flex flex-col ${
         isVisible ? 'translate-x-0' : 'translate-x-full'
       }`}>
       {/* Header */}
-      <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-600 flex-shrink-0">
+      <div className={`flex items-center justify-between p-3 sm:p-4 ${isDark ? 'border-gray-600' : 'border-gray-300'} border-b flex-shrink-0`}>
         <div className="flex items-center gap-2">
           <Image src={assets.pin_icon} alt="Pinned" className="w-5 h-5 sm:w-6 sm:h-6" />
-          <h3 className="text-white font-medium text-sm sm:text-base">Pinned Messages</h3>
-          <span className="text-xs text-gray-400">({pinnedMessages.length})</span>
+          <h3 className={`${isDark ? 'text-white' : 'text-gray-900'} font-medium text-sm sm:text-base`}>Pinned Messages</h3>
+          <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>({pinnedMessages.length})</span>
         </div>
         <button
           onClick={onToggleVisibility}
-          className="text-gray-400 hover:text-white transition-colors hover:bg-gray-700 rounded-lg"
+          className={`${isDark ? 'text-gray-400 hover:text-white hover:bg-gray-700' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'} transition-colors rounded-lg`}
         >
           <Image src={assets.sidebar_close_icon} alt="Close" className="w-6 h-6 sm:w-8 sm:h-8" />
         </button>
@@ -40,7 +43,7 @@ const PinnedMessages = ({ pinnedMessages, onUnpinMessage, isVisible, onToggleVis
       {/* Pinned Messages List */}
       <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent min-h-0">
         {pinnedMessages.length === 0 ? (
-          <div className="text-center text-gray-400 mt-6 sm:mt-8">
+          <div className={`text-center ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-6 sm:mt-8`}>
             <Image src={assets.pin_icon} alt="No pins" className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 opacity-50" />
             <p className="text-sm sm:text-base">No pinned messages yet</p>
             <p className="text-xs mt-1">Click the pin icon on any message to save it here</p>
@@ -51,7 +54,7 @@ const PinnedMessages = ({ pinnedMessages, onUnpinMessage, isVisible, onToggleVis
               {/* Message Header with Unpin button - always visible */}
               <div className="flex items-center justify-between mb-2 px-1">
                 {/* Message metadata */}
-                <div className="text-xs text-gray-400 flex items-center">
+                <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} flex items-center`}>
                   <span className={`inline-block w-1.5 h-1.5 rounded-full mr-2 ${
                     msg.role === 'user' ? 'bg-blue-400' : 'bg-green-400'
                   }`}></span>
@@ -61,7 +64,7 @@ const PinnedMessages = ({ pinnedMessages, onUnpinMessage, isVisible, onToggleVis
                 {/* Unpin button - always visible with beautiful design */}
                 <button
                   onClick={() => onUnpinMessage(index)}
-                  className="unpin-button relative flex items-center gap-1 px-2 py-1 text-xs text-gray-400 hover:text-red-400 rounded-md border border-gray-600 hover:border-red-400/50"
+                  className={`unpin-button relative flex items-center gap-1 px-2 py-1 text-xs ${isDark ? 'text-gray-400 hover:text-red-400 border-gray-600 hover:border-red-400/50' : 'text-gray-600 hover:text-red-500 border-gray-400 hover:border-red-500/50'} rounded-md border transition-all shadow-sm`}
                   title="Unpin message"
                 >
                   <svg 

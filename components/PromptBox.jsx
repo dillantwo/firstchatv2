@@ -1,6 +1,7 @@
 import { assets } from '@/assets/assets'
 import { useAppContext } from '@/context/AppContextLTI';
 import { useLTIAuth } from '@/context/LTIAuthContext';
+import { useTheme } from '@/context/ThemeContext';
 import SimpleChatflowSelector from './SimpleChatflowSelector';
 import axios from 'axios';
 import Image from 'next/image'
@@ -22,6 +23,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
     const textareaRef = useRef(null);
     const {user, chats, setChats, selectedChat, setSelectedChat, selectedChatflow, setSelectedChatflow, createNewChat, handleChatflowChange} = useAppContext();
     const { isAuthenticated, user: authUser } = useLTIAuth();
+    const { isDark } = useTheme();
 
     // Add performance monitoring effect
     useEffect(() => {
@@ -731,14 +733,14 @@ const PromptBox = ({setIsLoading, isLoading}) => {
          }}>
       {/* Image preview area */}
       {uploadedImages.length > 0 && (
-        <div className="mb-3 p-3 bg-[#404045] rounded-2xl">
+        <div className={`mb-3 p-3 ${isDark ? 'bg-[#404045]' : 'bg-gray-100'} rounded-2xl`}>
           <div className="flex flex-wrap gap-2">
             {uploadedImages.map((image) => (
               <div key={image.id} className="relative group">
                 <img 
                   src={image.url} 
                   alt={image.name}
-                  className="w-16 h-16 object-cover rounded-lg border border-gray-600 cursor-pointer hover:opacity-80 transition-opacity"
+                  className={`w-16 h-16 object-cover rounded-lg border ${isDark ? 'border-gray-600' : 'border-gray-300'} cursor-pointer hover:opacity-80 transition-opacity`}
                   onClick={() => openPreviewModal(image)}
                 />
                 <button
@@ -798,7 +800,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             key={item.text}
             type="button"
             onClick={() => handleQuickPrompt(item.content)}
-            className="quick-prompt-btn flex items-center gap-1.5 px-4 py-2 bg-[#404045]/80 border border-gray-300/30 rounded-full hover:bg-gray-500/30 hover:border-gray-300/60 text-xs text-white/90 group min-w-[100px] justify-center"
+            className={`quick-prompt-btn flex items-center gap-1.5 px-4 py-2 ${isDark ? 'bg-[#404045]/80 border-gray-300/30 text-white/90 hover:bg-gray-500/30 hover:border-gray-300/60' : 'bg-gray-800 border-gray-600 text-gray-100 hover:bg-gray-900 hover:border-gray-500 opacity-70 hover:opacity-100'} border rounded-full text-xs group min-w-[100px] justify-center transition-all shadow-sm`}
           >
             {item.text === 'Good' && (
               <Image src={assets.like_icon} alt="" className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100 transition-opacity" />
@@ -821,7 +823,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
       </div>
 
       <form onSubmit={sendPrompt}
-       className={`w-full bg-[#404045] p-4 rounded-3xl mt-4 transition-all ${isDragging ? 'border-2 border-blue-500 border-dashed' : ''}`}
+       className={`w-full ${isDark ? 'bg-[#404045]' : 'bg-gray-50 border-2 border-gray-300'} p-4 rounded-3xl mt-4 transition-all ${isDragging ? 'border-2 border-blue-500 border-dashed' : ''} shadow-sm`}
        onDragOver={handleDragOver}
        onDragLeave={handleDragLeave}
        onDrop={handleDrop}>
@@ -839,7 +841,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
         ref={textareaRef}
         onKeyDown={handleKeyDown}
         onPaste={handlePaste}
-        className='outline-none w-full resize-none bg-transparent leading-6 text-sm sm:text-base placeholder:text-gray-400 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent textarea-smooth'
+        className={`outline-none w-full resize-none bg-transparent leading-6 text-sm sm:text-base ${isDark ? 'placeholder:text-gray-400 text-white' : 'placeholder:text-gray-500 text-gray-900'} scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent textarea-smooth`}
         style={{ 
             minHeight: '48px', // Minimum height for 2 lines
             maxHeight: '192px', // Maximum height for 8 lines
@@ -872,10 +874,16 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             <button
               type="button"
               onClick={openFileSelector}
-              className='w-4 cursor-pointer hover:opacity-70 transition-opacity'
+              className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
+                isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm opacity-70 hover:opacity-100'
+              }`}
               title="Upload Image"
             >
-              <Image className='w-4' src={assets.file_upload} alt='Upload Image'/>
+              <Image 
+                className={`w-4 transition-all ${isDark ? '' : 'brightness-0 invert'}`} 
+                src={assets.file_upload} 
+                alt='Upload Image'
+              />
             </button>
             
             {/* Voice recognition button */}
@@ -885,12 +893,12 @@ const PromptBox = ({setIsLoading, isLoading}) => {
               className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
                 isListening 
                   ? 'bg-red-500 animate-pulse shadow-lg shadow-red-500/50' 
-                  : 'hover:bg-gray-600/30'
+                  : `${isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm opacity-70 hover:opacity-100'}`
               }`}
               title={isListening ? "Click to stop continuous recording" : "Click to start continuous voice input (supports Cantonese and English)"}
             >
               <Image 
-                className={`w-4 transition-all ${isListening ? 'brightness-0 invert' : ''}`}
+                className={`w-4 transition-all ${isListening ? 'brightness-0 invert' : `${isDark ? '' : 'brightness-0 invert'}`}`}
                 src={assets.phone_icon} 
                 alt='Voice Input'
               />

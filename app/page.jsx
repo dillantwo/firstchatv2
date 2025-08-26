@@ -7,7 +7,9 @@ import LTIAuthGuard from "@/components/LTIAuthGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import PinnedMessages from "@/components/PinnedMessages";
 import ViewportHandler from "@/components/ViewportHandler";
+import ThemeToggle from "@/components/ThemeToggle";
 import { useAppContext } from "@/context/AppContextLTI";
+import { useTheme } from "@/context/ThemeContext";
 import { useHydration } from "@/utils/useHydration";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
@@ -20,6 +22,7 @@ export default function Home() {
   const [pinnedMessages, setPinnedMessages] = useState([])
   const [showPinnedPanel, setShowPinnedPanel] = useState(false)
   const {selectedChat, selectedChatflow, handleChatflowChange, createNewChat} = useAppContext()
+  const { isDark } = useTheme()
   const containerRef = useRef(null)
   const hasHydrated = useHydration();
 
@@ -86,17 +89,21 @@ export default function Home() {
     <LTIAuthGuard>
       <ErrorBoundary>
         <ViewportHandler />
-        <div className="main-container bg-[#292a2d]">
-          <div className="flex h-screen bg-[#292a2d]">
+        <div className={`main-container ${isDark ? 'bg-[#292a2d]' : 'bg-white'} transition-colors duration-300`}>
+          <div className={`flex h-screen ${isDark ? 'bg-[#292a2d]' : 'bg-white'} transition-colors duration-300`}>
             <Sidebar expand={expand} setExpand={setExpand}/>
-            <div className={`flex-1 flex flex-col items-center justify-center px-2 sm:px-4 pb-2 bg-[#292a2d] text-white relative transition-all duration-300 chat-container ${
+            <div className={`flex-1 flex flex-col items-center justify-center px-2 sm:px-4 pb-2 ${isDark ? 'bg-[#292a2d] text-white' : 'bg-white text-gray-900'} relative transition-all duration-300 chat-container ${
               showPinnedPanel ? 'chat-container-with-pinned mr-0' : 'mr-0'
             }`}>
+            
+            {/* Theme Toggle Button */}
+            <ThemeToggle />
+            
             {/* Pinned messages toggle button - only show when panel is closed */}
             {!showPinnedPanel && (
               <button
                 onClick={() => setShowPinnedPanel(true)}
-                className="fixed top-3 right-4 z-20 bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                className={`fixed top-3 right-4 z-20 ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-800 hover:bg-gray-900 text-white'} p-2 rounded-lg transition-colors duration-200 flex items-center gap-2 shadow-sm`}
                 title="Show pinned messages"
               >
                 <Image src={assets.pin_icon} alt="Pin" className="w-5 h-5" />
@@ -120,7 +127,7 @@ export default function Home() {
               
               {/* Display current selected chatflow name */}
               <div className="flex-1 mx-2 sm:mx-4 max-w-xs text-center">
-                <span className="text-xs sm:text-sm text-gray-400 truncate block">
+                <span className={`text-xs sm:text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} truncate block`}>
                   {selectedChatflow ? selectedChatflow.name : 'No AI Selected'}
                 </span>
               </div>
@@ -160,12 +167,12 @@ export default function Home() {
             className="relative flex flex-col items-center justify-start w-full mt-32 md:mt-20 max-h-screen overflow-y-auto"
             > 
             {/* Desktop: Show chat title and chatflow name */}
-            <p className="hidden md:block fixed top-8 border border-transparent hover:border-gray-500/50 py-1 px-2 rounded-lg font-semibold mb-6">
+            <p className={`hidden md:block fixed top-8 border ${isDark ? 'border-transparent hover:border-gray-500/50' : 'border-transparent hover:border-gray-300/50'} py-1 px-2 rounded-lg font-semibold mb-6`}>
               {(selectedChat?.name || 'No Chat Selected').length > 8 
                 ? (selectedChat?.name || 'No Chat Selected').substring(0, 8) + '...' 
                 : (selectedChat?.name || 'No Chat Selected')}
               {selectedChatflow && (
-                <span className="text-xs text-gray-400 ml-2">• {selectedChatflow.name}</span>
+                <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} ml-2`}>• {selectedChatflow.name}</span>
               )}
             </p>
             
@@ -189,12 +196,12 @@ export default function Home() {
             {
               isLoading && (
                 <div className="flex gap-4 max-w-3xl w-full py-3">
-                  <Image className="h-9 w-9 p-1 border border-white/15 rounded-full"
+                  <Image className={`h-9 w-9 p-1 border ${isDark ? 'border-white/15' : 'border-gray-300'} rounded-full`}
                    src={assets.reshot_icon} alt="Logo"/>
                    <div className="loader flex justify-center items-center gap-1">
-                    <div className="w-1 h-1 rounded-full bg-white animate-bounce"></div>
-                    <div className="w-1 h-1 rounded-full bg-white animate-bounce"></div>
-                    <div className="w-1 h-1 rounded-full bg-white animate-bounce"></div>
+                    <div className={`w-1 h-1 rounded-full ${isDark ? 'bg-white' : 'bg-gray-900'} animate-bounce`}></div>
+                    <div className={`w-1 h-1 rounded-full ${isDark ? 'bg-white' : 'bg-gray-900'} animate-bounce`}></div>
+                    <div className={`w-1 h-1 rounded-full ${isDark ? 'bg-white' : 'bg-gray-900'} animate-bounce`}></div>
                    </div>
                 </div>
               )
@@ -204,7 +211,7 @@ export default function Home() {
           )
           }
           <PromptBox isLoading={isLoading} setIsLoading={setIsLoading}/>
-          <p className="text-xs absolute bottom-1 text-gray-500">AI-generated, for reference only</p>
+          <p className={`text-xs absolute bottom-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>AI-generated, for reference only</p>
 
           </div>
 
