@@ -15,9 +15,6 @@ export const AppContextProvider = ({children})=>{
     const { user, isAuthenticated } = useLTIAuth();
     const hasHydrated = useHydration();
     
-    console.log('[AppContextLTI] Received from LTIAuth - user:', user);
-    console.log('[AppContextLTI] Received from LTIAuth - isAuthenticated:', isAuthenticated);
-
     const [chats, setChats] = useState([]);
     const [selectedChat, setSelectedChat] = useState(null);
     const [selectedChatflow, setSelectedChatflow] = useState(null);
@@ -49,7 +46,6 @@ export const AppContextProvider = ({children})=>{
 
             const {data} = await axios.get('/api/chat/get')
             if(data.success){
-                console.log(data.data);
                 setChats(data.data)
 
                  // If the user has no chats, create one

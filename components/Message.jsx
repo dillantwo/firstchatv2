@@ -373,7 +373,6 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                                     // Prevent form submission from causing page refresh
                                                     document.addEventListener('submit', function(e) {
                                                         e.preventDefault();
-                                                        console.log('Form submission prevented to avoid page reload');
                                                         
                                                         // Delay height adjustment to allow content changes to recalculate
                                                         setTimeout(function() {
@@ -388,7 +387,6 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                                     document.addEventListener('click', function(e) {
                                                         if (e.target.tagName === 'A' && e.target.href) {
                                                             e.preventDefault();
-                                                            console.log('Link navigation prevented:', e.target.href);
                                                             return false;
                                                         }
                                                         
@@ -404,7 +402,6 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                                     
                                                     // Prevent drag operations from expanding the container
                                                     document.addEventListener('dragstart', function(e) {
-                                                        console.log('Drag operation detected, applying constraints');
                                                         e.dataTransfer.effectAllowed = 'move';
                                                     });
                                                     
@@ -483,7 +480,6 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                             
                                         } catch (error) {
                                             // Set compact default height when cross-origin restrictions apply
-                                            console.log('Unable to auto-resize iframe due to cross-origin restrictions');
                                             e.target.style.height = '300px';
                                             e.target.style.minHeight = '300px';
                                         }

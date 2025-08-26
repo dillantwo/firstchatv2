@@ -580,7 +580,6 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                     
                     if (currentIndex >= chars.length) {
                         streamingRef.current = false;
-                        console.log('Streaming complete. Full content length:', fullContent.length, 'Last 10 chars:', fullContent.slice(-10));
                         // Final update to ensure complete content is displayed
                         setSelectedChat((prev) => {
                             if (!prev) return prev;
@@ -699,9 +698,6 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             // Start streaming
             streamMessage(message);
             
-            // Debug log to check message length
-            console.log('AI response length:', message.length, 'Last 10 chars:', message.slice(-10));
-
             // Clear uploaded images
             setUploadedImages([]);
         }else{

@@ -81,7 +81,6 @@ export const LTIAuthProvider = ({ children }) => {
       (response) => response,
       (error) => {
         if (error.response?.status === 401) {
-          console.log('[LTI Auth] 401 error intercepted, handling token expiration');
           handleTokenExpired();
         }
         return Promise.reject(error);

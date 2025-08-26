@@ -4,10 +4,7 @@ import { useLTIAuth } from "@/context/LTIAuthContext";
 export default function LTIAuthGuard({ children }) {
   const { isLoading, isAuthenticated } = useLTIAuth();
 
-  console.log('[LTI AuthGuard] isLoading:', isLoading, 'isAuthenticated:', isAuthenticated);
-
   if (isLoading) {
-    console.log('[LTI AuthGuard] Showing loading state');
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#292a2d] text-white">
         <div className="text-center">
@@ -23,7 +20,6 @@ export default function LTIAuthGuard({ children }) {
   }
 
   if (!isAuthenticated) {
-    console.log('[LTI AuthGuard] User not authenticated, showing login dialog');
     
     const handleGoToMoodle = () => {
       // 跳转到Moodle网站
@@ -75,6 +71,5 @@ export default function LTIAuthGuard({ children }) {
     );
   }
 
-  console.log('[LTI AuthGuard] User authenticated, rendering children');
   return children;
 }
