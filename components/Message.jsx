@@ -41,6 +41,13 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
 
     const processedContent = processMathContent(content);
 
+    // Check if content contains math formulas
+    const hasMathFormulas = useMemo(() => {
+        if (!content) return false;
+        // Check for various math delimiters
+        return /(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$|\\[\[\(][\s\S]*?\\[\]\)])/g.test(content);
+    }, [content]);
+
     const copyMessage = ()=>{
         navigator.clipboard.writeText(content)
         toast.success('Message copied to clipboard')
@@ -139,7 +146,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
             const afterHTML = parts[1] || '';
             
             return (
-                <div className={`space-y-4 w-full ${isInPinnedPanel ? (isDark ? 'text-white' : 'text-gray-900') : ''}`}>
+                <div className={`space-y-4 w-full ${hasMathFormulas ? 'message-with-math' : ''} ${isInPinnedPanel ? (isDark ? 'text-white' : 'text-gray-900') : ''}`}>
                     {/* Content before HTML code block */}
                     {beforeHTML && (
                         <Markdown 
@@ -233,9 +240,9 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                     title="HTML Render Preview"
                                     sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock"
                                     style={{ 
-                                        height: isInPinnedPanel ? '800px' : '350px', // Even larger height for pinned panel
-                                        minHeight: isInPinnedPanel ? '500px' : '150px', // Increased minimum height for pinned panel
-                                        maxHeight: isInPinnedPanel ? '1200px' : '350px', // Prevent iframe from growing beyond this
+                                        height: isInPinnedPanel ? '200px' : '350px', // Initial height for pinned panel, will be set to actual content height by adjustHeight
+                                        minHeight: isInPinnedPanel ? '200px' : '150px', // Initial minHeight for pinned panel, will be set to actual content height by adjustHeight
+                                        maxHeight: isInPinnedPanel ? 'none' : '350px', // No max height limit for pinned panel
                                         overflow: 'hidden', // Hide overflow to prevent expansion
                                         border: 'none',
                                         display: 'block',
@@ -251,23 +258,34 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                             
                                             // Dynamic height adjustment function
                                             const adjustHeight = () => {
-                                                try {` + 
-                                                    (isInPinnedPanel ? `
-                                                    // Don't auto-adjust height in pinned panel to prevent expansion
-                                                    return;` : `
+                                                try {
                                                     // Get actual content height including all elements
                                                     const bodyHeight = doc.body.scrollHeight;
                                                     const documentHeight = doc.documentElement.scrollHeight;
                                                     const maxHeight = Math.max(bodyHeight, documentHeight);
                                                     
-                                                    // Set iframe height to actual content height, reducing excess whitespace
-                                                    const finalHeight = Math.max(200, maxHeight + 15) + 'px';
-                                                    iframe.style.height = finalHeight;
-                                                    iframe.style.minHeight = finalHeight;
-                                                    
-                                                    // Allow appropriate scrolling inside iframe in case content grows dynamically
-                                                    doc.body.style.overflow = 'auto';
-                                                    doc.documentElement.style.overflow = 'auto';`) + `
+                                                    if (isInPinnedPanel) {
+                                                        // For pinned panel, set fixed height and prevent further changes
+                                                        const finalHeight = Math.max(200, maxHeight + 15) + 'px';
+                                                        iframe.style.height = finalHeight;
+                                                        iframe.style.minHeight = finalHeight;
+                                                        iframe.style.maxHeight = finalHeight; // Also set maxHeight to prevent any changes
+                                                        
+                                                        // Disable scrolling and fix the container size
+                                                        doc.body.style.overflow = 'hidden';
+                                                        doc.documentElement.style.overflow = 'hidden';
+                                                        doc.body.style.height = finalHeight;
+                                                        doc.documentElement.style.height = finalHeight;
+                                                    } else {
+                                                        // For regular messages (chatbot), use original height without extra padding
+                                                        const finalHeight = Math.max(200, maxHeight) + 'px';
+                                                        iframe.style.height = finalHeight;
+                                                        iframe.style.minHeight = finalHeight;
+                                                        
+                                                        // Allow appropriate scrolling inside iframe in case content grows dynamically
+                                                        doc.body.style.overflow = 'auto';
+                                                        doc.documentElement.style.overflow = 'auto';
+                                                    }
                                                 } catch (innerError) {
                                                     // Height adjustment failed
                                                 }
@@ -404,12 +422,14 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                                     document.addEventListener('submit', function(e) {
                                                         e.preventDefault();
                                                         
-                                                        // Delay height adjustment to allow content changes to recalculate
-                                                        setTimeout(function() {
-                                                            renderMath(); // Re-render math after content change
-                                                            const event = new Event('contentChanged');
-                                                            document.dispatchEvent(event);
-                                                        }, 100);
+                                                        // Delay height adjustment to allow content changes to recalculate (disabled for pinned panels)
+                                                        if (!${isInPinnedPanel}) {
+                                                            setTimeout(function() {
+                                                                renderMath(); // Re-render math after content change
+                                                                const event = new Event('contentChanged');
+                                                                document.dispatchEvent(event);
+                                                            }, 100);
+                                                        }
                                                         return false;
                                                     });
                                                     
@@ -421,7 +441,8 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                                         }
                                                         
                                                         // Button clicks may change content, delay height adjustment
-                                                        if (e.target.tagName === 'BUTTON') {
+                                                        if (e.target.tagName === 'BUTTON' && !${isInPinnedPanel}) {
+                                                            // Only auto-adjust height for chatbot messages, not pinned panels
                                                             setTimeout(function() {
                                                                 renderMath(); // Re-render math after button click
                                                                 const event = new Event('contentChanged');
@@ -470,7 +491,8 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                                                 shouldResize = true;
                                                             }
                                                         });
-                                                        if (shouldResize) {
+                                                        if (shouldResize && !${isInPinnedPanel}) {
+                                                            // Only auto-adjust height for chatbot messages to preserve dynamic behavior
                                                             setTimeout(function() {
                                                                 renderMath(); // Re-render math after DOM changes
                                                                 const event = new Event('contentChanged');
@@ -500,8 +522,10 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                                 doc.head.appendChild(script);
                                             }
                                             
-                                            // Listen for content change events and re-adjust height
-                                            doc.addEventListener('contentChanged', adjustHeight);
+                                            // Listen for content change events and re-adjust height (only for chatbot messages)
+                                            if (!isInPinnedPanel) {
+                                                doc.addEventListener('contentChanged', adjustHeight);
+                                            }
                                             
                                             // Initial height adjustments - delayed to allow math rendering
                                             setTimeout(adjustHeight, 500);
@@ -544,7 +568,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
         } else {
             // Regular Markdown rendering
             return (
-                <div className={`space-y-4 w-full ${isInPinnedPanel ? (isDark ? 'text-white' : 'text-gray-900') : ''}`}>
+                <div className={`space-y-4 w-full ${hasMathFormulas ? 'message-with-math' : ''} ${isInPinnedPanel ? (isDark ? 'text-white' : 'text-gray-900') : ''}`}>
                     <Markdown 
                         remarkPlugins={[remarkMath, remarkGfm]}
                         rehypePlugins={[rehypeKatex]}

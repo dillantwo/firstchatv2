@@ -175,23 +175,51 @@ pre{
 
 /* KaTeX 数学公式样式 */
 .katex {
-  font-size: 1.6em !important;
+  font-size: 1.3em !important;
 }
 
 .katex-display {
-  font-size: 1.8em !important;
-  margin: 1.5em 0 !important;
+  font-size: 1.4em !important;
+  margin: 1.2em 0 !important;
 }
 
 /* 行内数学公式 */
 .katex-mathml {
-  font-size: 1.4em !important;
+  font-size: 1.1em !important;
 }
 
 /* 块级数学公式额外样式 */
 .katex-display > .katex {
-  font-size: 2em !important;
+  font-size: 1.5em !important;
   text-align: center !important;
+}
+
+/* 包含数学公式的消息增加行距 */
+.message-with-math {
+  line-height: 1.9 !important;
+}
+
+.message-with-math p {
+  line-height: 1.9 !important;
+  margin-bottom: 1.0em !important;
+}
+
+.message-with-math .katex {
+  margin: 0.3em 0 !important;
+  line-height: 1.6 !important;
+}
+
+/* 直接调整所有包含分数的段落 */
+p:has(.katex) {
+  line-height: 1.9 !important;
+  margin: 1.0em 0 !important;
+}
+
+/* 更直接的方法：增加所有数学公式的行距 */
+.katex {
+  line-height: 1.5 !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
 }
 
 /* Markdown表格美化样式 */

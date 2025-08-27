@@ -1,4 +1,4 @@
-import React, { Fragment, useRef, useEffect, useState } from 'react';
+import React, { Fragment } from 'react';
 import { assets } from '@/assets/assets';
 import Image from 'next/image';
 import Message from './Message';
@@ -6,29 +6,6 @@ import { useTheme } from '@/context/ThemeContext';
 
 const PinnedMessages = ({ pinnedMessages, onUnpinMessage, isVisible, onToggleVisibility }) => {
   const { isDark } = useTheme();
-  const messagesContainerRef = useRef(null);
-  const [dynamicHeight, setDynamicHeight] = useState('auto');
-  
-  // 计算内容高度并设置动态高度
-  useEffect(() => {
-    if (messagesContainerRef.current && pinnedMessages.length > 0) {
-      // 重置高度为 auto 以获取真实内容高度
-      messagesContainerRef.current.style.height = 'auto';
-      
-      // 获取内容的自然高度
-      const contentHeight = messagesContainerRef.current.scrollHeight;
-      
-      // 根据内容高度设置样式
-      if (contentHeight < 500) {
-        setDynamicHeight('500px');
-      } else {
-        setDynamicHeight('auto');
-      }
-    } else {
-      // 没有消息时使用默认高度
-      setDynamicHeight('auto');
-    }
-  }, [pinnedMessages, isVisible]);
   
   if (!isVisible && pinnedMessages.length === 0) {
     return null;
@@ -64,11 +41,8 @@ const PinnedMessages = ({ pinnedMessages, onUnpinMessage, isVisible, onToggleVis
       </div>
 
       {/* Pinned Messages List */}
-      <div 
-        ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent min-h-0"
-        style={{ height: dynamicHeight }}
-      >
+      <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent min-h-0">
+
         {pinnedMessages.length === 0 ? (
           <div className={`text-center ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-6 sm:mt-8`}>
             <Image src={assets.pin_svgrepo_com} alt="No pins" className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 opacity-50" />
