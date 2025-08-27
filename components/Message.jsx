@@ -233,7 +233,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                     title="HTML Render Preview"
                                     sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock"
                                     style={{ 
-                                        height: isInPinnedPanel ? '1200px' : '350px', // Even larger height for pinned panel
+                                        height: isInPinnedPanel ? '800px' : '350px', // Even larger height for pinned panel
                                         minHeight: isInPinnedPanel ? '500px' : '150px', // Increased minimum height for pinned panel
                                         maxHeight: isInPinnedPanel ? '1200px' : '350px', // Prevent iframe from growing beyond this
                                         overflow: 'hidden', // Hide overflow to prevent expansion
