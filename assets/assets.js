@@ -23,6 +23,8 @@ import qrcode from "./qrcode.png";
 import three_dots from "./three_dots.svg";
 import new_icon from "./new_icon.svg";
 import reshot_icon from "./reshot_icon.svg";
+import pin_svgrepo_com from "./pin_svgrepo_com.svg";
+import mic_svgrepo_com from "./mic_svgrepo_com.svg";
 
 export const assets = {
   arrow_icon,
@@ -50,4 +52,6 @@ export const assets = {
   three_dots,
   new_icon,
   reshot_icon,
+  pin_svgrepo_com,
+  mic_svgrepo_com
 };

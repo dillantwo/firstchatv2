@@ -54,7 +54,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                 images,
                 timestamp: Date.now()
             });
-            toast.success(isPinned ? 'Message unpinned' : 'Message pinned');
+            // Remove toast message from here since parent component will handle it
         }
     };
 
@@ -201,7 +201,8 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                                         timestamp: Date.now(),
                                                         isHtmlOnly: true
                                                     });
-                                                    toast.success(isPinned ? 'HTML content unpinned' : 'HTML content pinned');
+                                                    // Don't use isPinned here since it might not reflect HTML content state correctly
+                                                    // Let the parent component handle the state and toast message
                                                 }
                                             }}
                                             className={`px-3 py-1 text-xs rounded flex items-center gap-1 ${
@@ -212,9 +213,9 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                             title={isPinned ? 'Unpin HTML content' : 'Pin HTML content'}
                                         >
                                             <Image 
-                                                src={assets.pin_icon} 
+                                                src={assets.pin_svgrepo_com} 
                                                 alt={isPinned ? 'Unpin' : 'Pin'} 
-                                                className="w-3 h-3 brightness-0 invert"
+                                                className="w-4 h-4 brightness-0 invert"
                                             />
                                             {isPinned ? 'Unpin' : 'Pin'}
                                         </button>
@@ -588,7 +589,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
 
       <div className={`flex flex-col  w-full ${isInPinnedPanel ? 'mb-6' : 'mb-8'} ${role === 'user' && 'items-end'}`}>
         <div className={`group relative flex ${isInPinnedPanel ? 'max-w-full py-3 px-2' : 'max-w-2xl py-3'} rounded-xl ${role === 'user' ? (isInPinnedPanel ? 'px-3' : `${isDark ? 'bg-[#414158]' : 'bg-blue-100'} px-5`) : 'gap-3'}`}>
-            <div className={`absolute ${role === 'user' ? `${isDark ? '-left-20' : '-left-24'} top-2.5` : 'left-9 -bottom-6'} transition-all ${isInPinnedPanel ? 'hidden' : ''}`}>
+            <div className={`absolute ${role === 'user' ? `${isDark ? '-left-20' : '-left-20'} top-2.5` : 'left-9 -bottom-6'} transition-all ${isInPinnedPanel ? 'hidden' : ''}`}>
                 <div className='flex items-center gap-2'>
                     {
                         role === 'user' ? (
@@ -603,7 +604,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                 <Image 
                                     src={assets.copy_icon} 
                                     alt='Copy' 
-                                    className={`w-4 transition-all ${isDark ? '' : 'brightness-0 invert'}`}
+                                    className={`w-4 transition-all ${isDark ? 'brightness-0 invert' : 'brightness-0 invert'}`}
                                 />
                             </button>
                             {showPinButton && (
@@ -615,9 +616,9 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                     title={isPinned ? 'Unpin message' : 'Pin message'}
                                 >
                                     <Image 
-                                        src={assets.pin_icon} 
+                                        src={assets.pin_svgrepo_com} 
                                         alt={isPinned ? 'Unpin' : 'Pin'} 
-                                        className={`w-5 transition-all ${isDark ? '' : 'brightness-0 invert'}`}
+                                        className={`w-5 transition-all ${isDark ? 'brightness-0 invert' : 'brightness-0 invert'}`}
                                     />
                                 </button>
                             )}
@@ -634,7 +635,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                 <Image 
                                     src={assets.copy_icon} 
                                     alt='Copy' 
-                                    className={`w-4 transition-all ${isDark ? '' : 'brightness-0 invert'}`}
+                                    className={`w-4 transition-all ${isDark ? 'brightness-0 invert' : 'brightness-0 invert'}`}
                                 />
                             </button>
                             {showPinButton && (
@@ -646,9 +647,9 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                     title={isPinned ? 'Unpin message' : 'Pin message'}
                                 >
                                     <Image 
-                                        src={assets.pin_icon} 
+                                        src={assets.pin_svgrepo_com} 
                                         alt={isPinned ? 'Unpin' : 'Pin'} 
-                                        className={`w-5 transition-all ${isDark ? '' : 'brightness-0 invert'}`}
+                                        className={`w-5 transition-all ${isDark ? 'brightness-0 invert' : 'brightness-0 invert'}`}
                                     />
                                 </button>
                             )}

@@ -13,6 +13,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useHydration } from "@/utils/useHydration";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import toast from 'react-hot-toast';
 
 export default function Home() {
 
@@ -56,11 +57,23 @@ export default function Home() {
       setPinnedMessages(prev => prev.filter(pinned => 
         `${pinned.role}-${pinned.content?.slice(0, 100)?.replace(/\s/g, '')}` !== messageId
       ));
+      // Show appropriate toast message
+      if (message.isHtmlOnly) {
+        toast.success('HTML content unpinned');
+      } else {
+        toast.success('Message unpinned');
+      }
     } else {
       // Pin message
       setPinnedMessages(prev => [...prev, { ...message, timestamp: Date.now() }]);
       if (!showPinnedPanel) {
         setShowPinnedPanel(true);
+      }
+      // Show appropriate toast message
+      if (message.isHtmlOnly) {
+        toast.success('HTML content pinned');
+      } else {
+        toast.success('Message pinned');
       }
     }
   };
@@ -120,7 +133,7 @@ export default function Home() {
                 className={`fixed top-3 right-4 z-20 ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-800 hover:bg-gray-900 text-white'} p-2 rounded-lg transition-colors duration-200 flex items-center gap-2 shadow-sm`}
                 title="Show pinned messages"
               >
-                <Image src={assets.pin_icon} alt="Pin" className="w-5 h-5" />
+                <Image src={assets.pin_svgrepo_com} alt="Pin" className="w-5 h-5 brightness-0 invert" />
                 {pinnedMessages.length > 0 && (
                   <span className="bg-blue-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1">
                     {pinnedMessages.length}

@@ -18,6 +18,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
     const [textareaHeight, setTextareaHeight] = useState('auto');
     const [isListening, setIsListening] = useState(false);
     const [speechRecognition, setSpeechRecognition] = useState(null);
+    const [selectedLanguage, setSelectedLanguage] = useState('zh-yue-HK'); // 添加语言状态
     const streamingRef = useRef(false); // Track streaming status
     const fileInputRef = useRef(null);
     const textareaRef = useRef(null);
@@ -39,6 +40,15 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             }
         }
     }, []);
+
+    // 支持的语言列表
+    const supportedLanguages = [
+        { code: 'zh-yue-HK', name: '粵語', flag: '🇭🇰' },
+        { code: 'zh-CN', name: '普通话', flag: '🇨🇳' },
+        { code: 'en-US', name: 'English', flag: '🇺🇸' },
+        { code: 'ja-JP', name: '日本語', flag: '🇯🇵' },
+        { code: 'ko-KR', name: '한국어', flag: '🇰🇷' },
+    ];
 
     // iPad Chrome viewport optimization
     useEffect(() => {
@@ -123,7 +133,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                 recognition.continuous = true; // Enable continuous recognition
                 recognition.interimResults = true; // Show interim results
                 recognition.maxAlternatives = 1;
-                recognition.lang = 'zh-yue-HK'; // Default Cantonese
+                recognition.lang = selectedLanguage; // Use selected language
                 
                 recognition.onstart = () => {
                     setIsListening(true);
@@ -207,7 +217,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                 // Browser does not support speech recognition
             }
         }
-    }, []);
+    }, [selectedLanguage]); // 添加 selectedLanguage 作为依赖项
 
     // Auto-adjust textarea height
     const adjustTextareaHeight = () => {
@@ -282,7 +292,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             // Start speech recognition
             navigator.mediaDevices.getUserMedia({ audio: true })
                 .then(() => {
-                    speechRecognition.lang = 'zh-yue-HK';
+                    speechRecognition.lang = selectedLanguage; // 使用选择的语言
                     setIsListening(true);
                     speechRecognition.start();
                 })
@@ -876,11 +886,29 @@ const PromptBox = ({setIsLoading, isLoading}) => {
               title="Upload Image"
             >
               <Image 
-                className={`w-4 transition-all ${isDark ? '' : 'brightness-0 invert'}`} 
+                className={`w-3.5 transition-all ${isDark ? '' : 'brightness-0 invert'}`} 
                 src={assets.file_upload} 
                 alt='Upload Image'
               />
             </button>
+            
+            {/* Language selector */}
+            <select
+              value={selectedLanguage}
+              onChange={(e) => setSelectedLanguage(e.target.value)}
+              className={`text-xs px-2 py-1 rounded-md border transition-all cursor-pointer ${
+                isDark 
+                  ? 'bg-gray-700 border-gray-600 text-white hover:bg-gray-600' 
+                  : 'bg-white border-gray-300 text-gray-700 hover:border-gray-400'
+              }`}
+              title="Select voice recognition language"
+            >
+              {supportedLanguages.map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.flag} {lang.name}
+                </option>
+              ))}
+            </select>
             
             {/* Voice recognition button */}
             <button
@@ -891,22 +919,22 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                   ? 'bg-red-500 animate-pulse shadow-lg shadow-red-500/50' 
                   : `${isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm opacity-70 hover:opacity-100'}`
               }`}
-              title={isListening ? "Click to stop continuous recording" : "Click to start continuous voice input (supports Cantonese and English)"}
+              title={isListening ? "Click to stop continuous recording" : "Click to start continuous voice input"}
             >
               <Image 
-                className={`w-4 transition-all ${isListening ? 'brightness-0 invert' : `${isDark ? '' : 'brightness-0 invert'}`}`}
-                src={assets.phone_icon} 
+                className={`w-5 transition-all ${isListening ? 'brightness-0 invert' : `${isDark ? 'brightness-0 invert' : 'brightness-0 invert'}`}`}
+                src={assets.mic_svgrepo_com} 
                 alt='Voice Input'
               />
             </button>
             
             <button 
-                className={`${(prompt || uploadedImages.length > 0) && selectedChatflow ? "bg-primary" : "bg-[#71717a]"} rounded-full p-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`${(prompt || uploadedImages.length > 0) && selectedChatflow ? "bg-blue-700 hover:bg-blue-800" : "bg-blue-600"} rounded-full p-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
                 disabled={!selectedChatflow}
                 title={!selectedChatflow ? "Please select a chatflow first" : ""}
             >
                 <Image 
-                    className='w-3.5 aspect-square' 
+                    className='w-3.5 aspect-square brightness-0 invert sepia saturate-[500%] hue-rotate-[190deg]' 
                     src={(prompt || uploadedImages.length > 0) && selectedChatflow ? assets.arrow_icon : assets.arrow_icon_dull} 
                     alt=''
                 />

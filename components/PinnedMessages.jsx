@@ -28,7 +28,7 @@ const PinnedMessages = ({ pinnedMessages, onUnpinMessage, isVisible, onToggleVis
       {/* Header */}
       <div className={`flex items-center justify-between p-3 sm:p-4 ${isDark ? 'border-gray-600' : 'border-gray-300'} border-b flex-shrink-0`}>
         <div className="flex items-center gap-2">
-          <Image src={assets.pin_icon} alt="Pinned" className="w-5 h-5 sm:w-6 sm:h-6" />
+          <Image src={assets.pin_svgrepo_com} alt="Pinned" className="w-5 h-5 sm:w-6 sm:h-6" />
           <h3 className={`${isDark ? 'text-white' : 'text-gray-900'} font-medium text-sm sm:text-base`}>Pinned Messages</h3>
           <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>({pinnedMessages.length})</span>
         </div>
@@ -44,7 +44,7 @@ const PinnedMessages = ({ pinnedMessages, onUnpinMessage, isVisible, onToggleVis
       <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent min-h-0">
         {pinnedMessages.length === 0 ? (
           <div className={`text-center ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-6 sm:mt-8`}>
-            <Image src={assets.pin_icon} alt="No pins" className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 opacity-50" />
+            <Image src={assets.pin_svgrepo_com} alt="No pins" className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 opacity-50" />
             <p className="text-sm sm:text-base">No pinned messages yet</p>
             <p className="text-xs mt-1">Click the pin icon on any message to save it here</p>
           </div>
