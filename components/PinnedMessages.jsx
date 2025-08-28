@@ -82,7 +82,7 @@ const PinnedMessages = ({ pinnedMessages, onUnpinMessage, isVisible, onToggleVis
                     <path d="m9 21 3-6 3 6" />
                     <path d="M15 3a3 3 0 0 0-6 0l-.84 4.2a3 3 0 0 0 2.34 3.56L12 17l1.5-6.24a3 3 0 0 0 2.34-3.56L15 3Z" />
                   </svg>
-                  <span className="hidden sm:inline font-medium">Unpin</span>
+                  <span className="hidden sm:inline font-medium">{t("Unpin")}</span>
                 </button>
               </div>
               
@@ -98,6 +98,11 @@ const PinnedMessages = ({ pinnedMessages, onUnpinMessage, isVisible, onToggleVis
                   />
                 </div>
               </div>
+              
+              {/* Separator line - only show if not the last message */}
+              {index < pinnedMessages.length - 1 && (
+                <div className={`mt-4 sm:mt-6 border-t ${isDark ? 'border-gray-600' : 'border-gray-200'}`}></div>
+              )}
             </div>
           ))
         )}
