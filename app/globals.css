@@ -679,6 +679,56 @@ textarea {
     min-height: -webkit-fill-available;
   }
   
+  /* iPad：统一顶部按钮垂直位置 */
+  .fixed.top-3.right-24,
+  .fixed.top-3.right-36 {
+    top: 0.75rem !important; /* 12px - 适合iPad的按钮高度 */
+  }
+  
+  /* iPad：调整Pin按钮位置，使其与其他按钮完全对齐 - 提高优先级 */
+  button.fixed.top-3.right-4 {
+    top: 0.75rem !important; /* 与其他按钮对齐 */
+    right: 1rem !important; /* 16px */
+    padding: 0.5rem !important; /* 覆盖移动端的padding设置 */
+  }
+  
+  /* iPad：调整ControlBar按钮水平位置，增加间距避免重叠 */
+  .fixed.top-3.right-24 {
+    right: 6rem !important; /* 96px - 语言切换按钮，增加间距 */
+  }
+  
+  .fixed.top-3.right-36 {
+    right: 9rem !important; /* 144px - 主题切换按钮，进一步增加间距 */
+  }
+  
+  /* iPad：确保按钮尺寸一致 */
+  .fixed.top-3.right-24 button,
+  .fixed.top-3.right-36 button,
+  button.fixed.top-3.right-4 {
+    padding: 0.5rem !important; /* 8px - 适合iPad触摸 */
+    min-height: 40px !important; /* 确保足够的触摸区域 */
+    min-width: 40px !important;
+  }
+  
+  /* iPad：特别处理Pin按钮的数字徽章，确保不会影响布局 */
+  button.fixed.top-3.right-4 span {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    z-index: 10;
+  }
+  
+  /* iPad：强制Pin按钮与其他按钮对齐 - 最高优先级 */
+  @media screen and (orientation: portrait) {
+    .fixed.top-3.right-4,
+    button.fixed.top-3.right-4 {
+      top: 0.75rem !important;
+      transform: translateY(0) !important;
+      margin-top: 0 !important;
+      position: fixed !important;
+    }
+  }
+  
   /* 确保聊天容器不会被截断 */
   .chat-container {
     min-height: 0;
