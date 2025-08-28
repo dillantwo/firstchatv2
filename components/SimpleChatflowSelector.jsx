@@ -4,6 +4,7 @@ import { assets } from '@/assets/assets';
 import { useHydration } from '@/utils/useHydration';
 import { useLTIAuth } from '@/context/LTIAuthContext';
 import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
@@ -14,6 +15,7 @@ const SimpleChatflowSelector = ({ selectedChatflow, onChatflowChange }) => {
     const hasHydrated = useHydration();
     const { user, isAuthenticated } = useLTIAuth();
     const { isDark } = useTheme();
+    const { t } = useLanguage();
 
     // Fetch chatflows function
     const fetchChatflows = async () => {
@@ -47,9 +49,9 @@ const SimpleChatflowSelector = ({ selectedChatflow, onChatflowChange }) => {
                 }
             } else {
                 if (data.message === 'Authentication required') {
-                    toast.error('Please login to view available chatflows');
+                    toast.error(t('Please access this tool through Moodle LTI'));
                 } else {
-                    toast.error('Unable to load chatflow list');
+                    toast.error(t('No chatflows available'));
                 }
             }
         } catch (error) {
@@ -58,7 +60,7 @@ const SimpleChatflowSelector = ({ selectedChatflow, onChatflowChange }) => {
                 // Token expired, will be handled by interceptor, no toast needed
                 return;
             }
-            toast.error('Failed to load chatflows, please try again later');
+            toast.error(t('No chatflows available'));
         } finally {
             setIsLoading(false);
         }
@@ -106,7 +108,7 @@ const SimpleChatflowSelector = ({ selectedChatflow, onChatflowChange }) => {
             >
                 <Image src={assets.chat_icon} alt="" className="w-3 h-3" />
                 <span className="truncate max-w-[120px]">
-                    {isLoading ? 'Loading...' : (selectedChatflow?.name || 'Select AI')}
+                    {isLoading ? t('Loading...') : (selectedChatflow?.name || t('Select Chatflow'))}
                 </span>
                 <Image 
                     src={assets.arrow_icon} 
@@ -120,7 +122,7 @@ const SimpleChatflowSelector = ({ selectedChatflow, onChatflowChange }) => {
                 <div className={`absolute bottom-full left-0 mb-1 min-w-[300px] max-w-[400px] ${isDark ? 'bg-[#2f2f35] border-gray-500' : 'bg-white border-gray-300'} border rounded-md shadow-xl z-[9999] max-h-40 overflow-y-auto`}>
                     {chatflows.length === 0 ? (
                         <div className={`px-3 py-2 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                            No available chatflows
+                            {t('No chatflows available')}
                         </div>
                     ) : (
                         chatflows.map((chatflow) => (

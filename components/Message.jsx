@@ -8,6 +8,7 @@ import rehypeKatex from 'rehype-katex'
 import Prism from 'prismjs'
 import toast from 'react-hot-toast'
 import { useTheme } from '@/context/ThemeContext'
+import { useLanguage } from '@/context/LanguageContext'
 
 const Message = ({role, content, images, onPinMessage, isPinned = false, showPinButton = true, isInPinnedPanel = false}) => {
 
@@ -15,6 +16,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
     const [htmlViewMode, setHtmlViewMode] = useState('rendered'); // 'rendered' | 'code'
     const iframeRef = React.useRef(null);
     const { isDark } = useTheme();
+    const { t } = useLanguage();
 
     useEffect(()=>{
         Prism.highlightAll()
@@ -50,7 +52,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
 
     const copyMessage = ()=>{
         navigator.clipboard.writeText(content)
-        toast.success('Message copied to clipboard')
+        toast.success(t('Message copied to clipboard'))
     }
 
     const handlePinMessage = () => {
@@ -217,14 +219,14 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                                     ? 'bg-orange-500 text-white hover:bg-orange-600' 
                                                     : 'bg-blue-500 text-white hover:bg-blue-600'
                                             }`}
-                                            title={isPinned ? 'Unpin HTML content' : 'Pin HTML content'}
+                                            title={isPinned ? t('Unpin message') : t('Pin message')}
                                         >
                                             <Image 
                                                 src={assets.pin_svgrepo_com} 
-                                                alt={isPinned ? 'Unpin' : 'Pin'} 
+                                                alt={isPinned ? t('Unpin message') : t('Pin message')} 
                                                 className="w-4 h-4 brightness-0 invert"
                                             />
-                                            {isPinned ? 'Unpin' : 'Pin'}
+                                            {isPinned ? t('Unpin message') : t('Pin message')}
                                         </button>
                                     )}
                                 </div>
@@ -237,7 +239,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                     key={`iframe-${role}-${content?.slice(0, 50)}`}
                                     srcDoc={processMathContent(htmlCode)}
                                     className="w-full border-0 rounded"
-                                    title="HTML Render Preview"
+                                    title={t("HTML Render Preview")}
                                     sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock"
                                     style={{ 
                                         height: isInPinnedPanel ? '200px' : '350px', // Initial height for pinned panel, will be set to actual content height by adjustHeight
@@ -605,7 +607,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
               className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
             />
             <div className="absolute bottom-2 left-2 bg-black bg-opacity-70 text-white px-3 py-1 rounded-lg text-sm">
-              {previewModal.image.name || 'Image'}
+              {previewModal.image.name || t('Image')}
             </div>
           </div>
         </div>
@@ -623,11 +625,11 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                 className={`opacity-70 hover:opacity-100 w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
                                     isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm'
                                 }`}
-                                title="Copy message"
+                                title={t("Copy message")}
                             >
                                 <Image 
                                     src={assets.copy_icon} 
-                                    alt='Copy' 
+                                    alt={t('Copy')} 
                                     className={`w-4 transition-all ${isDark ? 'brightness-0 invert' : 'brightness-0 invert'}`}
                                 />
                             </button>
@@ -637,11 +639,11 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                     className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
                                         isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm'
                                     } ${isPinned ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
-                                    title={isPinned ? 'Unpin message' : 'Pin message'}
+                                    title={isPinned ? t('Unpin message') : t('Pin message')}
                                 >
                                     <Image 
                                         src={assets.pin_svgrepo_com} 
-                                        alt={isPinned ? 'Unpin' : 'Pin'} 
+                                        alt={isPinned ? t('Unpin') : t('Pin')} 
                                         className={`w-5 transition-all ${isDark ? 'brightness-0 invert' : 'brightness-0 invert'}`}
                                     />
                                 </button>
@@ -654,11 +656,11 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                 className={`opacity-70 hover:opacity-100 w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
                                     isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm'
                                 }`}
-                                title="Copy message"
+                                title={t("Copy message")}
                             >
                                 <Image 
                                     src={assets.copy_icon} 
-                                    alt='Copy' 
+                                    alt={t('Copy')} 
                                     className={`w-4 transition-all ${isDark ? 'brightness-0 invert' : 'brightness-0 invert'}`}
                                 />
                             </button>
@@ -668,11 +670,11 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                     className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
                                         isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm'
                                     } ${isPinned ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
-                                    title={isPinned ? 'Unpin message' : 'Pin message'}
+                                    title={isPinned ? t('Unpin message') : t('Pin message')}
                                 >
                                     <Image 
                                         src={assets.pin_svgrepo_com} 
-                                        alt={isPinned ? 'Unpin' : 'Pin'} 
+                                        alt={isPinned ? t('Unpin message') : t('Pin message')} 
                                         className={`w-5 transition-all ${isDark ? 'brightness-0 invert' : 'brightness-0 invert'}`}
                                     />
                                 </button>
@@ -697,12 +699,12 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                     <div key={index} className='relative group'>
                                         <img 
                                             src={image.url} 
-                                            alt={image.name || `Image ${index + 1}`}
+                                            alt={image.name || `${t('Image')} ${index + 1}`}
                                             className={`max-w-48 max-h-48 object-cover rounded-lg border ${isDark ? 'border-gray-600' : 'border-gray-300'} cursor-pointer hover:opacity-90 transition-opacity`}
                                             onClick={() => openPreviewModal(image)}
                                         />
                                         <div className='absolute bottom-1 left-1 bg-black/70 text-xs px-1 py-0.5 rounded text-white/70 opacity-0 group-hover:opacity-100 transition-opacity'>
-                                            {image.name || `Image ${index + 1}`}
+                                            {image.name || `${t('Image')} ${index + 1}`}
                                         </div>
                                     </div>
                                 ))}

@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { useLTIAuth } from '@/context/LTIAuthContext'
 import { useAppContext } from '@/context/AppContextLTI'
 import { useTheme } from '@/context/ThemeContext'
+import { useLanguage } from '@/context/LanguageContext'
 import ChatLabel from './ChatLabel'
 
 const Sidebar = ({expand, setExpand}) => {
@@ -11,6 +12,7 @@ const Sidebar = ({expand, setExpand}) => {
     const { user, logout } = useLTIAuth()
     const {filteredChats, selectedChatflow, createNewChat} = useAppContext()
     const { isDark } = useTheme()
+    const { t } = useLanguage()
     const [openMenu, setOpenMenu] = useState({id: 0, open: false})
     const [showUserMenu, setShowUserMenu] = useState(false)
 
@@ -31,11 +33,11 @@ const Sidebar = ({expand, setExpand}) => {
             <Image className={expand ? 'w-6' : 'w-7'} src={expand ? assets.chat_icon : assets.chat_icon_dull} alt=''/>
             {!expand && (
                 <div className={`absolute w-max -top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition ${isDark ? 'bg-black text-white' : 'bg-gray-800 text-white'} text-sm px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]`}>
-                    New chat
+                    {t('New chat')}
                     <div className={`w-3 h-3 absolute ${isDark ? 'bg-black' : 'bg-gray-800'} rotate-45 left-1/2 -bottom-1.5 -translate-x-1/2`}></div>
                 </div>
             )}
-            {expand && <p className={`${isDark ? 'text-white' : 'text-white'} text font-medium`}>New chat</p>}
+            {expand && <p className={`${isDark ? 'text-white' : 'text-white'} text font-medium`}>{t('New chat')}</p>}
         </button>
 
         <div className={`mt-8 ${isDark ? 'text-white/25' : 'text-gray-500'} text-sm flex-1 flex flex-col min-h-0 ${expand ? "block" : "hidden"}`}>
@@ -51,7 +53,7 @@ const Sidebar = ({expand, setExpand}) => {
             )}
             
             <div className={`my-1 flex-shrink-0 ${isDark ? 'text-white' : 'text-gray-900'} text-sm font-medium`}>
-                {selectedChatflow ? `${selectedChatflow.name} Chats` : 'Recent Chats'}
+                {selectedChatflow ? `${selectedChatflow.name} ${t('Chats')}` : t('Recent Chats')}
             </div>
             <div className="flex-1 chat-list-container min-h-0 pr-2">
                 {filteredChats.length > 0 ? (
@@ -62,14 +64,14 @@ const Sidebar = ({expand, setExpand}) => {
                     <div className="text-center py-8">
                         <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-sm mb-2`}>
                             {selectedChatflow 
-                                ? `No chats for ${selectedChatflow.name}` 
-                                : 'No chats available'
+                                ? `${t('No chats for')} ${selectedChatflow.name}` 
+                                : t('No chats available')
                             }
                         </p>
                         <p className={`${isDark ? 'text-gray-500' : 'text-gray-400'} text-xs`}>
                             {selectedChatflow 
-                                ? 'Start a new conversation with this chatflow' 
-                                : 'Create your first chat to get started'
+                                ? t('Start a new conversation with this chatflow')
+                                : t('Create your first chat to get started')
                             }
                         </p>
                     </div>
@@ -114,7 +116,7 @@ const Sidebar = ({expand, setExpand}) => {
                                 onClick={logout}
                                 className={`w-full text-left text-red-400 hover:text-red-300 text-sm py-1 px-2 rounded ${isDark ? 'hover:bg-red-900/20' : 'hover:bg-red-50'} transition-colors`}
                             >
-                                Logout
+                                {t('Logout')}
                             </button>
                         </div>
                     )}

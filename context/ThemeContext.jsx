@@ -12,9 +12,9 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState('light');
 
-  // 初始化主题（从 localStorage 读取或默认为 dark）
+  // 初始化主题（从 localStorage 读取或默认为 light）
   useEffect(() => {
     const savedTheme = localStorage.getItem('chat-theme');
     if (savedTheme) {

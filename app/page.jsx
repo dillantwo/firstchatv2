@@ -8,8 +8,10 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import PinnedMessages from "@/components/PinnedMessages";
 import ViewportHandler from "@/components/ViewportHandler";
 import ThemeToggle from "@/components/ThemeToggle";
+import ControlBar from "@/components/ControlBarNew";
 import { useAppContext } from "@/context/AppContextLTI";
 import { useTheme } from "@/context/ThemeContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { useHydration } from "@/utils/useHydration";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
@@ -24,6 +26,7 @@ export default function Home() {
   const [showPinnedPanel, setShowPinnedPanel] = useState(false)
   const {selectedChat, selectedChatflow, handleChatflowChange, createNewChat} = useAppContext()
   const { isDark } = useTheme()
+  const { t } = useLanguage()
   const containerRef = useRef(null)
   const hasHydrated = useHydration();
 
@@ -59,9 +62,9 @@ export default function Home() {
       ));
       // Show appropriate toast message
       if (message.isHtmlOnly) {
-        toast.success('HTML content unpinned');
+        toast.success(t('HTML content unpinned'));
       } else {
-        toast.success('Message unpinned');
+        toast.success(t('Message unpinned'));
       }
     } else {
       // Pin message
@@ -71,9 +74,9 @@ export default function Home() {
       }
       // Show appropriate toast message
       if (message.isHtmlOnly) {
-        toast.success('HTML content pinned');
+        toast.success(t('HTML content pinned'));
       } else {
-        toast.success('Message pinned');
+        toast.success(t('Message pinned'));
       }
     }
   };
@@ -123,17 +126,17 @@ export default function Home() {
               showPinnedPanel ? 'chat-container-with-pinned mr-0' : 'mr-0'
             }`}>
             
-            {/* Theme Toggle Button */}
-            <ThemeToggle />
+            {/* Control Bar with Language and Theme Toggle */}
+            <ControlBar showPinnedPanel={showPinnedPanel} />
             
             {/* Pinned messages toggle button - only show when panel is closed */}
             {!showPinnedPanel && (
               <button
                 onClick={() => setShowPinnedPanel(true)}
                 className={`fixed top-3 right-4 z-20 ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-800 hover:bg-gray-900 text-white'} p-2 rounded-lg transition-colors duration-200 flex items-center gap-2 shadow-sm`}
-                title="Show pinned messages"
+                title={t("Show pinned messages")}
               >
-                <Image src={assets.pin_svgrepo_com} alt="Pin" className="w-5 h-5 brightness-0 invert" />
+                <Image src={assets.pin_svgrepo_com} alt={t("Pin")} className="w-5 h-5 brightness-0 invert" />
                 {pinnedMessages.length > 0 && (
                   <span className="bg-blue-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1">
                     {pinnedMessages.length}
@@ -147,7 +150,7 @@ export default function Home() {
                 <Image onClick={()=> (expand ? setExpand(false) : setExpand(true))}
                  className="rotate-180 cursor-pointer w-6 h-6" src={assets.menu_icon} alt=""/>
                 <div className="absolute w-max top-10 left-0 opacity-0 group-hover:opacity-100 transition bg-black text-white text-xs sm:text-sm px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]">
-                  {expand ? 'Close menu' : 'Open menu'}
+                  {expand ? t('Close menu') : t('Open menu')}
                   <div className="w-3 h-3 absolute bg-black rotate-45 left-4 -top-1.5"></div>
                 </div>
               </div>
@@ -155,7 +158,7 @@ export default function Home() {
               {/* Display current selected chatflow name */}
               <div className="flex-1 mx-2 sm:mx-4 max-w-xs text-center">
                 <span className={`text-xs sm:text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} truncate block`}>
-                  {selectedChatflow ? selectedChatflow.name : 'No AI Selected'}
+                  {selectedChatflow ? selectedChatflow.name : t('No AI Selected')}
                 </span>
               </div>
               
@@ -164,10 +167,10 @@ export default function Home() {
                   onClick={createNewChat}
                   className="opacity-70 cursor-pointer hover:opacity-100 transition-opacity w-6 h-6" 
                   src={assets.chat_icon} 
-                  alt="New chat"
+                  alt={t("New chat")}
                 />
                 <div className="absolute w-max top-10 right-0 opacity-0 group-hover:opacity-100 transition bg-black text-white text-xs sm:text-sm px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]">
-                  New chat
+                  {t("New chat")}
                   <div className="w-3 h-3 absolute bg-black rotate-45 right-4 -top-1.5"></div>
                 </div>
               </div>
@@ -179,12 +182,12 @@ export default function Home() {
               <div className="mt-16 sm:mt-16 md:mt-8 mb-24 md:mb-32 px-4">
               <div className="flex items-center gap-3">
                 <Image src={assets.reshot_icon} alt="" className="h-8 sm:h-10 w-8 sm:w-10"/>
-                <p className="text-xl sm:text-2xl font-medium">Hi, I'm FirstChat.</p>
+                <p className="text-xl sm:text-2xl font-medium">{t("Hi, I'm FirstChat.")}</p>
               </div>
               <p className="text-xs sm:text-sm mt-2 ml-11 sm:ml-13">
                 {selectedChatflow 
-                  ? `How can I help you with ${selectedChatflow.name}?` 
-                  : 'How can I help you today?'
+                  ? t('How can I help you with') + ` ${selectedChatflow.name}?` 
+                  : t('How can I help you today?')
                 }
               </p>
               </div>
@@ -195,9 +198,9 @@ export default function Home() {
             > 
             {/* Desktop: Show chat title and chatflow name */}
             <p className={`hidden md:block fixed top-8 border ${isDark ? 'border-transparent hover:border-gray-500/50' : 'border-transparent hover:border-gray-300/50'} py-1 px-2 rounded-lg font-semibold mb-6`}>
-              {(selectedChat?.name || 'No Chat Selected').length > 8 
-                ? (selectedChat?.name || 'No Chat Selected').substring(0, 8) + '...' 
-                : (selectedChat?.name || 'No Chat Selected')}
+              {(selectedChat?.name || t('No Chat Selected')).length > 8 
+                ? (selectedChat?.name || t('No Chat Selected')).substring(0, 8) + '...' 
+                : (selectedChat?.name || t('No Chat Selected'))}
               {selectedChatflow && (
                 <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} ml-2`}>• {selectedChatflow.name}</span>
               )}
@@ -205,9 +208,9 @@ export default function Home() {
             
             {/* Mobile: Show chat title only */}
             <p className="md:hidden fixed top-20 border border-transparent py-1 px-2 rounded-lg font-semibold mb-6 text-sm">
-              {(selectedChat?.name || 'No Chat Selected').length > 12 
-                ? (selectedChat?.name || 'No Chat Selected').substring(0, 12) + '...' 
-                : (selectedChat?.name || 'No Chat Selected')}
+              {(selectedChat?.name || t('No Chat Selected')).length > 12 
+                ? (selectedChat?.name || t('No Chat Selected')).substring(0, 12) + '...' 
+                : (selectedChat?.name || t('No Chat Selected'))}
             </p>
             {messages.map((msg, index)=>(
               <Message 
@@ -238,7 +241,7 @@ export default function Home() {
           )
           }
           <PromptBox isLoading={isLoading} setIsLoading={setIsLoading}/>
-          <p className={`text-xs absolute bottom-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>AI-generated, for reference only</p>
+          <p className={`text-xs absolute bottom-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t("AI-generated, for reference only")}</p>
 
           </div>
 

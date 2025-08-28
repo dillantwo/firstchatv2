@@ -241,26 +241,35 @@ table {
 
 /* Dark theme table styles */
 .dark table {
-  background-color: #2d2d2d;
-  color: #e5e5e5;
+  background-color: #1a1a1a;
+  color: #ffffff;
 }
 
 .dark table thead {
-  background-color: #3a3a3a;
+  background-color: #2a2a2a;
 }
 
 .dark table th {
-  color: #9ca3af;
-  border-bottom: 1px solid #4b5563;
+  color: #ffffff;
+  font-weight: 600;
+  border-bottom: 1px solid #555555;
 }
 
 .dark table td {
-  color: #e5e5e5;
-  border-bottom: 1px solid #4b5563;
+  color: #ffffff;
+  border-bottom: 1px solid #444444;
+}
+
+.dark table tbody tr {
+  background-color: #1f1f1f;
+}
+
+.dark table tbody tr:nth-child(even) {
+  background-color: #242424;
 }
 
 .dark table tbody tr:hover {
-  background-color: #3a3a3a;
+  background-color: #333333;
 }
 
 /* Light theme table styles */
@@ -677,7 +686,7 @@ textarea {
     display: flex;
     flex-direction: column;
     width: 100%;
-    background-color: #292a2d; /* 确保背景色完全覆盖 */
+    background-color: var(--bg-primary); /* 使用CSS变量确保主题切换正常 */
     padding-bottom: env(safe-area-inset-bottom, 20px);
   }
   
@@ -693,7 +702,7 @@ textarea {
     body {
       margin: 0;
       padding: 0;
-      background-color: #292a2d;
+      background-color: var(--bg-primary);
       overflow-x: hidden;
       min-height: 100vh;
       min-height: 100svh;
@@ -702,7 +711,7 @@ textarea {
     html {
       margin: 0;
       padding: 0;
-      background-color: #292a2d;
+      background-color: var(--bg-primary);
       min-height: 100vh;
       min-height: 100svh;
     }
@@ -715,7 +724,7 @@ textarea {
       height: -webkit-fill-available;
       margin: 0;
       padding: 0;
-      background-color: #292a2d;
+      background-color: var(--bg-primary);
       padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
     }
     
@@ -726,7 +735,7 @@ textarea {
       height: 100svh;
       height: -webkit-fill-available;
       margin: 0;
-      background-color: #292a2d;
+      background-color: var(--bg-primary);
     }
     
     /* Chrome特定：确保底部内容可见 */
@@ -754,7 +763,7 @@ textarea {
   /* 防止意外的水平滚动 */
   body {
     overflow-x: hidden;
-    background-color: #292a2d;
+    background-color: var(--bg-primary);
   }
   
   /* 确保所有容器都不会超出视口 */

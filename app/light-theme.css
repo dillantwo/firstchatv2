@@ -146,3 +146,44 @@
 .light .pinned-message-container i {
   color: #2d2d2d !important;
 }
+
+/* Light theme for AI messages (bot messages) */
+.light .space-y-4 {
+  color: #1a1a1a !important;
+}
+
+.light .space-y-4 p,
+.light .space-y-4 span,
+.light .space-y-4 div,
+.light .space-y-4 li,
+.light .space-y-4 h1,
+.light .space-y-4 h2,
+.light .space-y-4 h3,
+.light .space-y-4 h4,
+.light .space-y-4 h5,
+.light .space-y-4 h6 {
+  color: #1a1a1a !important;
+}
+
+.light .space-y-4 strong,
+.light .space-y-4 b {
+  color: #000000 !important;
+}
+
+.light .space-y-4 em,
+.light .space-y-4 i {
+  color: #2d2d2d !important;
+}
+
+/* Light theme for general AI message content */
+.light [role="assistant"] .space-y-4,
+.light .ai-message,
+.light .bot-message {
+  color: #1a1a1a !important;
+}
+
+.light [role="assistant"] .space-y-4 *,
+.light .ai-message *,
+.light .bot-message * {
+  color: #1a1a1a !important;
+}

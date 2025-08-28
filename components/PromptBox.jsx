@@ -2,6 +2,7 @@ import { assets } from '@/assets/assets'
 import { useAppContext } from '@/context/AppContextLTI';
 import { useLTIAuth } from '@/context/LTIAuthContext';
 import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
 import SimpleChatflowSelector from './SimpleChatflowSelector';
 import axios from 'axios';
 import Image from 'next/image'
@@ -25,6 +26,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
     const {user, chats, setChats, selectedChat, setSelectedChat, selectedChatflow, setSelectedChatflow, createNewChat, handleChatflowChange} = useAppContext();
     const { isAuthenticated, user: authUser } = useLTIAuth();
     const { isDark } = useTheme();
+    const { t } = useLanguage();
 
     // Add performance monitoring effect
     useEffect(() => {
@@ -36,7 +38,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             // Show warning if average response time is too high
             if (metrics.averageResponseTime > 8000) {
                 console.warn(`⚠️ High average response time: ${metrics.averageResponseTime.toFixed(2)}ms`);
-                toast.error('AI 响应速度较慢，建议检查网络连接', { duration: 3000 });
+                toast.error(t('AI 响应速度较慢，建议检查网络连接'), { duration: 3000 });
             }
         }
     }, []);
@@ -85,8 +87,8 @@ const PromptBox = ({setIsLoading, isLoading}) => {
 
     // Preset quick phrases
     const quickPrompts = [
-        { text: "Let's learn", content: "Let's learn！" },
-        { text: 'Please continue', content: 'Please continue ' }
+        { text: t("Let's learn"), content: t("Let's learn") + "！" },
+        { text: t('Please continue'), content: t('Please continue') + ' ' }
     ];
 
     // Handle quick phrase click - send message directly
@@ -280,7 +282,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
     // Handle speech recognition
     const handleSpeechRecognition = () => {
         if (!speechRecognition) {
-            toast.error('Your browser does not support speech recognition feature');
+            toast.error(t('Your browser does not support speech recognition feature'));
             return;
         }
         
@@ -416,10 +418,10 @@ const PromptBox = ({setIsLoading, isLoading}) => {
         try {
             
             if(!user || !isAuthenticated) {
-                toast.error('Please access this tool through Moodle LTI');
+                toast.error(t('Please access this tool through Moodle LTI'));
                 return;
             }
-            if(isLoading) return toast.error('Wait for the previous prompt response');
+            if(isLoading) return toast.error(t('Wait for the previous prompt response'));
             if(!contentToSend.trim()) return; // If no input content, do nothing
             
             // If no chat is selected, automatically create a new chat
@@ -439,7 +441,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                     if (!createResponse.data.success) {
                         setIsLoading(false);
                         setPrompt(contentToSend); // Restore input content
-                        return toast.error('Failed to create new chat. Please try again.');
+                        return toast.error(t('Failed to create new chat. Please try again.'));
                     }
                     
                     // Get newly created chat
@@ -468,12 +470,12 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                         } else {
                             setIsLoading(false);
                             setPrompt(contentToSend);
-                            return toast.error('Failed to find created chat.');
+                            return toast.error(t('Failed to find created chat.'));
                         }
                     } else {
                         setIsLoading(false);
                         setPrompt(contentToSend);
-                        return toast.error('Failed to retrieve chat after creation.');
+                        return toast.error(t('Failed to retrieve chat after creation.'));
                     }
                 } catch (createError) {
                     setIsLoading(false);
@@ -482,7 +484,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                         // Token expired, will be handled by interceptor
                         return;
                     }
-                    return toast.error('Failed to create new chat. Please try again.');
+                    return toast.error(t('Failed to create new chat. Please try again.'));
                 }
             } else {
                 setIsLoading(true);
@@ -721,7 +723,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                 // Token expired, interceptor will handle the popup
                 setPrompt(contentToSend);
             } else {
-                toast.error(error.message || 'Failed to send message');
+                toast.error(t(error.message || 'Failed to send message'));
                 setPrompt(contentToSend);
             }
         } finally {
@@ -796,7 +798,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             // For new chat state (no selected chat or empty messages), only show "Let's learn" button
             const isNewChat = !selectedChat || !selectedChat.messages || selectedChat.messages.length === 0;
             if (isNewChat) {
-              return item.text === "Let's learn";
+              return item.text === t("Let's learn");
             }
             // For non-new chat state, show all buttons
             return true;
@@ -811,13 +813,13 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             {item.text === 'Good' && (
               <Image src={assets.like_icon} alt="" className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100 transition-opacity" />
             )}
-            {item.text === "Let's learn" && (
+            {item.text === t("Let's learn") && (
               <Image src={assets.arrow_icon} alt="" className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100 transition-opacity" />
             )}
             {item.text === 'Please recommend' && (
               <span className="text-sm opacity-70 group-hover:opacity-100 transition-opacity">😊</span>
             )}
-            {item.text === 'Please continue' && (
+            {item.text === t('Please continue') && (
               <Image src={assets.regenerate_icon} alt="" className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100 transition-opacity" />
             )}
             {item.text === 'Free to chat' && (
@@ -861,7 +863,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             touchAction: 'manipulation', // 优化触摸响应
             WebkitTapHighlightColor: 'transparent' // 移除点击高亮
         }}
-        placeholder={isDragging ? 'Drag images here to upload...' : isListening ? 'Continuous listening...' : 'Type a message, drag images, or use voice input...'} 
+        placeholder={isDragging ? t('Drag images here to upload...') : isListening ? t('Continuous listening...') : t('Type a message, drag images, or use voice input...')} 
         onChange={handleInputChange} 
         value={prompt}
         rows={2}/>
@@ -883,7 +885,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
               className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
                 isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm opacity-70 hover:opacity-100'
               }`}
-              title="Upload Image"
+              title={t("Upload Image")}
             >
               <Image 
                 className={`w-3.5 transition-all ${isDark ? '' : 'brightness-0 invert'}`} 
@@ -901,7 +903,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                   ? 'bg-gray-700 border-gray-600 text-white hover:bg-gray-600' 
                   : 'bg-white border-gray-300 text-gray-700 hover:border-gray-400'
               }`}
-              title="Select voice recognition language"
+              title={t("Select voice recognition language")}
             >
               {supportedLanguages.map((lang) => (
                 <option key={lang.code} value={lang.code}>
@@ -919,19 +921,19 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                   ? 'bg-red-500 animate-pulse shadow-lg shadow-red-500/50' 
                   : `${isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm opacity-70 hover:opacity-100'}`
               }`}
-              title={isListening ? "Click to stop continuous recording" : "Click to start continuous voice input"}
+              title={isListening ? t("Click to stop continuous recording") : t("Click to start continuous voice input")}
             >
               <Image 
                 className={`w-5 transition-all ${isListening ? 'brightness-0 invert' : `${isDark ? 'brightness-0 invert' : 'brightness-0 invert'}`}`}
                 src={assets.mic_svgrepo_com} 
-                alt='Voice Input'
+                alt={t('Voice Input')}
               />
             </button>
             
             <button 
                 className={`${(prompt || uploadedImages.length > 0) && selectedChatflow ? "bg-blue-700 hover:bg-blue-800" : "bg-blue-600"} rounded-full p-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
                 disabled={!selectedChatflow}
-                title={!selectedChatflow ? "Please select a chatflow first" : ""}
+                title={!selectedChatflow ? t("Please select a chatflow first") : ""}
             >
                 <Image 
                     className='w-3.5 aspect-square brightness-0 invert sepia saturate-[500%] hue-rotate-[190deg]' 

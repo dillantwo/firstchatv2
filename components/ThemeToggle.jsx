@@ -1,10 +1,12 @@
 'use client';
 import { useTheme } from '@/context/ThemeContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { assets } from '@/assets/assets';
 import Image from 'next/image';
 
 const ThemeToggle = () => {
   const { theme, toggleTheme, isDark } = useTheme();
+  const { t } = useLanguage();
 
   return (
     <div className="fixed top-3 right-28 z-30 group">
@@ -18,7 +20,7 @@ const ThemeToggle = () => {
           }
           transform hover:scale-105 active:scale-95 shadow-sm
         `}
-        title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+        title={t(isDark ? 'Switch to light mode' : 'Switch to dark mode')}
       >
         {/* 太阳图标 (浅色模式) */}
         <div className={`transition-all duration-300 ${isDark ? 'opacity-0 rotate-180 scale-0' : 'opacity-100 rotate-0 scale-100'}`}>
@@ -45,7 +47,7 @@ const ThemeToggle = () => {
       
       {/* Tooltip */}
       <div className="absolute w-max top-10 right-0 opacity-0 group-hover:opacity-100 transition bg-black text-white text-xs sm:text-sm px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]">
-        {isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        {t(isDark ? 'Switch to light mode' : 'Switch to dark mode')}
         <div className="w-3 h-3 absolute bg-black rotate-45 right-4 -top-1.5"></div>
       </div>
     </div>

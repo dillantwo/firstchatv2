@@ -6,6 +6,7 @@ import 'katex/dist/katex.min.css';
 import { LTIAuthProvider } from "@/context/LTIAuthContext";
 import { AppContextProvider } from "@/context/AppContextLTI";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 import { Toaster } from "react-hot-toast";
 
 const inter = Inter({
@@ -31,21 +32,23 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="bg-[#292a2d] dark">
-      <body className={`${inter.className} antialiased bg-[#292a2d]`} suppressHydrationWarning={true}>
-        <ThemeProvider>
-          <LTIAuthProvider>
-            <AppContextProvider>
-              <Toaster toastOptions={
-                {
-                  success: {style: { background: "black", color: "white"}},
-                  error: {style: { background: "black", color: "white"}}
-                }
-              }/>
-              {children}
-            </AppContextProvider>
-          </LTIAuthProvider>
-        </ThemeProvider>
+    <html lang="en" className="bg-white light">
+      <body className={`${inter.className} antialiased bg-white`} suppressHydrationWarning={true}>
+        <LanguageProvider>
+          <ThemeProvider>
+            <LTIAuthProvider>
+              <AppContextProvider>
+                <Toaster toastOptions={
+                  {
+                    success: {style: { background: "black", color: "white"}},
+                    error: {style: { background: "black", color: "white"}}
+                  }
+                }/>
+                {children}
+              </AppContextProvider>
+            </LTIAuthProvider>
+          </ThemeProvider>
+        </LanguageProvider>
       </body>
     </html>
   );
