@@ -461,7 +461,7 @@ table td * {
     /* iPad竖屏：减少移动端导航栏高度 */
     .md\\:hidden.absolute {
       top: 0.25rem !important; /* 更靠近顶部 */
-      height: 2rem !important; /* 固定高度 */
+      height: 1.5rem !important; /* 固定高度为24px，比按钮稍微高一点 */
     }
     
     /* iPad竖屏：调整Pin按钮位置 */
@@ -565,7 +565,7 @@ table td * {
     /* iPad横屏：减少移动端导航栏高度 */
     .md\\:hidden.absolute {
       top: 0.25rem !important; /* 更靠近顶部 */
-      height: 1.75rem !important; /* 横屏时稍微更小 */
+      height: 1.5rem !important; /* 横屏时使用更小的高度24px */
     }
     
     /* iPad横屏：调整pin按钮位置，增加与下方内容的间距 */
@@ -652,7 +652,7 @@ textarea {
   /* 移动端：减少顶部导航栏高度 */
   .md\\:hidden.absolute.px-2.sm\\:px-4 {
     top: 0.25rem !important; /* 减少顶部距离 */
-    height: 2rem !important; /* 固定高度为32px */
+    height: 1.5rem !important; /* 固定高度为24px，更紧凑 */
   }
   
   /* 移动端：调整Pin按钮位置 */
