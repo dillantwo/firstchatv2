@@ -19,6 +19,10 @@ const translations = {
     'Rename': '重新命名',
     'Delete': '刪除',
     'Enter new name': '輸入新名稱',
+    'Rename Chat': '重新命名對話',
+    'Name cannot be empty': '名稱不能為空',
+    'Delete Chat': '刪除對話',
+    'Are you sure you want to delete this chat? This action cannot be undone.': '您確定要刪除此對話嗎？此操作無法復原。',
     
     // PromptBox
     'Type a message, drag images, or use voice input...': '輸入訊息、拖曳圖片或使用語音輸入...',
@@ -141,6 +145,10 @@ const translations = {
     'Rename': 'Rename',
     'Delete': 'Delete',
     'Enter new name': 'Enter new name',
+    'Rename Chat': 'Rename Chat',
+    'Name cannot be empty': 'Name cannot be empty',
+    'Delete Chat': 'Delete Chat',
+    'Are you sure you want to delete this chat? This action cannot be undone.': 'Are you sure you want to delete this chat? This action cannot be undone.',
     
     // PromptBox
     'Type a message, drag images, or use voice input...': 'Type a message, drag images, or use voice input...',

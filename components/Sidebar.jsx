@@ -31,7 +31,7 @@ const Sidebar = ({expand, setExpand}) => {
             </div>
         </div>
 
-        <button onClick={createNewChat} className={`mt-8 flex items-center justify-center cursor-pointer ${expand ? "bg-primary hover:opacity-90 rounded-2xl gap-2 p-2.5 w-max" : `group relative h-9 w-9 mx-auto ${isDark ? 'hover:bg-gray-500/30' : 'hover:bg-gray-300'} rounded-lg`}`}>
+        <button onClick={createNewChat} className={`mt-8 flex items-center justify-center cursor-pointer select-none ${expand ? "bg-primary hover:opacity-90 rounded-2xl gap-2 p-2.5 w-max" : `group relative h-9 w-9 mx-auto ${isDark ? 'hover:bg-gray-500/30' : 'hover:bg-gray-300'} rounded-lg`}`}>
             <Image className={expand ? 'w-6' : 'w-7'} src={expand ? assets.chat_icon : assets.chat_icon_dull} alt=''/>
             {!expand && (
                 <div className={`absolute w-max -top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition ${isDark ? 'bg-black text-white' : 'bg-gray-800 text-white'} text-sm px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]`}>
@@ -39,7 +39,7 @@ const Sidebar = ({expand, setExpand}) => {
                     <div className={`w-3 h-3 absolute ${isDark ? 'bg-black' : 'bg-gray-800'} rotate-45 left-1/2 -bottom-1.5 -translate-x-1/2`}></div>
                 </div>
             )}
-            {expand && <p className={`${isDark ? 'text-white' : 'text-white'} text font-medium`}>{t('New chat')}</p>}
+            {expand && <p className={`${isDark ? 'text-white' : 'text-white'} text font-medium select-none`}>{t('New chat')}</p>}
         </button>
 
         <div className={`mt-8 ${isDark ? 'text-white/25' : 'text-gray-500'} text-sm flex-1 flex flex-col min-h-0 ${expand ? "block" : "hidden"}`}>
@@ -49,7 +49,7 @@ const Sidebar = ({expand, setExpand}) => {
                         <div className={`w-2 h-2 rounded-full ${selectedChatflow.deployed ? 'bg-green-500' : 'bg-gray-500'} mt-1 flex-shrink-0`} />
                     )}
                     <div className="flex-1 min-w-0">
-                        <span className="text-sm leading-5 block word-break break-all whitespace-normal">
+                        <span className="text-sm leading-5 block word-break break-all whitespace-normal select-none">
                             {selectedChatflow ? `${selectedChatflow.name} ${t('Chats')}` : t('Recent Chats')}
                         </span>
                     </div>
@@ -61,7 +61,7 @@ const Sidebar = ({expand, setExpand}) => {
                         <ChatLabel key={chat._id} name={chat.name} id={chat._id} openMenu={openMenu} setOpenMenu={setOpenMenu}/>
                     )
                 ) : (
-                    <div className="text-center py-8">
+                    <div className="text-center py-8 select-none">
                         <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} text-sm mb-2`}>
                             {selectedChatflow 
                                 ? `${t('No chats for')} ${selectedChatflow.name}` 
@@ -99,7 +99,7 @@ const Sidebar = ({expand, setExpand}) => {
                                 {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                             </div>
                         )}
-                        {expand && <span className="truncate">{user.username || user.name || user.email}</span>}
+                        {expand && <span className="truncate select-none">{user.username || user.name || user.email}</span>}
                     </div>
                     
                     {showUserMenu && expand && (

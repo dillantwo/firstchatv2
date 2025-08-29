@@ -45,11 +45,9 @@ const PromptBox = ({setIsLoading, isLoading}) => {
 
     // 支持的语言列表
     const supportedLanguages = [
-        { code: 'zh-yue-HK', name: '粵語', flag: '🇭🇰' },
-        { code: 'zh-CN', name: '普通话', flag: '🇨🇳' },
-        { code: 'en-US', name: 'English', flag: '🇺🇸' },
-        { code: 'ja-JP', name: '日本語', flag: '🇯🇵' },
-        { code: 'ko-KR', name: '한국어', flag: '🇰🇷' },
+        { code: 'en-US', name: 'English', flag: 'US' },
+        { code: 'zh-yue-HK', name: '粵語', flag: 'HK' },
+        { code: 'zh-CN', name: '普通话', flag: 'CN' },
     ];
 
     // iPad Chrome viewport optimization
