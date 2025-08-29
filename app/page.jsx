@@ -182,7 +182,7 @@ export default function Home() {
               <div className="mt-16 sm:mt-16 md:mt-8 mb-24 md:mb-32 px-4">
               <div className="flex items-center gap-3">
                 <Image src={assets.reshot_icon} alt="" className="h-8 sm:h-10 w-8 sm:w-10"/>
-                <p className="text-xl sm:text-2xl font-medium">{t("Hi, I'm FirstChat.")}</p>
+                <p className="text-xl sm:text-2xl font-medium">{t("Hi, I'm AI ChatBot.")}</p>
               </div>
               <p className="text-xs sm:text-sm mt-2 ml-11 sm:ml-13">
                 {selectedChatflow 

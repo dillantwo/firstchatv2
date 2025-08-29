@@ -20,7 +20,9 @@ const Sidebar = ({expand, setExpand}) => {
     <div className={`flex flex-col justify-between ${isDark ? 'bg-[#212327]' : 'bg-gray-50 border-r border-gray-200'} pt-7 transition-all z-50 max-md:absolute max-md:h-screen max-md:h-[100vh] max-md:h-[-webkit-fill-available] overflow-hidden ${expand ? 'p-4 w-64 min-w-64' : 'md:w-20 w-0 max-md:overflow-hidden'}`}>
       <div className="flex flex-col min-h-0 flex-1">
         <div className={`flex ${expand ? "flex-row gap-10" : "flex-col items-center gap-8"}`}>
-            <Image className={expand ? "w-36" : "w-10"} src={expand ? assets.logo_text : assets.reshot_icon} alt=''/>
+            <div className={`${expand && isDark ? 'bg-white/90 rounded-lg px-3 py-2' : ''} transition-all duration-300`}>
+                <Image className={expand ? "w-36" : "w-10"} src={expand ? assets.logo_text : assets.reshot_icon} alt=''/>
+            </div>
 
             <div onClick={()=> expand ? setExpand(false) : setExpand(true)}
              className={`group relative flex items-center justify-center ${isDark ? 'hover:bg-gray-500/20' : 'hover:bg-gray-300'} transition-all duration-300 h-9 w-9 aspect-square rounded-lg cursor-pointer`}>
@@ -41,19 +43,17 @@ const Sidebar = ({expand, setExpand}) => {
         </button>
 
         <div className={`mt-8 ${isDark ? 'text-white/25' : 'text-gray-500'} text-sm flex-1 flex flex-col min-h-0 ${expand ? "block" : "hidden"}`}>
-            {/* 显示当前 chatflow 名称 */}
-            {selectedChatflow && (
-                <div className={`mb-4 p-3 ${isDark ? 'bg-[#2a2b2f] border-gray-600/30' : 'bg-gray-100 border-gray-200'} rounded-lg border flex-shrink-0`}>
-                    <div className="flex items-center gap-2 mb-1">
-                        <div className={`w-2 h-2 rounded-full ${selectedChatflow.deployed ? 'bg-green-500' : 'bg-gray-500'}`} />
-                        <p className={`${isDark ? 'text-white' : 'text-gray-900'} text-sm font-medium truncate`}>{selectedChatflow.name}</p>
+            <div className={`mb-4 flex-shrink-0 ${isDark ? 'text-white' : 'text-gray-900'} font-medium`}>
+                <div className="flex gap-2">
+                    {selectedChatflow && (
+                        <div className={`w-2 h-2 rounded-full ${selectedChatflow.deployed ? 'bg-green-500' : 'bg-gray-500'} mt-1 flex-shrink-0`} />
+                    )}
+                    <div className="flex-1 min-w-0">
+                        <span className="text-sm leading-5 block word-break break-all whitespace-normal">
+                            {selectedChatflow ? `${selectedChatflow.name} ${t('Chats')}` : t('Recent Chats')}
+                        </span>
                     </div>
-                    <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} truncate`}>{selectedChatflow.category}</p>
                 </div>
-            )}
-            
-            <div className={`my-1 flex-shrink-0 ${isDark ? 'text-white' : 'text-gray-900'} text-sm font-medium`}>
-                {selectedChatflow ? `${selectedChatflow.name} ${t('Chats')}` : t('Recent Chats')}
             </div>
             <div className="flex-1 chat-list-container min-h-0 pr-2">
                 {filteredChats.length > 0 ? (

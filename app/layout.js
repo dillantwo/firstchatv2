@@ -15,8 +15,8 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "FirstChat",
-  description: "QEF FirstChat",
+  title: "AI ChatBot",
+  description: "QEF AI ChatBot",
 };
 
 export const viewport = {

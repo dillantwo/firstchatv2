@@ -25,6 +25,8 @@ import new_icon from "./new_icon.svg";
 import reshot_icon from "./reshot_icon.svg";
 import pin_svgrepo_com from "./pin_svgrepo_com.svg";
 import mic_svgrepo_com from "./mic_svgrepo_com.svg";
+import moon_svg from "./moon_svg.svg";
+import sun_svg from "./sun_svg.svg";
 
 export const assets = {
   arrow_icon,
@@ -53,5 +55,7 @@ export const assets = {
   new_icon,
   reshot_icon,
   pin_svgrepo_com,
-  mic_svgrepo_com
+  mic_svgrepo_com,
+  sun_svg,
+  moon_svg
 };
