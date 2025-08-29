@@ -83,7 +83,7 @@ const ChatLabel = ({openMenu, setOpenMenu, id, name}) => {
         <p className='group-hover:max-w-4/6 truncate flex-1 min-w-0 select-none'>{name}</p>
         <div onClick={e=>{e.stopPropagation();setOpenMenu({id: id, open: !openMenu.open})}}
          className={`group relative flex items-center justify-center h-6 w-6 aspect-square ${isDark ? 'hover:bg-black/80' : 'hover:bg-gray-300'} rounded-lg flex-shrink-0`}>
-          <Image src={assets.three_dots} alt='' className={`w-4 ${openMenu.id === id && openMenu.open ? '' : 'hidden'} group-hover:block`}/>
+          <Image src={assets.three_dots} alt='' className={`w-4 ${openMenu.id === id && openMenu.open ? '' : 'hidden'} group-hover:block touch-device-visible`}/>
           <div className={`absolute ${openMenu.id === id && openMenu.open ? 'block' : 'hidden'} -right-2 top-6 ${isDark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'} rounded-xl w-max p-2 z-[9999] shadow-lg border`}>
               <div onClick={openRenameDialog} className={`flex items-center gap-3 ${isDark ? 'hover:bg-white/10 text-white' : 'hover:bg-gray-100 text-gray-800'} px-3 py-2 rounded-lg whitespace-nowrap`}>
                   <Image src={assets.pencil_icon} alt='' className='w-4'/>

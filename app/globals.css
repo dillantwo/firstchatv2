@@ -199,6 +199,21 @@ pre{
   line-height: 1.9 !important;
 }
 
+/* iPad 和觸屏設備上強制顯示三個點菜單 */
+@media (hover: none) and (pointer: coarse) {
+  .touch-device-visible {
+    display: block !important;
+  }
+}
+
+/* 專門針對 iPad 的媒體查詢 */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape),
+       (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  .touch-device-visible {
+    display: block !important;
+  }
+}
+
 .message-with-math p {
   line-height: 1.9 !important;
   margin-bottom: 1.0em !important;
