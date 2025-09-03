@@ -8,7 +8,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-const SimpleChatflowSelector = ({ selectedChatflow, onChatflowChange }) => {
+const SimpleChatflowSelector = ({ selectedChatflow, onChatflowChange, disabled = false }) => {
     const [chatflows, setChatflows] = useState([]);
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -102,9 +102,11 @@ const SimpleChatflowSelector = ({ selectedChatflow, onChatflowChange }) => {
         <div className="relative">
             {/* Simple selection button */}
             <button
-                onClick={() => setIsOpen(!isOpen)}
-                className={`flex items-center gap-2 px-2 py-1.5 ${isDark ? 'bg-[#404045] border-gray-500 text-white hover:bg-gray-600' : 'bg-gray-800 border-gray-600 text-gray-100 hover:bg-gray-900 opacity-70 hover:opacity-100'} border rounded-md transition-all text-xs shadow-sm`}
-                disabled={isLoading}
+                onClick={() => !disabled && setIsOpen(!isOpen)}
+                className={`flex items-center gap-2 px-2 py-1.5 ${isDark ? 'bg-[#404045] border-gray-500 text-white hover:bg-gray-600' : 'bg-gray-800 border-gray-600 text-gray-100 hover:bg-gray-900 opacity-70 hover:opacity-100'} border rounded-md transition-all text-xs shadow-sm ${
+                    disabled ? 'opacity-30 cursor-not-allowed' : ''
+                }`}
+                disabled={isLoading || disabled}
             >
                 <Image src={assets.chat_icon} alt="" className="w-3 h-3" />
                 <span className="truncate max-w-[120px]">
@@ -118,7 +120,7 @@ const SimpleChatflowSelector = ({ selectedChatflow, onChatflowChange }) => {
             </button>
 
             {/* Simple dropdown menu with solid background */}
-            {isOpen && !isLoading && (
+            {isOpen && !isLoading && !disabled && (
                 <div className={`absolute bottom-full left-0 mb-1 min-w-[300px] max-w-[400px] ${isDark ? 'bg-[#2f2f35] border-gray-500' : 'bg-white border-gray-300'} border rounded-md shadow-xl z-[9999] max-h-40 overflow-y-auto`}>
                     {chatflows.length === 0 ? (
                         <div className={`px-3 py-2 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>

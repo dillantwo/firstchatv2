@@ -20,6 +20,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
     const [isListening, setIsListening] = useState(false);
     const [speechRecognition, setSpeechRecognition] = useState(null);
     const [selectedLanguage, setSelectedLanguage] = useState('zh-yue-HK'); // 添加语言状态
+    const [isStreaming, setIsStreaming] = useState(false); // 添加流式传输状态
     const streamingRef = useRef(false); // Track streaming status
     const fileInputRef = useRef(null);
     const textareaRef = useRef(null);
@@ -91,6 +92,9 @@ const PromptBox = ({setIsLoading, isLoading}) => {
 
     // Handle quick phrase click - send message directly
     const handleQuickPrompt = async (content) => {
+        // 如果正在加载或流式传输，则不允许发送
+        if (isLoading || isStreaming) return;
+        
         // Create a mock event object for sendPrompt function
         const mockEvent = {
             preventDefault: () => {}
@@ -271,7 +275,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
     }, [prompt]);
 
     const handleKeyDown = (e)=>{
-        if(e.key === "Enter" && !e.shiftKey){
+        if(e.key === "Enter" && !e.shiftKey && !isLoading && !isStreaming){
             e.preventDefault();
             sendPrompt(e);
         }
@@ -403,6 +407,16 @@ const PromptBox = ({setIsLoading, isLoading}) => {
         setPreviewModal({ isOpen: false, image: null });
     };
 
+    // 停止流式传输
+    const stopStreaming = () => {
+        streamingRef.current = false;
+        setIsStreaming(false);
+        setIsLoading(false);
+        
+        // 显示停止消息
+        toast.success(t('Response stopped'));
+    };
+
     const sendPrompt = async (e)=>{
         e.preventDefault();
         
@@ -422,11 +436,15 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             if(isLoading) return toast.error(t('Wait for the previous prompt response'));
             if(!contentToSend.trim()) return; // If no input content, do nothing
             
+            // 立即设置加载和流式传输状态
+            setIsLoading(true);
+            setIsStreaming(true);
+            setPrompt(""); // Clear input to prevent duplicate submission
+            
             // If no chat is selected, automatically create a new chat
             let currentChat = selectedChat;
             if(!currentChat) {
-                setIsLoading(true);
-                setPrompt(""); // Clear input to prevent duplicate submission
+                // 状态已经在上面设置了，这里不需要重复设置
                 
                 try {
                     // Create new chat
@@ -437,7 +455,9 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                     });
                     
                     if (!createResponse.data.success) {
+                        // 恢复状态
                         setIsLoading(false);
+                        setIsStreaming(false);
                         setPrompt(contentToSend); // Restore input content
                         return toast.error(t('Failed to create new chat. Please try again.'));
                     }
@@ -466,17 +486,23 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                             setChats(chatsResponse.data.data);
                             setSelectedChat(newChat);
                         } else {
+                            // 恢复状态
                             setIsLoading(false);
+                            setIsStreaming(false);
                             setPrompt(contentToSend);
                             return toast.error(t('Failed to find created chat.'));
                         }
                     } else {
+                        // 恢复状态
                         setIsLoading(false);
+                        setIsStreaming(false);
                         setPrompt(contentToSend);
                         return toast.error(t('Failed to retrieve chat after creation.'));
                     }
                 } catch (createError) {
+                    // 恢复状态
                     setIsLoading(false);
+                    setIsStreaming(false);
                     setPrompt(contentToSend);
                     if (createError.response?.status === 401) {
                         // Token expired, will be handled by interceptor
@@ -484,9 +510,6 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                     }
                     return toast.error(t('Failed to create new chat. Please try again.'));
                 }
-            } else {
-                setIsLoading(true);
-                setPrompt("");
             }
 
             // Now send message
@@ -577,6 +600,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             // Optimized streaming effect - 提升显示速度
             const streamMessage = (fullContent) => {
                 streamingRef.current = true; // Start streaming
+                setIsStreaming(true); // 设置流式传输状态
                 
                 // Use Array.from to properly handle Unicode characters including Chinese
                 const chars = Array.from(fullContent);
@@ -590,6 +614,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                     
                     if (currentIndex >= chars.length) {
                         streamingRef.current = false;
+                        setIsStreaming(false); // 清除流式传输状态
                         // Final update to ensure complete content is displayed
                         setSelectedChat((prev) => {
                             if (!prev) return prev;
@@ -678,6 +703,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                         setTimeout(() => {
                             if (streamingRef.current) {
                                 streamingRef.current = false;
+                                setIsStreaming(false); // 清除流式传输状态
                                 setSelectedChat((prev) => {
                                     if (!prev) return prev;
                                     const updatedMessages = [
@@ -712,10 +738,16 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             setUploadedImages([]);
         }else{
             toast.error(data.message);
+            // 恢复状态
+            setIsStreaming(false);
             setPrompt(contentToSend);
         }
 
         } catch (error) {
+            // 清除流式传输状态
+            streamingRef.current = false;
+            setIsStreaming(false);
+            
             // 401 errors are automatically handled by axios interceptor
             if (error.response?.status === 401) {
                 // Token expired, interceptor will handle the popup
@@ -726,6 +758,8 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             }
         } finally {
             setIsLoading(false);
+            // 注意：这里不清除 isStreaming，因为可能正在流式传输
+            // isStreaming 会在流式传输完成或被停止时清除
         }
     }
 
@@ -806,7 +840,10 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             key={item.text}
             type="button"
             onClick={() => handleQuickPrompt(item.content)}
-            className={`quick-prompt-btn flex items-center gap-1.5 px-4 py-2 ${isDark ? 'bg-[#404045]/80 border-gray-300/30 text-white/90 hover:bg-gray-500/30 hover:border-gray-300/60' : 'bg-gray-800 border-gray-600 text-gray-100 hover:bg-gray-900 hover:border-gray-500 opacity-70 hover:opacity-100'} border rounded-full text-xs group min-w-[100px] justify-center transition-all shadow-sm`}
+            disabled={isLoading || isStreaming}
+            className={`quick-prompt-btn flex items-center gap-1.5 px-4 py-2 ${isDark ? 'bg-[#404045]/80 border-gray-300/30 text-white/90 hover:bg-gray-500/30 hover:border-gray-300/60' : 'bg-gray-800 border-gray-600 text-gray-100 hover:bg-gray-900 hover:border-gray-500 opacity-70 hover:opacity-100'} border rounded-full text-xs group min-w-[100px] justify-center transition-all shadow-sm ${
+                (isLoading || isStreaming) ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             {item.text === 'Good' && (
               <Image src={assets.like_icon} alt="" className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100 transition-opacity" />
@@ -847,7 +884,10 @@ const PromptBox = ({setIsLoading, isLoading}) => {
         ref={textareaRef}
         onKeyDown={handleKeyDown}
         onPaste={handlePaste}
-        className={`outline-none w-full resize-none bg-transparent leading-6 text-sm sm:text-base ${isDark ? 'placeholder:text-gray-400 text-white' : 'placeholder:text-gray-500 text-gray-900'} scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent textarea-smooth`}
+        disabled={isLoading || isStreaming}
+        className={`outline-none w-full resize-none bg-transparent leading-6 text-sm sm:text-base ${isDark ? 'placeholder:text-gray-400 text-white' : 'placeholder:text-gray-500 text-gray-900'} scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent textarea-smooth ${
+            (isLoading || isStreaming) ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
         style={{ 
             minHeight: '48px', // Minimum height for 2 lines
             maxHeight: '192px', // Maximum height for 8 lines
@@ -871,7 +911,8 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                 {/* Chatflow selector - bottom left position */}
                 <SimpleChatflowSelector 
                     selectedChatflow={selectedChatflow} 
-                    onChatflowChange={handleChatflowChange} 
+                    onChatflowChange={handleChatflowChange}
+                    disabled={isLoading || isStreaming}
                 />
             </div>
 
@@ -880,9 +921,10 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             <button
               type="button"
               onClick={openFileSelector}
+              disabled={isLoading || isStreaming}
               className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
                 isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm opacity-70 hover:opacity-100'
-              }`}
+              } ${(isLoading || isStreaming) ? 'opacity-30 cursor-not-allowed' : ''}`}
               title={t("Upload Image")}
             >
               <Image 
@@ -896,11 +938,12 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             <select
               value={selectedLanguage}
               onChange={(e) => setSelectedLanguage(e.target.value)}
+              disabled={isLoading || isStreaming}
               className={`text-xs px-2 py-1 rounded-md border transition-all cursor-pointer ${
                 isDark 
                   ? 'bg-gray-700 border-gray-600 text-white hover:bg-gray-600' 
                   : 'bg-white border-gray-300 text-gray-700 hover:border-gray-400'
-              }`}
+              } ${(isLoading || isStreaming) ? 'opacity-30 cursor-not-allowed' : ''}`}
               title={t("Select voice recognition language")}
             >
               {supportedLanguages.map((lang) => (
@@ -914,11 +957,12 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             <button
               type="button"
               onClick={handleSpeechRecognition}
+              disabled={isLoading || isStreaming}
               className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
                 isListening 
                   ? 'bg-red-500 animate-pulse shadow-lg shadow-red-500/50' 
                   : `${isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm opacity-70 hover:opacity-100'}`
-              }`}
+              } ${(isLoading || isStreaming) ? 'opacity-30 cursor-not-allowed' : ''}`}
               title={isListening ? t("Click to stop continuous recording") : t("Click to start continuous voice input")}
             >
               <Image 
@@ -929,14 +973,34 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             </button>
             
             <button 
-                className={`${(prompt || uploadedImages.length > 0) && selectedChatflow ? "bg-blue-700 hover:bg-blue-800" : "bg-blue-600"} rounded-full p-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
-                disabled={!selectedChatflow}
-                title={!selectedChatflow ? t("Please select a chatflow first") : ""}
+                type={(isLoading || isStreaming) ? "button" : "submit"}
+                onClick={(isLoading || isStreaming) ? stopStreaming : undefined}
+                className={`${
+                    (isLoading || isStreaming)
+                        ? "bg-red-600 hover:bg-red-700" 
+                        : (prompt || uploadedImages.length > 0) && selectedChatflow 
+                            ? "bg-blue-700 hover:bg-blue-800" 
+                            : "bg-blue-600"
+                } rounded-full p-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
+                disabled={!selectedChatflow && !(isLoading || isStreaming)}
+                title={
+                    (isLoading || isStreaming)
+                        ? t("Click to stop response") 
+                        : !selectedChatflow 
+                            ? t("Please select a chatflow first") 
+                            : ""
+                }
             >
                 <Image 
                     className='w-3.5 aspect-square brightness-0 invert sepia saturate-[500%] hue-rotate-[190deg]' 
-                    src={(prompt || uploadedImages.length > 0) && selectedChatflow ? assets.arrow_icon : assets.arrow_icon_dull} 
-                    alt=''
+                    src={
+                        (isLoading || isStreaming)
+                            ? assets.stop_icon 
+                            : (prompt || uploadedImages.length > 0) && selectedChatflow 
+                                ? assets.arrow_icon 
+                                : assets.arrow_icon_dull
+                    } 
+                    alt={(isLoading || isStreaming) ? t('Stop') : t('Send')}
                 />
             </button>
             </div>

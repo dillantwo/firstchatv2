@@ -27,6 +27,7 @@ import pin_svgrepo_com from "./pin_svgrepo_com.svg";
 import mic_svgrepo_com from "./mic_svgrepo_com.svg";
 import moon_svg from "./moon_svg.svg";
 import sun_svg from "./sun_svg.svg";
+import stop_icon from "./stop_icon.svg";
 
 export const assets = {
   arrow_icon,
@@ -57,5 +58,6 @@ export const assets = {
   pin_svgrepo_com,
   mic_svgrepo_com,
   sun_svg,
-  moon_svg
+  moon_svg,
+  stop_icon
 };
