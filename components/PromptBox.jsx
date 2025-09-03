@@ -22,6 +22,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
     const [selectedLanguage, setSelectedLanguage] = useState('zh-yue-HK'); // 添加语言状态
     const [isStreaming, setIsStreaming] = useState(false); // 添加流式传输状态
     const streamingRef = useRef(false); // Track streaming status
+    const abortControllerRef = useRef(null); // Track current request for cancellation
     const fileInputRef = useRef(null);
     const textareaRef = useRef(null);
     const {user, chats, setChats, selectedChat, setSelectedChat, selectedChatflow, setSelectedChatflow, createNewChat, handleChatflowChange} = useAppContext();
@@ -100,19 +101,11 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             preventDefault: () => {}
         };
         
-        // Temporarily set prompt to quick phrase content
-        const originalPrompt = prompt;
-        setPrompt(content);
-        
-        // Wait for a microtask to ensure state update
-        await new Promise(resolve => setTimeout(resolve, 0));
-        
-        // Directly call sendPrompt to send message
+        // Directly call sendPrompt to send message without modifying prompt state
         try {
             await sendPromptWithContent(mockEvent, content);
         } catch (error) {
-            // If sending fails, restore original prompt
-            setPrompt(originalPrompt);
+            console.error('Failed to send quick prompt:', error);
         }
     };
 
@@ -124,6 +117,11 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             if (speechRecognition && isListening) {
                 speechRecognition.stop();
                 setIsListening(false);
+            }
+            // Clean up any ongoing requests
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+                abortControllerRef.current = null;
             }
         };
     }, [speechRecognition, isListening]);
@@ -413,6 +411,12 @@ const PromptBox = ({setIsLoading, isLoading}) => {
         setIsStreaming(false);
         setIsLoading(false);
         
+        // Cancel the ongoing request if it exists
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            abortControllerRef.current = null;
+        }
+        
         // 显示停止消息
         toast.success(t('Response stopped'));
     };
@@ -441,6 +445,9 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             setIsStreaming(true);
             setPrompt(""); // Clear input to prevent duplicate submission
             
+            // Create abort controller for this request
+            abortControllerRef.current = new AbortController();
+            
             // If no chat is selected, automatically create a new chat
             let currentChat = selectedChat;
             if(!currentChat) {
@@ -458,6 +465,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                         // 恢复状态
                         setIsLoading(false);
                         setIsStreaming(false);
+                        abortControllerRef.current = null;
                         setPrompt(contentToSend); // Restore input content
                         return toast.error(t('Failed to create new chat. Please try again.'));
                     }
@@ -489,6 +497,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                             // 恢复状态
                             setIsLoading(false);
                             setIsStreaming(false);
+                            abortControllerRef.current = null;
                             setPrompt(contentToSend);
                             return toast.error(t('Failed to find created chat.'));
                         }
@@ -496,6 +505,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                         // 恢复状态
                         setIsLoading(false);
                         setIsStreaming(false);
+                        abortControllerRef.current = null;
                         setPrompt(contentToSend);
                         return toast.error(t('Failed to retrieve chat after creation.'));
                     }
@@ -503,6 +513,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                     // 恢复状态
                     setIsLoading(false);
                     setIsStreaming(false);
+                    abortControllerRef.current = null;
                     setPrompt(contentToSend);
                     if (createError.response?.status === 401) {
                         // Token expired, will be handled by interceptor
@@ -558,6 +569,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
         const {data} = await withPerformanceTracking(chatId, () => 
             axios.post('/api/chat/ai', sendData, {
                 timeout: 60000, // 60秒超时
+                signal: abortControllerRef.current?.signal, // Add abort signal
                 withCredentials: true,
                 headers: {
                     'Content-Type': 'application/json',
@@ -736,10 +748,14 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             
             // Clear uploaded images
             setUploadedImages([]);
+            
+            // Clear abort controller since request completed successfully
+            abortControllerRef.current = null;
         }else{
             toast.error(data.message);
             // 恢复状态
             setIsStreaming(false);
+            abortControllerRef.current = null;
             setPrompt(contentToSend);
         }
 
@@ -747,6 +763,15 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             // 清除流式传输状态
             streamingRef.current = false;
             setIsStreaming(false);
+            
+            // Clear abort controller
+            abortControllerRef.current = null;
+            
+            // Handle aborted requests (when user clicks stop)
+            if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+                // Request was cancelled by user, don't show error message
+                return;
+            }
             
             // 401 errors are automatically handled by axios interceptor
             if (error.response?.status === 401) {
