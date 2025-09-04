@@ -23,7 +23,7 @@ const ControlBar = ({ showPinnedPanel = false }) => {
   return (
     <>
       {/* Language Toggle Button - 右上角，与钉选按钮保持更多距离 */}
-      <div className="fixed top-3 right-24 z-30 group">
+      <div className="fixed top-3 right-24 z-30 group ipad-landscape-language-button">
         <button
           onClick={toggleLanguage}
           className={`
@@ -48,7 +48,7 @@ const ControlBar = ({ showPinnedPanel = false }) => {
       </div>
 
       {/* Theme Toggle Button - 右上角，在语言按钮左侧保持合适距离 */}
-      <div className="fixed top-3 right-36 z-30 group">
+      <div className="fixed top-3 right-36 z-30 group ipad-landscape-theme-button">
         <button
           onClick={toggleTheme}
           className={`

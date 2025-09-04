@@ -279,8 +279,8 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                                         doc.body.style.height = finalHeight;
                                                         doc.documentElement.style.height = finalHeight;
                                                     } else {
-                                                        // For regular messages (chatbot), use original height without extra padding
-                                                        const finalHeight = Math.max(200, maxHeight) + 'px';
+                                                        // For regular messages (chatbot), add 15px buffer for better spacing
+                                                        const finalHeight = Math.max(200, maxHeight + 15) + 'px';
                                                         iframe.style.height = finalHeight;
                                                         iframe.style.minHeight = finalHeight;
                                                         
