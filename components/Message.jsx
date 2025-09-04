@@ -214,19 +214,15 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                                     // Let the parent component handle the state and toast message
                                                 }
                                             }}
-                                            className={`px-3 py-1 text-xs rounded flex items-center gap-1 ${
-                                                isPinned 
-                                                    ? 'bg-orange-500 text-white hover:bg-orange-600' 
-                                                    : 'bg-blue-500 text-white hover:bg-blue-600'
-                                            }`}
-                                            title={isPinned ? t('Unpin message') : t('Pin message')}
+                                            className="px-3 py-1 text-xs rounded flex items-center gap-1 bg-blue-500 text-white hover:bg-blue-600"
+                                            title={t('Pin message')}
                                         >
                                             <Image 
                                                 src={assets.pin_svgrepo_com} 
-                                                alt={isPinned ? t('Unpin message') : t('Pin message')} 
+                                                alt={t('Pin message')} 
                                                 className="w-4 h-4 brightness-0 invert"
                                             />
-                                            {isPinned ? t('Unpin message') : t('Pin message')}
+                                            {t('Pin message')}
                                         </button>
                                     )}
                                 </div>
@@ -639,12 +635,12 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                     onClick={handlePinMessage}
                                     className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 -ml-1 lg:ml-0 ${
                                         isDark ? 'hover:bg-gray-600/30' : 'hover:bg-gray-100/50'
-                                    } ${isPinned ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
-                                    title={isPinned ? t('Unpin message') : t('Pin message')}
+                                    } opacity-70 hover:opacity-100`}
+                                    title={t('Pin message')}
                                 >
                                     <Image 
                                         src={assets.pin_svgrepo_com} 
-                                        alt={isPinned ? t('Unpin') : t('Pin')} 
+                                        alt={t('Pin message')} 
                                         className={`w-5 transition-all ${isDark ? 'brightness-0 invert' : ''}`}
                                         style={isDark ? {} : { filter: 'hue-rotate(220deg) saturate(2) brightness(0.4)' }}
                                     />
@@ -672,12 +668,12 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                                     onClick={handlePinMessage}
                                     className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 -ml-1 lg:ml-0 ${
                                         isDark ? 'hover:bg-gray-600/30' : 'hover:bg-gray-100/50'
-                                    } ${isPinned ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
-                                    title={isPinned ? t('Unpin message') : t('Pin message')}
+                                    } opacity-70 hover:opacity-100`}
+                                    title={t('Pin message')}
                                 >
                                     <Image 
                                         src={assets.pin_svgrepo_com} 
-                                        alt={isPinned ? t('Unpin message') : t('Pin message')} 
+                                        alt={t('Pin message')} 
                                         className={`w-5 transition-all ${isDark ? 'brightness-0 invert' : ''}`}
                                         style={isDark ? {} : { filter: 'hue-rotate(220deg) saturate(2) brightness(0.4)' }}
                                     />
