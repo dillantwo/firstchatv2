@@ -422,36 +422,6 @@ table td * {
   and (-webkit-min-device-pixel-ratio: 1),
   screen and (min-width: 768px) and (max-width: 1024px) and (pointer: coarse) {
   
-  /* iPad横屏模式下的按钮对齐优化 */
-  @media (orientation: landscape) {
-    .ipad-landscape-pin-button {
-      right: 1rem !important; /* 16px - Pin按钮最右侧 */
-    }
-    
-    .ipad-landscape-language-button {
-      right: 5rem !important; /* 80px - 语言按钮 */
-    }
-    
-    .ipad-landscape-theme-button {
-      right: 8rem !important; /* 128px - 主题按钮最左侧 */
-    }
-  }
-  
-  /* iPad Portrait - 保持原有位置 */
-  @media (orientation: portrait) {
-    .ipad-landscape-pin-button {
-      right: 1rem !important;
-    }
-    
-    .ipad-landscape-language-button {
-      right: 6rem !important;
-    }
-    
-    .ipad-landscape-theme-button {
-      right: 9rem !important;
-    }
-  }
-  
   /* 确保界面完全适应iPad屏幕 - 兼容Chrome和Safari */
   html, body {
     width: 100%;

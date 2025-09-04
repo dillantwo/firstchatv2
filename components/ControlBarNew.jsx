@@ -23,7 +23,7 @@ const ControlBar = ({ showPinnedPanel = false }) => {
   return (
     <>
       {/* Language Toggle Button - 右上角，与钉选按钮保持更多距离 */}
-      <div className="fixed top-3 right-24 z-30 group ipad-landscape-language-button">
+      <div className="fixed top-3 right-24 z-30 group">
         <button
           onClick={toggleLanguage}
           className={`

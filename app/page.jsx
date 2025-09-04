@@ -133,7 +133,7 @@ export default function Home() {
             {!showPinnedPanel && (
               <button
                 onClick={() => setShowPinnedPanel(true)}
-                className={`fixed top-3 right-4 z-20 ipad-landscape-pin-button ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-800 hover:bg-gray-900 text-white'} p-2 rounded-lg transition-colors duration-200 flex items-center gap-2 shadow-sm`}
+                className={`fixed top-3 right-4 z-20 ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-800 hover:bg-gray-900 text-white'} p-2 rounded-lg transition-colors duration-200 flex items-center gap-2 shadow-sm`}
                 title={t("Show pinned messages")}
               >
                 <Image src={assets.pin_svgrepo_com} alt={t("Pin")} className="w-5 h-5 brightness-0 invert" />
