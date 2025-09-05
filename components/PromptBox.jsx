@@ -896,7 +896,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
           <div className="flex flex-wrap gap-2">
             {/* 显示正在上传的文件 */}
             {uploadingFiles.map((file) => (
-              <div key={file.id} className="relative group">
+              <div key={file.id} className="relative group w-16">
                 <div 
                   className={`w-16 h-16 flex flex-col items-center justify-center rounded-lg border ${isDark ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-white'} relative overflow-hidden`}
                 >
@@ -920,14 +920,14 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                 {/* 取消上传按钮 */}
                 <button
                   onClick={() => removeUploadingFile(file.id)}
-                  className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-[9999]"
+                  className={`absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 text-xs flex items-center justify-center transition-colors z-10 ${previewModal.isOpen ? 'hidden' : ''}`}
                   title={`${t('Cancel upload')} ${file.name}`}
                 >
                   ×
                 </button>
                 
                 {/* 文件名提示 */}
-                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white text-xs px-1 py-0.5 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity truncate">
+                <div className={`absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white text-xs px-1 py-0.5 rounded-b-lg truncate ${previewModal.isOpen ? 'hidden' : ''}`}>
                   {file.name} ({t('Uploading')}...)
                 </div>
               </div>
@@ -935,7 +935,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             
             {/* 显示已上传的文件 */}
             {uploadedImages.map((file) => (
-              <div key={file.id} className="relative group">
+              <div key={file.id} className="relative group w-16">
                 {file.fileType === 'image' ? (
                   // 圖片預覽
                   <img 
@@ -960,13 +960,13 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                 )}
                 <button
                   onClick={() => removeImage(file.id)}
-                  className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-[9999]"
+                  className={`absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 text-xs flex items-center justify-center transition-colors z-10 ${previewModal.isOpen ? 'hidden' : ''}`}
                   title={`${t('Remove')} ${file.name}`}
                 >
                   ×
                 </button>
                 {/* 文件名提示 */}
-                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white text-xs px-1 py-0.5 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity truncate">
+                <div className={`absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white text-xs px-1 py-0.5 rounded-b-lg truncate ${previewModal.isOpen ? 'hidden' : ''} w-full`}>
                   {file.name}
                 </div>
               </div>
@@ -978,7 +978,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
       {/* File preview modal */}
       {previewModal.isOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[10000]"
           onClick={closePreviewModal}
         >
           <div 
@@ -987,7 +987,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
           >
             <button
               onClick={closePreviewModal}
-              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors z-10"
+              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors z-[10001]"
             >
               ×
             </button>
