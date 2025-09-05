@@ -218,6 +218,7 @@ export default function Home() {
                 role={msg.role} 
                 content={msg.content} 
                 images={msg.images}
+                documents={msg.documents}
                 onPinMessage={handlePinMessage}
                 isPinned={isMessagePinned(msg)}
                 showPinButton={true}

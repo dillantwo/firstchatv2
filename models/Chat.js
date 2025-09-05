@@ -14,6 +14,14 @@ const ChatSchema = new mongoose.Schema(
                         url: {type: String}
                     }
                 ],
+                documents: [
+                    {
+                        name: {type: String},
+                        type: {type: String},
+                        text: {type: String},
+                        pages: {type: Number}
+                    }
+                ],
                 // Token usage for this specific message (if available from AI provider)
                 tokenUsage: {
                     promptTokens: {type: Number, default: 0},

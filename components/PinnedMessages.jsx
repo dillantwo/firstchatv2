@@ -93,6 +93,7 @@ const PinnedMessages = ({ pinnedMessages, onUnpinMessage, isVisible, onToggleVis
                     role={msg.role} 
                     content={msg.content} 
                     images={msg.images}
+                    documents={msg.documents}
                     showPinButton={false}
                     isInPinnedPanel={true}
                   />

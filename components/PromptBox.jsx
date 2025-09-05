@@ -21,6 +21,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
     const [speechRecognition, setSpeechRecognition] = useState(null);
     const [selectedLanguage, setSelectedLanguage] = useState('zh-yue-HK'); // 添加语言状态
     const [isStreaming, setIsStreaming] = useState(false); // 添加流式传输状态
+    const [uploadingFiles, setUploadingFiles] = useState([]); // 添加正在上传的文件状态
     const streamingRef = useRef(false); // Track streaming status
     const abortControllerRef = useRef(null); // Track current request for cancellation
     const fileInputRef = useRef(null);
@@ -307,30 +308,109 @@ const PromptBox = ({setIsLoading, isLoading}) => {
     // Handle image upload
     const handleImageUpload = (files) => {
         const validFiles = Array.from(files).filter(file => {
-            if (!file.type.startsWith('image/')) {
-                toast.error('Only image files are allowed');
+            // 只支持圖片和Word文檔
+            const isImage = file.type.startsWith('image/');
+            const isWord = file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+                          file.name.toLowerCase().endsWith('.docx');
+            
+            if (!isImage && !isWord) {
+                toast.error('Only image files (.jpg, .png, .gif, etc.) and Word documents (.docx) are supported');
                 return false;
             }
             if (file.size > 50 * 1024 * 1024) { // 50MB limit
-                toast.error('Image file cannot exceed 50MB');
+                toast.error('File cannot exceed 50MB');
                 return false;
             }
             return true;
         });
 
         validFiles.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const imageData = {
+            const isImage = file.type.startsWith('image/');
+            
+            if (isImage) {
+                // 對於圖片，立即添加到预览区域
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const imageData = {
+                        id: Date.now() + Math.random(),
+                        file,
+                        url: e.target.result,
+                        name: file.name,
+                        fileType: 'image'
+                    };
+                    setUploadedImages(prev => [...prev, imageData]);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                // 對於文檔文件，先添加loading状态，然后上傳到服務器進行處理
+                const uploadingFile = {
+                    id: Date.now() + Math.random(),
+                    name: file.name,
+                    fileType: 'document',
+                    isUploading: true
+                };
+                setUploadingFiles(prev => [...prev, uploadingFile]);
+                handleDocumentUpload(file, uploadingFile.id);
+            }
+        });
+    };
+
+    // Handle document upload (Word, PDF)
+    const handleDocumentUpload = async (file, uploadingId) => {
+        const formData = new FormData();
+        formData.append('files', file);
+        
+        try {
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
+            
+            // Check if response is ok
+            if (!response.ok) {
+                const errorText = await response.text();
+                // 移除loading状态
+                setUploadingFiles(prev => prev.filter(f => f.id !== uploadingId));
+                toast.error(`Failed to upload ${file.name}: Server error (${response.status})`);
+                return;
+            }
+            
+            // Check content type
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const responseText = await response.text();
+                // 移除loading状态
+                setUploadingFiles(prev => prev.filter(f => f.id !== uploadingId));
+                toast.error(`Failed to upload ${file.name}: Invalid server response`);
+                return;
+            }
+            
+            const result = await response.json();
+            
+            if (result.success && result.data && result.data.length > 0) {
+                const documentData = result.data[0];
+                const processedDocument = {
                     id: Date.now() + Math.random(),
                     file,
-                    url: e.target.result,
-                    name: file.name
+                    name: documentData.name,
+                    text: documentData.text,
+                    fileType: documentData.fileType,
+                    documentType: documentData.documentType,
+                    pages: documentData.pages || null
                 };
-                setUploadedImages(prev => [...prev, imageData]);
-            };
-            reader.readAsDataURL(file);
-        });
+                // 移除loading状态并添加处理完成的文档
+                setUploadingFiles(prev => prev.filter(f => f.id !== uploadingId));
+                setUploadedImages(prev => [...prev, processedDocument]);
+            } else {
+                // 移除loading状态
+                setUploadingFiles(prev => prev.filter(f => f.id !== uploadingId));
+                toast.error(result.message || 'Failed to process document');
+            }
+        } catch (error) {
+            // 移除loading状态
+            setUploadingFiles(prev => prev.filter(f => f.id !== uploadingId));
+            toast.error(`Failed to upload ${file.name}: ${error.message}`);
+        }
     };
 
     // Handle file selection
@@ -364,7 +444,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
     // Handle paste
     const handlePaste = (e) => {
         const items = e.clipboardData.items;
-        let hasImage = false;
+        let hasFile = false;
         
         for (let item of items) {
             if (item.type.startsWith('image/')) {
@@ -372,13 +452,13 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                 const file = item.getAsFile();
                 if (file) {
                     handleImageUpload([file]);
-                    hasImage = true;
+                    hasFile = true;
                 }
             }
         }
         
-        // If no image, it's text paste, need to adjust height
-        if (!hasImage) {
+        // If no file, it's text paste, need to adjust height
+        if (!hasFile) {
             setTimeout(() => {
                 adjustTextareaHeight();
             }, 0);
@@ -389,6 +469,11 @@ const PromptBox = ({setIsLoading, isLoading}) => {
     const removeImage = (imageId) => {
         setUploadedImages(prev => prev.filter(img => img.id !== imageId));
     };
+    
+    // Remove uploading file (cancel upload)
+    const removeUploadingFile = (uploadingId) => {
+        setUploadingFiles(prev => prev.filter(file => file.id !== uploadingId));
+    };
 
     // Open file selector
     const openFileSelector = () => {
@@ -396,8 +481,8 @@ const PromptBox = ({setIsLoading, isLoading}) => {
     };
 
     // Open image preview modal
-    const openPreviewModal = (image) => {
-        setPreviewModal({ isOpen: true, image });
+    const openPreviewModal = (file) => {
+        setPreviewModal({ isOpen: true, file });
     };
 
     // Close image preview modal
@@ -528,9 +613,12 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                 role: "user",
                 content: contentToSend,
                 timestamp: Date.now(),
-                images: uploadedImages.length > 0 ? uploadedImages.map(img => ({
-                    name: img.name,
-                    url: img.url
+                images: uploadedImages.length > 0 ? uploadedImages.map(file => ({
+                    name: file.name,
+                    url: file.url,
+                    fileType: file.fileType,
+                    text: file.text,
+                    documentType: file.documentType
                 })) : undefined
             }
 
@@ -547,11 +635,16 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             messages: [...prev.messages, userPrompt]
         }))
 
-        // Prepare data to send, including images
+        // Prepare data to send, including images and documents
         const sendData = {
             chatId: currentChat._id,
             prompt: contentToSend,
-            images: uploadedImages.length > 0 ? uploadedImages.map(img => img.url) : undefined,
+            images: uploadedImages.length > 0 ? uploadedImages.filter(file => file.fileType === 'image').map(img => img.url) : undefined,
+            documents: uploadedImages.length > 0 ? uploadedImages.filter(file => file.fileType === 'document').map(doc => ({
+                name: doc.name,
+                text: doc.text,
+                type: doc.documentType
+            })) : undefined,
         };
         
         // Only add chatflowId when a chatflow is selected
@@ -746,8 +839,9 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             // Start streaming
             streamMessage(message);
             
-            // Clear uploaded images
+            // Clear uploaded images and uploading files
             setUploadedImages([]);
+            setUploadingFiles([]);
             
             // Clear abort controller since request completed successfully
             abortControllerRef.current = null;
@@ -796,38 +890,99 @@ const PromptBox = ({setIsLoading, isLoading}) => {
            position: 'relative',
            zIndex: 10
          }}>
-      {/* Image preview area */}
-      {uploadedImages.length > 0 && (
+      {/* File preview area */}
+      {(uploadedImages.length > 0 || uploadingFiles.length > 0) && (
         <div className={`mb-3 p-3 ${isDark ? 'bg-[#404045]' : 'bg-gray-100'} rounded-2xl`}>
           <div className="flex flex-wrap gap-2">
-            {uploadedImages.map((image) => (
-              <div key={image.id} className="relative group">
-                <img 
-                  src={image.url} 
-                  alt={image.name}
-                  className={`w-16 h-16 object-cover rounded-lg border ${isDark ? 'border-gray-600' : 'border-gray-300'} cursor-pointer hover:opacity-80 transition-opacity`}
-                  onClick={() => openPreviewModal(image)}
-                />
+            {/* 显示正在上传的文件 */}
+            {uploadingFiles.map((file) => (
+              <div key={file.id} className="relative group">
+                <div 
+                  className={`w-16 h-16 flex flex-col items-center justify-center rounded-lg border ${isDark ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-white'} relative overflow-hidden`}
+                >
+                  {/* Loading 遮罩 */}
+                  <div className={`absolute inset-0 ${isDark ? 'bg-gray-800' : 'bg-gray-200'} bg-opacity-80 flex flex-col items-center justify-center`}>
+                    <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-500 border-t-transparent mb-1"></div>
+                    <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'} font-medium`}>
+                      {t('Uploading')}
+                    </div>
+                  </div>
+                  
+                  {/* 文档图标背景 */}
+                  <div className="text-2xl mb-1 opacity-30">
+                    📝
+                  </div>
+                  <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'} text-center px-1 opacity-30`}>
+                    DOCX
+                  </div>
+                </div>
+                
+                {/* 取消上传按钮 */}
                 <button
-                  onClick={() => removeImage(image.id)}
+                  onClick={() => removeUploadingFile(file.id)}
                   className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-[9999]"
+                  title={`${t('Cancel upload')} ${file.name}`}
                 >
                   ×
                 </button>
+                
+                {/* 文件名提示 */}
+                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white text-xs px-1 py-0.5 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity truncate">
+                  {file.name} ({t('Uploading')}...)
+                </div>
+              </div>
+            ))}
+            
+            {/* 显示已上传的文件 */}
+            {uploadedImages.map((file) => (
+              <div key={file.id} className="relative group">
+                {file.fileType === 'image' ? (
+                  // 圖片預覽
+                  <img 
+                    src={file.url} 
+                    alt={file.name}
+                    className={`w-16 h-16 object-cover rounded-lg border ${isDark ? 'border-gray-600' : 'border-gray-300'} cursor-pointer hover:opacity-80 transition-opacity`}
+                    onClick={() => openPreviewModal(file)}
+                  />
+                ) : (
+                  // 文檔圖標
+                  <div 
+                    className={`w-16 h-16 flex flex-col items-center justify-center rounded-lg border ${isDark ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-white'} cursor-pointer hover:opacity-80 transition-opacity`}
+                    onClick={() => openPreviewModal(file)}
+                  >
+                    <div className="text-2xl mb-1">
+                      📝
+                    </div>
+                    <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'} text-center px-1`}>
+                      {file.documentType?.toUpperCase()}
+                    </div>
+                  </div>
+                )}
+                <button
+                  onClick={() => removeImage(file.id)}
+                  className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-[9999]"
+                  title={`${t('Remove')} ${file.name}`}
+                >
+                  ×
+                </button>
+                {/* 文件名提示 */}
+                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white text-xs px-1 py-0.5 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity truncate">
+                  {file.name}
+                </div>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Image preview modal */}
+      {/* File preview modal */}
       {previewModal.isOpen && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
           onClick={closePreviewModal}
         >
           <div 
-            className="relative max-w-4xl max-h-4xl p-4"
+            className="relative max-w-4xl max-h-4xl p-4 m-4 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -836,13 +991,36 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             >
               ×
             </button>
-            <img 
-              src={previewModal.image.url} 
-              alt={previewModal.image.name}
-              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-            />
+            
+            {previewModal.file.fileType === 'image' ? (
+              // 圖片預覽
+              <img 
+                src={previewModal.file.url} 
+                alt={previewModal.file.name}
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              />
+            ) : (
+              // 文檔內容預覽
+              <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-2xl max-h-[80vh] overflow-hidden`}>
+                <div className={`p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+                  <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    {previewModal.file.name}
+                  </h3>
+                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {previewModal.file.documentType?.toUpperCase()} Document
+                    {previewModal.file.pages && ` • ${previewModal.file.pages} pages`}
+                  </p>
+                </div>
+                <div className={`p-4 max-h-96 overflow-y-auto ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  <pre className="whitespace-pre-wrap text-sm leading-relaxed">
+                    {previewModal.file.text || 'No text content available'}
+                  </pre>
+                </div>
+              </div>
+            )}
+            
             <div className="absolute bottom-2 left-2 bg-black bg-opacity-70 text-white px-3 py-1 rounded-lg text-sm">
-              {previewModal.image.name}
+              {previewModal.file.name}
             </div>
           </div>
         </div>
@@ -899,7 +1077,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
           multiple
           onChange={handleFileSelect}
           className="hidden"
@@ -926,7 +1104,7 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             touchAction: 'manipulation', // 优化触摸响应
             WebkitTapHighlightColor: 'transparent' // 移除点击高亮
         }}
-        placeholder={isDragging ? t('Drag images here to upload...') : isListening ? t('Continuous listening...') : t('Type a message, drag images, or use voice input...')} 
+        placeholder={isDragging ? t('Drag files here to upload...') : isListening ? t('Continuous listening...') : t('Type a message, drag files, or use voice input...')} 
         onChange={handleInputChange} 
         value={prompt}
         rows={2}/>
@@ -950,12 +1128,12 @@ const PromptBox = ({setIsLoading, isLoading}) => {
               className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
                 isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm opacity-70 hover:opacity-100'
               } ${(isLoading || isStreaming) ? 'opacity-30 cursor-not-allowed' : ''}`}
-              title={t("Upload Image")}
+              title={t("Upload Files (Images, Word)")}
             >
               <Image 
                 className={`w-3.5 transition-all ${isDark ? '' : 'brightness-0 invert'}`} 
                 src={assets.file_upload} 
-                alt='Upload Image'
+                alt='Upload Files'
               />
             </button>
             

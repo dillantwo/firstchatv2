@@ -25,10 +25,10 @@ const translations = {
     'Are you sure you want to delete this chat? This action cannot be undone.': '您確定要刪除此對話嗎？此操作無法復原。',
     
     // PromptBox
-    'Type a message, drag images, or use voice input...': '輸入訊息、拖曳圖片或使用語音輸入...',
-    'Drag images here to upload...': '拖曳圖片至此上傳...',
+    'Type a message, drag images, or use voice input...': '輸入訊息、拖曳文件或使用語音輸入...',
+    'Drag images here to upload...': '拖曳文件至此上傳...',
     'Continuous listening...': '持續聆聽中...',
-    'Upload Image': '上傳圖片',
+    'Upload Image': '上傳文件 (圖片/Word/PDF)',
     'Voice Input': '語音輸入',
     'Select voice recognition language': '選擇語音辨識語言',
     'Click to start continuous voice input': '點擊開始持續語音輸入',
@@ -89,6 +89,8 @@ const translations = {
     
     // Common UI
     'Loading...': '載入中...',
+    'Uploading': '上傳中',
+    'Cancel upload': '取消上傳',
     'Error': '錯誤',
     'Success': '成功',
     'Cancel': '取消',
@@ -155,10 +157,10 @@ const translations = {
     'Are you sure you want to delete this chat? This action cannot be undone.': 'Are you sure you want to delete this chat? This action cannot be undone.',
     
     // PromptBox
-    'Type a message, drag images, or use voice input...': 'Type a message, drag images, or use voice input...',
-    'Drag images here to upload...': 'Drag images here to upload...',
+    'Type a message, drag images, or use voice input...': 'Type a message, drag files, or use voice input...',
+    'Drag images here to upload...': 'Drag files here to upload...',
     'Continuous listening...': 'Continuous listening...',
-    'Upload Image': 'Upload Image',
+    'Upload Image': 'Upload Files (Images, Word, PDF)',
     'Voice Input': 'Voice Input',
     'Select voice recognition language': 'Select voice recognition language',
     'Click to start continuous voice input': 'Click to start continuous voice input',
@@ -213,6 +215,8 @@ const translations = {
     
     // Common UI
     'Loading...': 'Loading...',
+    'Uploading': 'Uploading',
+    'Cancel upload': 'Cancel upload',
     'Error': 'Error',
     'Success': 'Success',
     'Cancel': 'Cancel',

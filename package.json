@@ -20,6 +20,7 @@
     "flowise-sdk": "^1.0.9",
     "jsonwebtoken": "^9.0.2",
     "katex": "^0.16.22",
+    "mammoth": "^1.10.0",
     "mongodb": "^6.18.0",
     "mongoose": "^8.16.4",
     "next": "^15.5.0",

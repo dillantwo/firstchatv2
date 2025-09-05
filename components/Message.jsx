@@ -10,7 +10,7 @@ import toast from 'react-hot-toast'
 import { useTheme } from '@/context/ThemeContext'
 import { useLanguage } from '@/context/LanguageContext'
 
-const Message = ({role, content, images, onPinMessage, isPinned = false, showPinButton = true, isInPinnedPanel = false}) => {
+const Message = ({role, content, images, documents, onPinMessage, isPinned = false, showPinButton = true, isInPinnedPanel = false}) => {
 
     const [previewModal, setPreviewModal] = useState({ isOpen: false, image: null });
     const [htmlViewMode, setHtmlViewMode] = useState('rendered'); // 'rendered' | 'code'
@@ -588,7 +588,7 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
           onClick={closePreviewModal}
         >
           <div 
-            className="relative max-w-4xl max-h-4xl p-4"
+            className="relative max-w-4xl max-h-4xl p-4 m-4 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -597,11 +597,34 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
             >
               ×
             </button>
-            <img 
-              src={previewModal.image.url} 
-              alt={previewModal.image.name}
-              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-            />
+            
+            {previewModal.image.fileType === 'image' || !previewModal.image.fileType ? (
+              // 圖片預覽
+              <img 
+                src={previewModal.image.url} 
+                alt={previewModal.image.name}
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              />
+            ) : (
+              // 文檔內容預覽
+              <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-2xl max-h-[80vh] overflow-hidden`}>
+                <div className={`p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+                  <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    {previewModal.image.name}
+                  </h3>
+                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {previewModal.image.documentType?.toUpperCase()} Document
+                    {previewModal.image.pages && ` • ${previewModal.image.pages} pages`}
+                  </p>
+                </div>
+                <div className={`p-4 max-h-96 overflow-y-auto ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  <pre className="whitespace-pre-wrap text-sm leading-relaxed">
+                    {previewModal.image.text || 'No text content available'}
+                  </pre>
+                </div>
+              </div>
+            )}
+            
             <div className="absolute bottom-2 left-2 bg-black bg-opacity-70 text-white px-3 py-1 rounded-lg text-sm">
               {previewModal.image.name || t('Image')}
             </div>
@@ -692,19 +715,62 @@ const Message = ({role, content, images, onPinMessage, isPinned = false, showPin
                             `${isDark ? 'text-white' : 'text-gray-900'} ${isDark ? '' : 'bg-gray-50 p-3 rounded-lg border border-gray-200'}` : 
                             `${isDark ? 'text-white/90' : 'text-gray-800'}`
                     }>
-                        {/* Display images */}
-                        {images && images.length > 0 && (
+                        {/* Display images and documents */}
+                        {((images && images.length > 0) || (documents && documents.length > 0)) && (
                             <div className='mb-3 flex flex-wrap gap-2'>
-                                {images.map((image, index) => (
-                                    <div key={index} className='relative group'>
-                                        <img 
-                                            src={image.url} 
-                                            alt={image.name || `${t('Image')} ${index + 1}`}
-                                            className={`max-w-48 max-h-48 object-cover rounded-lg border ${isDark ? 'border-gray-600' : 'border-gray-300'} cursor-pointer hover:opacity-90 transition-opacity`}
-                                            onClick={() => openPreviewModal(image)}
-                                        />
+                                {/* Display images */}
+                                {images && images.map((file, index) => (
+                                    <div key={`image-${index}`} className='relative group'>
+                                        {file.fileType === 'image' || !file.fileType ? (
+                                            // 顯示圖片
+                                            <img 
+                                                src={file.url} 
+                                                alt={file.name || `${t('Image')} ${index + 1}`}
+                                                className={`max-w-48 max-h-48 object-cover rounded-lg border ${isDark ? 'border-gray-600' : 'border-gray-300'} cursor-pointer hover:opacity-90 transition-opacity`}
+                                                onClick={() => openPreviewModal(file)}
+                                            />
+                                        ) : (
+                                            // 顯示文檔圖標
+                                            <div 
+                                                className={`w-32 h-24 flex flex-col items-center justify-center rounded-lg border ${isDark ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-white'} cursor-pointer hover:opacity-80 transition-opacity`}
+                                                onClick={() => openPreviewModal(file)}
+                                            >
+                                                <div className="text-2xl mb-1">
+                                                    {file.documentType === 'pdf' ? '📄' : '📝'}
+                                                </div>
+                                                <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'} text-center px-1`}>
+                                                    {file.documentType?.toUpperCase()}
+                                                </div>
+                                                <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} text-center px-1 truncate max-w-full`}>
+                                                    {file.name}
+                                                </div>
+                                            </div>
+                                        )}
                                         <div className='absolute bottom-1 left-1 bg-black/70 text-xs px-1 py-0.5 rounded text-white/70 opacity-0 group-hover:opacity-100 transition-opacity'>
-                                            {image.name || `${t('Image')} ${index + 1}`}
+                                            {file.name || `${file.fileType === 'image' ? t('Image') : 'Document'} ${index + 1}`}
+                                        </div>
+                                    </div>
+                                ))}
+                                
+                                {/* Display documents */}
+                                {documents && documents.map((doc, index) => (
+                                    <div key={`doc-${index}`} className='relative group'>
+                                        <div 
+                                            className={`w-32 h-24 flex flex-col items-center justify-center rounded-lg border ${isDark ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-white'} cursor-pointer hover:opacity-80 transition-opacity`}
+                                            onClick={() => openPreviewModal({...doc, fileType: 'document', documentType: doc.type})}
+                                        >
+                                            <div className="text-2xl mb-1">
+                                                {doc.type === 'pdf' ? '📄' : '📝'}
+                                            </div>
+                                            <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'} text-center px-1`}>
+                                                {doc.type?.toUpperCase()}
+                                            </div>
+                                            <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} text-center px-1 truncate max-w-full`}>
+                                                {doc.name}
+                                            </div>
+                                        </div>
+                                        <div className='absolute bottom-1 left-1 bg-black/70 text-xs px-1 py-0.5 rounded text-white/70 opacity-0 group-hover:opacity-100 transition-opacity'>
+                                            {doc.name || `Document ${index + 1}`}
                                         </div>
                                     </div>
                                 ))}

@@ -111,8 +111,8 @@ export async function POST(req){
             });
         }
 
-        // Extract chatId, prompt, images, chatflowId, and optional courseId from the request body
-        const { chatId, prompt, images, chatflowId, courseId } = await req.json();
+        // Extract chatId, prompt, images, documents, chatflowId, and optional courseId from the request body
+        const { chatId, prompt, images, documents, chatflowId, courseId } = await req.json();
 
         // Validate required parameters
         if(!prompt?.trim()){
@@ -221,6 +221,15 @@ export async function POST(req){
                         };
                     }
                 })
+            }),
+            // Handle document information
+            ...(documents && documents.length > 0 && {
+                documents: documents.map(doc => ({
+                    name: doc.name,
+                    type: doc.type || 'document',
+                    text: doc.text,
+                    pages: doc.pages || null
+                }))
             })
         };
 
@@ -239,15 +248,25 @@ export async function POST(req){
         const chatHistory = data.messages.map(msg => ({
             role: msg.role,
             content: msg.content,
-            ...(msg.images && { images: msg.images })
+            ...(msg.images && { images: msg.images }),
+            ...(msg.documents && { documents: msg.documents })
         }));
 
         // Call the Flowise API to get a chat completion
         // Use the session ID generated earlier
         
+        // Prepare the enhanced prompt with document content if available
+        let enhancedPrompt = prompt;
+        if (documents && documents.length > 0) {
+            const documentContent = documents.map(doc => 
+                `\n\n--- ${doc.name} (${doc.type?.toUpperCase()}) ---\n${doc.text}`
+            ).join('\n');
+            enhancedPrompt = `${prompt}\n\nAttached Documents:${documentContent}`;
+        }
+        
         // First test the simplest request format
         const requestData = {
-            question: prompt,
+            question: enhancedPrompt,
             overrideConfig: {
                 sessionId: sessionId
             }

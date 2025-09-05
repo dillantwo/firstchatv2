@@ -2,13 +2,17 @@ export const maxDuration = 300;
 
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import mammoth from "mammoth";
 
 export async function POST(req) {
     try {
+        console.log('[Upload API] Starting file upload process');
+        
         // Get user ID from LTI session cookie
         const token = req.cookies.get('lti_session')?.value;
         
         if (!token) {
+            console.log('[Upload API] No authentication token found');
             return NextResponse.json({
                 success: false,
                 message: "User not authenticated",
@@ -19,7 +23,9 @@ export async function POST(req) {
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
             userId = decoded.userId;
+            console.log('[Upload API] User authenticated:', userId);
         } catch (error) {
+            console.log('[Upload API] Invalid session token:', error.message);
             return NextResponse.json({
                 success: false,
                 message: "Invalid session",
@@ -28,9 +34,11 @@ export async function POST(req) {
 
         // 獲取請求體大小
         const contentLength = req.headers.get('content-length');
+        console.log('[Upload API] Content length:', contentLength);
         
         // 檢查是否超過限制（50MB = 52428800 bytes）
         if (contentLength && parseInt(contentLength) > 52428800) {
+            console.log('[Upload API] File size exceeds limit');
             return NextResponse.json({
                 success: false,
                 message: "File size exceeds 50MB limit",
@@ -40,46 +48,101 @@ export async function POST(req) {
         const formData = await req.formData();
         const files = formData.getAll('files');
         
-        if (!files || files.length === 0) {
+        console.log('[Upload API] Files received:', files.length);
+
+        if (files.length === 0) {
             return NextResponse.json({
                 success: false,
-                message: "No files provided",
+                message: "No files uploaded",
             });
         }
 
         const processedFiles = [];
         
         for (const file of files) {
-            if (file.size > 52428800) { // 50MB
+            console.log(`[Upload API] Processing file: ${file.name} Type: ${file.type} Size: ${file.size}`);
+            
+            if (file.size === 0) {
+                console.log('[Upload API] Empty file detected');
+                return NextResponse.json({
+                    success: false,
+                    message: `File ${file.name} is empty`,
+                });
+            }
+
+            if (file.size > 50 * 1024 * 1024) { // 50MB limit
+                console.log('[Upload API] File size exceeds limit');
                 return NextResponse.json({
                     success: false,
                     message: `File ${file.name} exceeds 50MB limit`,
                 });
             }
             
-            // 轉換為 base64
             const bytes = await file.arrayBuffer();
             const buffer = Buffer.from(bytes);
-            const base64 = buffer.toString('base64');
-            const dataUrl = `data:${file.type};base64,${base64}`;
+            console.log('[Upload API] File converted to buffer, size:', buffer.length);
             
-            processedFiles.push({
-                name: file.name,
-                type: file.type,
-                size: file.size,
-                url: dataUrl
-            });
+            let processedData = {};
+            
+            // Handle different file types
+            if (file.type.startsWith('image/')) {
+                console.log('[Upload API] Processing as image');
+                // 處理圖片文件 - 保持原有邏輯，轉換為 base64
+                const base64 = buffer.toString('base64');
+                const dataUrl = `data:${file.type};base64,${base64}`;
+                
+                processedData = {
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    url: dataUrl,
+                    fileType: 'image'
+                };
+            } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+                      file.name.toLowerCase().endsWith('.docx')) {
+                console.log('[Upload API] Processing as Word document');
+                // 處理 Word 文檔
+                try {
+                    const result = await mammoth.extractRawText({ buffer });
+                    console.log('[Upload API] Word text extracted, length:', result.value.length);
+                    processedData = {
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        text: result.value,
+                        fileType: 'document',
+                        documentType: 'word'
+                    };
+                } catch (error) {
+                    console.error('[Upload API] Error processing Word document:', error);
+                    return NextResponse.json({
+                        success: false,
+                        message: `Failed to process Word document ${file.name}: ${error.message}`,
+                    });
+                }
+            } else {
+                console.log('[Upload API] Unsupported file type:', file.type);
+                return NextResponse.json({
+                    success: false,
+                    message: `Unsupported file type: ${file.type}. Only images (.jpg, .png, .gif, etc.) and Word documents (.docx) are supported.`,
+                });
+            }
+            
+            processedFiles.push(processedData);
+            console.log('[Upload API] File processed successfully:', file.name);
         }
 
+        console.log('[Upload API] All files processed successfully, count:', processedFiles.length);
         return NextResponse.json({
             success: true,
             data: processedFiles
         });
         
     } catch (error) {
+        console.error('[Upload API] Unexpected error:', error);
         return NextResponse.json({
             success: false,
             message: error.message || 'Failed to process file upload'
-        });
+        }, { status: 500 });
     }
 }
