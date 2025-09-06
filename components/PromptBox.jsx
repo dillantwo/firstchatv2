@@ -10,7 +10,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import toast from 'react-hot-toast';
 import { performanceMonitor, withPerformanceTracking } from '@/utils/performanceMonitor';
 
-const PromptBox = ({setIsLoading, isLoading}) => {
+const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange}) => {
 
     const [prompt, setPrompt] = useState('');
     const [uploadedImages, setUploadedImages] = useState([]);
@@ -45,6 +45,13 @@ const PromptBox = ({setIsLoading, isLoading}) => {
             }
         }
     }, []);
+
+    // Notify parent component when preview modal state changes
+    useEffect(() => {
+        if (onPreviewModalChange) {
+            onPreviewModalChange(previewModal.isOpen);
+        }
+    }, [previewModal.isOpen, onPreviewModalChange]);
 
     // 支持的语言列表
     const supportedLanguages = [

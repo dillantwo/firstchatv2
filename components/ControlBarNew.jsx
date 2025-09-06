@@ -4,7 +4,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { assets } from '@/assets/assets';
 import Image from 'next/image';
 
-const ControlBar = ({ showPinnedPanel = false }) => {
+const ControlBar = ({ showPinnedPanel = false, hideControls = false }) => {
   const { theme, toggleTheme, isDark } = useTheme();
   const { currentLanguage: language, changeLanguage, t } = useLanguage();
   
@@ -15,8 +15,8 @@ const ControlBar = ({ showPinnedPanel = false }) => {
     changeLanguage(language === 'zh' ? 'en' : 'zh');
   };
 
-  // 当钉选面板打开时隐藏控制按钮
-  if (showPinnedPanel) {
+  // 当钉选面板打开时或需要隐藏控制按钮时隐藏控制按钮
+  if (showPinnedPanel || hideControls) {
     return null;
   }
 

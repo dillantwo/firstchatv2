@@ -24,6 +24,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [pinnedMessages, setPinnedMessages] = useState([])
   const [showPinnedPanel, setShowPinnedPanel] = useState(false)
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false)
   const {selectedChat, selectedChatflow, handleChatflowChange, createNewChat} = useAppContext()
   const { isDark } = useTheme()
   const { t } = useLanguage()
@@ -46,6 +47,11 @@ export default function Home() {
       })
     }
   },[messages])
+
+  // Handle preview modal state change
+  const handlePreviewModalChange = (isOpen) => {
+    setIsPreviewModalOpen(isOpen);
+  };
 
   // Handle pinning/unpinning messages
   const handlePinMessage = (message) => {
@@ -127,10 +133,10 @@ export default function Home() {
             }`}>
             
             {/* Control Bar with Language and Theme Toggle */}
-            <ControlBar showPinnedPanel={showPinnedPanel} />
+            <ControlBar showPinnedPanel={showPinnedPanel} hideControls={isPreviewModalOpen} />
             
-            {/* Pinned messages toggle button - only show when panel is closed */}
-            {!showPinnedPanel && (
+            {/* Pinned messages toggle button - only show when panel is closed and preview modal is not open */}
+            {!showPinnedPanel && !isPreviewModalOpen && (
               <button
                 onClick={() => setShowPinnedPanel(true)}
                 className={`fixed top-3 right-4 z-20 ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-800 hover:bg-gray-900 text-white'} p-2 rounded-lg transition-colors duration-200 flex items-center gap-2 shadow-sm`}
@@ -241,7 +247,11 @@ export default function Home() {
             </div>
           )
           }
-          <PromptBox isLoading={isLoading} setIsLoading={setIsLoading}/>
+          <PromptBox 
+            isLoading={isLoading} 
+            setIsLoading={setIsLoading}
+            onPreviewModalChange={handlePreviewModalChange}
+          />
           <p className={`text-xs absolute bottom-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t("AI-generated, for reference only")}</p>
 
           </div>
