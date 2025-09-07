@@ -127,7 +127,7 @@ export default function Home() {
         <ViewportHandler />
         <div className={`main-container ${isDark ? 'bg-[#292a2d]' : 'bg-white'} transition-colors duration-300`}>
           <div className={`flex h-screen ${isDark ? 'bg-[#292a2d]' : 'bg-white'} transition-colors duration-300`}>
-            <Sidebar expand={expand} setExpand={setExpand}/>
+            <Sidebar expand={expand} setExpand={setExpand} isPreviewModalOpen={isPreviewModalOpen}/>
             <div className={`flex-1 flex flex-col items-center justify-center px-2 sm:px-4 pb-2 ${isDark ? 'bg-[#292a2d] text-white' : 'bg-white text-gray-900'} relative transition-all duration-300 chat-container ${
               showPinnedPanel ? 'chat-container-with-pinned mr-0' : 'mr-0'
             }`}>
@@ -137,18 +137,32 @@ export default function Home() {
             
             {/* Pinned messages toggle button - only show when panel is closed and preview modal is not open */}
             {!showPinnedPanel && !isPreviewModalOpen && (
-              <button
-                onClick={() => setShowPinnedPanel(true)}
-                className={`fixed top-3 right-4 z-20 ${isDark ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-800 hover:bg-gray-900 text-white'} p-2 rounded-lg transition-colors duration-200 flex items-center gap-2 shadow-sm`}
-                title={t("Show pinned messages")}
-              >
-                <Image src={assets.pin_svgrepo_com} alt={t("Pin")} className="w-5 h-5 brightness-0 invert" />
-                {pinnedMessages.length > 0 && (
-                  <span className="bg-blue-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1">
-                    {pinnedMessages.length}
-                  </span>
-                )}
-              </button>
+              <div className="fixed top-3 right-4 z-20 group pin-button">
+                <button
+                  onClick={() => setShowPinnedPanel(true)}
+                  className={`
+                    ${isDark 
+                      ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+                      : 'bg-gray-800 hover:bg-gray-900 text-white'
+                    } 
+                    p-2 rounded-lg transition-colors duration-200 flex items-center gap-2 shadow-sm min-h-[40px] min-w-[40px]
+                  `}
+                  title={t("Show pinned messages")}
+                >
+                  <Image src={assets.pin_svgrepo_com} alt={t("Pin")} className="w-5 h-5 brightness-0 invert" />
+                  {pinnedMessages.length > 0 && (
+                    <span className="bg-blue-500 text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 -ml-1">
+                      {pinnedMessages.length}
+                    </span>
+                  )}
+                </button>
+                
+                {/* Pin Button Tooltip */}
+                <div className="absolute w-max top-12 right-0 opacity-0 group-hover:opacity-100 transition bg-black text-white text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]">
+                  {t("Show pinned messages")}
+                  <div className="w-3 h-3 absolute bg-black rotate-45 right-4 -top-1.5"></div>
+                </div>
+              </div>
             )}
             {/* Mobile top navigation */}
             <div className="md:hidden absolute px-2 sm:px-4 top-2 sm:top-3 flex items-center justify-between w-full z-30">
@@ -200,7 +214,7 @@ export default function Home() {
             ):
             (
             <div ref={containerRef}
-            className="relative flex flex-col items-center justify-start w-full mt-32 md:mt-20 max-h-screen overflow-y-auto"
+            className="relative flex flex-col items-center justify-start w-full mt-5 md:mt-5 max-h-screen overflow-y-auto"
             > 
             {/* Desktop: Show chat title and chatflow name */}
             <p className={`hidden md:block fixed top-8 border ${isDark ? 'border-transparent hover:border-gray-500/50' : 'border-transparent hover:border-gray-300/50'} py-1 px-2 rounded-lg font-semibold mb-6`}>
@@ -251,6 +265,7 @@ export default function Home() {
             isLoading={isLoading} 
             setIsLoading={setIsLoading}
             onPreviewModalChange={handlePreviewModalChange}
+            showPinnedPanel={showPinnedPanel}
           />
           <p className={`text-xs absolute bottom-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t("AI-generated, for reference only")}</p>
 

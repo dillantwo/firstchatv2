@@ -732,7 +732,7 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                         ) : (
                                             // 顯示文檔圖標
                                             <div 
-                                                className={`w-32 h-24 flex flex-col items-center justify-center rounded-lg border ${isDark ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-white'} cursor-pointer hover:opacity-80 transition-opacity`}
+                                                className={`w-32 h-24 flex flex-col items-center justify-center rounded-lg border ${isDark ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-white'} cursor-pointer hover:opacity-80 transition-opacity overflow-hidden`}
                                                 onClick={() => openPreviewModal(file)}
                                             >
                                                 <div className="text-2xl mb-1">
@@ -741,7 +741,7 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                 <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'} text-center px-1`}>
                                                     {file.documentType?.toUpperCase()}
                                                 </div>
-                                                <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} text-center px-1 truncate max-w-full`}>
+                                                <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} text-center px-0.5 truncate max-w-[80px] w-full overflow-hidden`}>
                                                     {file.name}
                                                 </div>
                                             </div>
@@ -756,7 +756,7 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                 {documents && documents.map((doc, index) => (
                                     <div key={`doc-${index}`} className='relative group'>
                                         <div 
-                                            className={`w-32 h-24 flex flex-col items-center justify-center rounded-lg border ${isDark ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-white'} cursor-pointer hover:opacity-80 transition-opacity`}
+                                            className={`w-32 h-24 flex flex-col items-center justify-center rounded-lg border ${isDark ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-white'} cursor-pointer hover:opacity-80 transition-opacity overflow-hidden`}
                                             onClick={() => openPreviewModal({...doc, fileType: 'document', documentType: doc.type})}
                                         >
                                             <div className="text-2xl mb-1">
@@ -765,7 +765,7 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                             <div className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'} text-center px-1`}>
                                                 {doc.type?.toUpperCase()}
                                             </div>
-                                            <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} text-center px-1 truncate max-w-full`}>
+                                            <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} text-center px-0.5 truncate max-w-[80px] w-full overflow-hidden`}>
                                                 {doc.name}
                                             </div>
                                         </div>

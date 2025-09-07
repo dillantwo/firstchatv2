@@ -10,7 +10,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import toast from 'react-hot-toast';
 import { performanceMonitor, withPerformanceTracking } from '@/utils/performanceMonitor';
 
-const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange}) => {
+const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPanel = false}) => {
 
     const [prompt, setPrompt] = useState('');
     const [uploadedImages, setUploadedImages] = useState([]);
@@ -22,6 +22,7 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange}) => {
     const [selectedLanguage, setSelectedLanguage] = useState('zh-yue-HK'); // 添加语言状态
     const [isStreaming, setIsStreaming] = useState(false); // 添加流式传输状态
     const [uploadingFiles, setUploadingFiles] = useState([]); // 添加正在上传的文件状态
+    const [isIPadPortrait, setIsIPadPortrait] = useState(false); // 检测iPad竖屏模式
     const streamingRef = useRef(false); // Track streaming status
     const abortControllerRef = useRef(null); // Track current request for cancellation
     const fileInputRef = useRef(null);
@@ -53,6 +54,26 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange}) => {
         }
     }, [previewModal.isOpen, onPreviewModalChange]);
 
+    // 检测iPad竖屏模式
+    useEffect(() => {
+        const checkIPadPortrait = () => {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const isTablet = width <= 1024 && width > 768;
+            const isPortrait = height > width;
+            setIsIPadPortrait(isTablet && isPortrait);
+        };
+
+        checkIPadPortrait();
+        window.addEventListener('resize', checkIPadPortrait);
+        window.addEventListener('orientationchange', checkIPadPortrait);
+
+        return () => {
+            window.removeEventListener('resize', checkIPadPortrait);
+            window.removeEventListener('orientationchange', checkIPadPortrait);
+        };
+    }, []);
+
     // 支持的语言列表
     const supportedLanguages = [
         { code: 'en-US', name: 'English', flag: 'US' },
@@ -60,24 +81,15 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange}) => {
         { code: 'zh-CN', name: '普通话', flag: 'CN' },
     ];
 
-    // iPad Chrome viewport optimization
+    // Unified iPad viewport optimization - responsive for both orientations
     useEffect(() => {
-        const isIPad = /iPad|Macintosh/.test(navigator.userAgent) && 'ontouchend' in document;
-        const isChrome = /Chrome/.test(navigator.userAgent);
+        const isTablet = /iPad|Macintosh|Android.*Tablet/.test(navigator.userAgent) && 'ontouchend' in document;
         
-        if (isIPad) {
-            // 动态调整视口高度，适应iPad Chrome
+        if (isTablet) {
+            // 统一的视口高度调整，适应所有方向
             const adjustViewport = () => {
                 const vh = window.innerHeight * 0.01;
                 document.documentElement.style.setProperty('--vh', `${vh}px`);
-                
-                // 为iPad Chrome添加额外的底部边距
-                if (isChrome) {
-                    const promptContainer = document.querySelector('.prompt-container');
-                    if (promptContainer) {
-                        promptContainer.style.marginBottom = 'max(16px, env(safe-area-inset-bottom))';
-                    }
-                }
             };
             
             adjustViewport();
@@ -890,17 +902,17 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange}) => {
     }
 
   return (
-    <div className={`w-full px-2 sm:px-0 ${selectedChat?.messages.length > 0 ? "max-w-3xl" : "max-w-2xl"} transition-all prompt-container`}
+    <div className={`w-full px-2 sm:px-4 md:px-0 ${selectedChat?.messages.length > 0 ? "max-w-3xl" : "max-w-2xl"} transition-all duration-300 prompt-container`}
          style={{
            paddingBottom: 'max(env(safe-area-inset-bottom, 8px), 12px)',
-           marginBottom: '8px',
+           marginBottom: 'max(8px, env(safe-area-inset-bottom))',
            position: 'relative',
            zIndex: 10
          }}>
       {/* File preview area */}
       {(uploadedImages.length > 0 || uploadingFiles.length > 0) && (
-        <div className={`mb-3 p-3 ${isDark ? 'bg-[#404045]' : 'bg-gray-100'} rounded-2xl`}>
-          <div className="flex flex-wrap gap-2">
+        <div className={`mb-2 md:mb-3 p-2 md:p-3 ${isDark ? 'bg-[#404045]' : 'bg-gray-100'} rounded-xl md:rounded-2xl`}>
+          <div className="flex flex-wrap gap-1.5 md:gap-2">
             {/* 显示正在上传的文件 */}
             {uploadingFiles.map((file) => (
               <div key={file.id} className="relative group w-16">
@@ -1034,7 +1046,7 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange}) => {
       )}
 
       {/* Quick phrase buttons */}
-      <div className="flex items-center gap-2 mb-3 flex-wrap px-1">
+      <div className="flex items-center gap-1.5 md:gap-2 mb-2 md:mb-3 flex-wrap px-0.5 md:px-1">
         {quickPrompts
           .filter((item) => {
             // For new chat state (no selected chat or empty messages), only show "Let's learn" button
@@ -1051,7 +1063,7 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange}) => {
             type="button"
             onClick={() => handleQuickPrompt(item.content)}
             disabled={isLoading || isStreaming}
-            className={`quick-prompt-btn flex items-center gap-1.5 px-4 py-2 ${isDark ? 'bg-[#404045]/80 border-gray-300/30 text-white/90 hover:bg-gray-500/30 hover:border-gray-300/60' : 'bg-gray-800 border-gray-600 text-gray-100 hover:bg-gray-900 hover:border-gray-500 opacity-70 hover:opacity-100'} border rounded-full text-xs group min-w-[100px] justify-center transition-all shadow-sm ${
+            className={`quick-prompt-btn flex items-center gap-1 md:gap-1.5 px-3 md:px-4 py-1.5 md:py-2 ${isDark ? 'bg-[#404045]/80 border-gray-300/30 text-white/90 hover:bg-gray-500/30 hover:border-gray-300/60' : 'bg-gray-800 border-gray-600 text-gray-100 hover:bg-gray-900 hover:border-gray-500 opacity-70 hover:opacity-100'} border rounded-full text-xs md:text-xs group min-w-[80px] md:min-w-[100px] justify-center transition-all duration-200 shadow-sm hover:shadow-md ${
                 (isLoading || isStreaming) ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
@@ -1076,7 +1088,7 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange}) => {
       </div>
 
       <form onSubmit={sendPrompt}
-       className={`w-full ${isDark ? 'bg-[#404045]' : 'bg-gray-50 border-2 border-gray-300'} p-4 rounded-3xl mt-4 transition-all ${isDragging ? 'border-2 border-blue-500 border-dashed' : ''} shadow-sm`}
+       className={`w-full ${isDark ? 'bg-[#404045]' : 'bg-gray-50 border-2 border-gray-300'} p-3 md:p-4 rounded-2xl md:rounded-3xl mt-3 md:mt-4 transition-all duration-300 ${isDragging ? 'border-2 border-blue-500 border-dashed bg-blue-50/50' : ''} shadow-sm hover:shadow-md`}
        onDragOver={handleDragOver}
        onDragLeave={handleDragLeave}
        onDrop={handleDrop}>
@@ -1095,7 +1107,7 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange}) => {
         onKeyDown={handleKeyDown}
         onPaste={handlePaste}
         disabled={isLoading || isStreaming}
-        className={`outline-none w-full resize-none bg-transparent leading-6 text-sm sm:text-base ${isDark ? 'placeholder:text-gray-400 text-white' : 'placeholder:text-gray-500 text-gray-900'} scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent textarea-smooth ${
+        className={`outline-none w-full resize-none bg-transparent leading-6 text-sm md:text-base ${isDark ? 'placeholder:text-gray-400 text-white' : 'placeholder:text-gray-500 text-gray-900'} scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent textarea-smooth ${
             (isLoading || isStreaming) ? 'opacity-50 cursor-not-allowed' : ''
         }`}
         style={{ 
@@ -1105,8 +1117,8 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange}) => {
             lineHeight: '24px',
             wordWrap: 'break-word',
             paddingRight: '8px', // Leave space for scrollbar
-            fontSize: '16px', // 防止 iOS Safari 和 Chrome 自动缩放
-            transform: 'translateZ(0)', // 硬件加速，防止渲染问题
+            fontSize: 'clamp(16px, 4vw, 18px)', // 响应式字体大小，防止移动端缩放
+            transform: 'translateZ(0)', // 硬件加速
             WebkitTransform: 'translateZ(0)',
             touchAction: 'manipulation', // 优化触摸响应
             WebkitTapHighlightColor: 'transparent' // 移除点击高亮
@@ -1116,29 +1128,32 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange}) => {
         value={prompt}
         rows={2}/>
 
-        <div className='flex items-center justify-between text-sm'>
-            <div className='flex items-center gap-2'>
+        <div className='flex items-center justify-between text-xs md:text-sm'>
+            <div className='flex items-center gap-1.5 md:gap-2'>
                 {/* Chatflow selector - bottom left position */}
-                <SimpleChatflowSelector 
-                    selectedChatflow={selectedChatflow} 
-                    onChatflowChange={handleChatflowChange}
-                    disabled={isLoading || isStreaming}
-                />
+                {/* 在iPad竖屏模式下，当PIN面板打开时隐藏chatflow选择器，为输入框腾出更多空间 */}
+                {!(isIPadPortrait && showPinnedPanel) && (
+                    <SimpleChatflowSelector 
+                        selectedChatflow={selectedChatflow} 
+                        onChatflowChange={handleChatflowChange}
+                        disabled={isLoading || isStreaming}
+                    />
+                )}
             </div>
 
-            <div className='flex items-center gap-2'>
+            <div className='flex items-center gap-1.5 md:gap-2'>
             {/* Image upload button */}
             <button
               type="button"
               onClick={openFileSelector}
               disabled={isLoading || isStreaming}
-              className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
+              className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
                 isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm opacity-70 hover:opacity-100'
               } ${(isLoading || isStreaming) ? 'opacity-30 cursor-not-allowed' : ''}`}
               title={t("Upload Files (Images, Word)")}
             >
               <Image 
-                className={`w-3.5 transition-all ${isDark ? '' : 'brightness-0 invert'}`} 
+                className={`w-3 md:w-3.5 transition-all ${isDark ? '' : 'brightness-0 invert'}`} 
                 src={assets.file_upload} 
                 alt='Upload Files'
               />
@@ -1149,7 +1164,7 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange}) => {
               value={selectedLanguage}
               onChange={(e) => setSelectedLanguage(e.target.value)}
               disabled={isLoading || isStreaming}
-              className={`text-xs px-2 py-1 rounded-md border transition-all cursor-pointer ${
+              className={`text-xs px-1.5 md:px-2 py-1 rounded-md border transition-all cursor-pointer ${
                 isDark 
                   ? 'bg-gray-700 border-gray-600 text-white hover:bg-gray-600' 
                   : 'bg-white border-gray-300 text-gray-700 hover:border-gray-400'
@@ -1168,7 +1183,7 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange}) => {
               type="button"
               onClick={handleSpeechRecognition}
               disabled={isLoading || isStreaming}
-              className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
+              className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
                 isListening 
                   ? 'bg-red-500 animate-pulse shadow-lg shadow-red-500/50' 
                   : `${isDark ? 'hover:bg-gray-600/30' : 'bg-gray-800 hover:bg-gray-900 hover:shadow-sm opacity-70 hover:opacity-100'}`
@@ -1176,7 +1191,7 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange}) => {
               title={isListening ? t("Click to stop continuous recording") : t("Click to start continuous voice input")}
             >
               <Image 
-                className={`w-5 transition-all ${isListening ? 'brightness-0 invert' : `${isDark ? 'brightness-0 invert' : 'brightness-0 invert'}`}`}
+                className={`w-4 md:w-5 transition-all ${isListening ? 'brightness-0 invert' : `${isDark ? 'brightness-0 invert' : 'brightness-0 invert'}`}`}
                 src={assets.mic_svgrepo_com} 
                 alt={t('Voice Input')}
               />
@@ -1191,7 +1206,7 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange}) => {
                         : (prompt || uploadedImages.length > 0) && selectedChatflow 
                             ? "bg-blue-700 hover:bg-blue-800" 
                             : "bg-blue-600"
-                } rounded-full p-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-colors`}
+                } rounded-full p-1.5 md:p-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-md`}
                 disabled={!selectedChatflow && !(isLoading || isStreaming)}
                 title={
                     (isLoading || isStreaming)
@@ -1202,7 +1217,7 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange}) => {
                 }
             >
                 <Image 
-                    className='w-3.5 aspect-square brightness-0 invert sepia saturate-[500%] hue-rotate-[190deg]' 
+                    className='w-3 md:w-3.5 aspect-square brightness-0 invert sepia saturate-[500%] hue-rotate-[190deg] transition-transform duration-200 hover:scale-110' 
                     src={
                         (isLoading || isStreaming)
                             ? assets.stop_icon 

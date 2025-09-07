@@ -1,13 +1,13 @@
 import { assets } from '@/assets/assets'
 import Image from 'next/image'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useLTIAuth } from '@/context/LTIAuthContext'
 import { useAppContext } from '@/context/AppContextLTI'
 import { useTheme } from '@/context/ThemeContext'
 import { useLanguage } from '@/context/LanguageContext'
 import ChatLabel from './ChatLabel'
 
-const Sidebar = ({expand, setExpand}) => {
+const Sidebar = ({expand, setExpand, isPreviewModalOpen = false}) => {
 
     const { user, logout } = useLTIAuth()
     const {filteredChats, selectedChatflow, createNewChat} = useAppContext()
@@ -15,6 +15,35 @@ const Sidebar = ({expand, setExpand}) => {
     const { t } = useLanguage()
     const [openMenu, setOpenMenu] = useState({id: 0, open: false})
     const [showUserMenu, setShowUserMenu] = useState(false)
+    const [isIPadPortrait, setIsIPadPortrait] = useState(false)
+
+    // 检测iPad竖屏模式
+    useEffect(() => {
+        const checkIPadPortrait = () => {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const isTablet = width <= 1024 && width > 768;
+            const isPortrait = height > width;
+            setIsIPadPortrait(isTablet && isPortrait);
+        };
+
+        checkIPadPortrait();
+        window.addEventListener('resize', checkIPadPortrait);
+        window.addEventListener('orientationchange', checkIPadPortrait);
+
+        return () => {
+            window.removeEventListener('resize', checkIPadPortrait);
+            window.removeEventListener('orientationchange', checkIPadPortrait);
+        };
+    }, []);
+
+    // 在iPad竖屏模式下，如果预览模态框打开，则隐藏侧边栏
+    const shouldHideSidebar = isIPadPortrait && isPreviewModalOpen;
+
+  // 在iPad竖屏模式下，如果预览模态框打开，则不渲染侧边栏
+  if (shouldHideSidebar) {
+    return null;
+  }
 
   return (
     <div className={`flex flex-col justify-between ${isDark ? 'bg-[#212327]' : 'bg-gray-50 border-r border-gray-200'} pt-7 transition-all z-50 max-md:absolute max-md:h-screen max-md:h-[100vh] max-md:h-[-webkit-fill-available] overflow-hidden ${expand ? 'p-4 w-64 min-w-64' : 'md:w-20 w-0 max-md:overflow-hidden'}`}>

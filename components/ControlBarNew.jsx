@@ -22,8 +22,8 @@ const ControlBar = ({ showPinnedPanel = false, hideControls = false }) => {
 
   return (
     <>
-      {/* Language Toggle Button - 右上角，与钉选按钮保持更多距离 */}
-      <div className="fixed top-3 right-24 z-30 group">
+      {/* Language Toggle Button - 中间位置 */}
+      <div className="fixed top-3 right-20 z-30 group">
         <button
           onClick={toggleLanguage}
           className={`
@@ -31,11 +31,11 @@ const ControlBar = ({ showPinnedPanel = false, hideControls = false }) => {
               ? 'bg-gray-700 hover:bg-gray-600 text-white' 
               : 'bg-gray-800 hover:bg-gray-900 text-white'
             } 
-            p-2 rounded-lg transition-colors duration-200 flex items-center gap-1 shadow-sm
+            p-2 rounded-lg transition-colors duration-200 flex items-center justify-center shadow-sm min-h-[40px] min-w-[40px]
           `}
           title={t('Switch Language')}
         >
-          <span className="text-sm font-medium">
+          <span className="text-sm font-medium leading-none text-center">
             {language === 'zh' ? '中' : 'EN'}
           </span>
         </button>
@@ -47,8 +47,8 @@ const ControlBar = ({ showPinnedPanel = false, hideControls = false }) => {
         </div>
       </div>
 
-      {/* Theme Toggle Button - 右上角，在语言按钮左侧保持合适距离 */}
-      <div className="fixed top-3 right-36 z-30 group ipad-landscape-theme-button">
+      {/* Theme Toggle Button - 左侧位置 */}
+      <div className="fixed top-3 right-32 z-30 group ipad-theme-button">
         <button
           onClick={toggleTheme}
           className={`
@@ -56,7 +56,7 @@ const ControlBar = ({ showPinnedPanel = false, hideControls = false }) => {
               ? 'bg-gray-700 hover:bg-gray-600 text-white' 
               : 'bg-gray-800 hover:bg-gray-900 text-white'
             } 
-            p-2 rounded-lg transition-colors duration-200 flex items-center justify-center shadow-sm
+            p-2 rounded-lg transition-colors duration-200 flex items-center justify-center shadow-sm min-h-[40px] min-w-[40px]
           `}
           title={t(isDark ? 'Switch to light mode' : 'Switch to dark mode')}
         >
