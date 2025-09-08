@@ -130,37 +130,13 @@ body {
   }
 }
 
-/* 自定义响应式 margin-top 类 - 精确控制不同设备 */
-.chat-container-margin {
-  margin-top: 10px; /* 默认: 手机端 */
+/* 简化的导航栏布局 - 使用固定高度 */
+.top-navigation-bar {
+  height: 4rem; /* 64px - 固定导航栏高度 */
 }
 
-/* 真正的移动设备 - 使用 hover: none 和 pointer: coarse 来检测触摸设备 */
-@media (hover: none) and (pointer: coarse) and (max-width: 1023px) {
-  .chat-container-margin {
-    margin-top: 0; /* 移动设备: 移除顶部间距 */
-  }
-}
-
-/* iPad 竖屏 - 只针对真正的触摸设备 */
-@media (hover: none) and (pointer: coarse) and (min-width: 768px) and (max-width: 1023px) and (orientation: portrait) {
-  .chat-container-margin {
-    margin-top: 0; /* iPad 竖屏: 移除顶部间距 */
-  }
-}
-
-/* iPad 横屏 - 只针对真正的触摸设备 */
-@media (hover: none) and (pointer: coarse) and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
-  .chat-container-margin {
-    margin-top: 0; /* iPad 横屏: 移除顶部间距 */
-  }
-}
-
-/* 桌面电脑 - 包括缩小窗口的情况 */
-@media (hover: hover) and (pointer: fine) {
-  .chat-container-margin {
-    margin-top: 4rem; /* 桌面电脑: 始终保持 mt-16，无论窗口大小 */
-  }
+.content-with-nav {
+  padding-top: 4rem; /* 64px - 为导航栏留出空间 */
 }
 
 /* 桌面电脑大屏幕的额外样式 */
@@ -530,79 +506,16 @@ table td * {
     margin-bottom: max(16px, env(safe-area-inset-bottom));
   }
   
-  /* 统一的按钮位置调整 */
-  .fixed.top-3.right-24,
-  .fixed.top-3.right-36,
-  button.fixed.top-3.right-4 {
-    top: clamp(0.5rem, 2vh, 1rem) !important;
-    padding: clamp(0.375rem, 1.5vw, 0.5rem) !important;
-    min-height: clamp(36px, 6vw, 44px) !important;
-    min-width: clamp(36px, 6vw, 44px) !important;
-  }
-  
-  /* 按钮间距调整 */
-  .fixed.top-3.right-24 {
-    right: clamp(5rem, 12vw, 7rem) !important;
-  }
-  
-  .fixed.top-3.right-36 {
-    right: clamp(8rem, 18vw, 10rem) !important;
-  }
-  
-  button.fixed.top-3.right-4 {
-    right: clamp(0.75rem, 2vw, 1.25rem) !important;
-  }
-  
   /* 文本输入优化 */
   textarea {
     font-size: clamp(16px, 4vw, 18px) !important;
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
   }
-  
-  /* 隐藏固定标题 */
-  p.fixed.top-8,
-  p.fixed.top-20 {
-    display: none !important;
-  }
 }
 
 /* 额外的布局调整 */
 @media (max-width: 1024px) {
-  /* Pin按钮位置统一 - 与其他按钮对齐 */
-  .pin-button {
-    top: 0.75rem !important; /* 与语言和主题按钮保持一致的top值 */
-    right: 1rem !important; /* 与其他按钮保持一致的right值 */
-  }
-  
-  .pin-button button {
-    padding: 0.5rem !important; /* 与其他按钮保持一致的padding */
-    min-height: 40px !important; /* 确保足够的触摸区域 */
-    min-width: 40px !important;
-    margin-bottom: 0 !important; /* 移除多余的margin */
-    transform: none !important; /* 移除transform偏移 */
-  }
-  
-  /* 确保所有顶部控制按钮在移动端都对齐 */
-  .fixed.top-3.right-20,
-  .fixed.top-3.right-32,
-  .pin-button {
-    top: 0.75rem !important;
-  }
-  
-  .fixed.top-3.right-20 button,
-  .fixed.top-3.right-32 button,
-  .pin-button button {
-    padding: 0.5rem !important;
-    min-height: 40px !important;
-    min-width: 40px !important;
-  }
-  
-  /* 由于隐藏了标题，减少聊天容器的顶部边距 */
-  .relative.flex.flex-col.items-center.justify-start {
-    margin-top: 20px !important;
-  }
-  
   /* 钉选信息响应式适配 - 移动端优化 */
   .pinned-panel-layout {
     width: 50%; /* 移动端 PIN 面板占 50% */
