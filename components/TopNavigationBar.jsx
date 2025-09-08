@@ -149,20 +149,6 @@ const TopNavigationBar = ({
             </div>
           </div>
         )}
-        
-        {/* New Chat Button */}
-        <div className="group relative">
-          <Image 
-            onClick={createNewChat}
-            className="opacity-70 cursor-pointer hover:opacity-100 transition-opacity w-6 h-6" 
-            src={assets.chat_icon} 
-            alt={t("New chat")}
-          />
-          <div className="absolute w-max top-10 right-0 opacity-0 group-hover:opacity-100 transition bg-black text-white text-xs sm:text-sm px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]">
-            {t("New chat")}
-            <div className="w-3 h-3 absolute bg-black rotate-45 right-4 -top-1.5"></div>
-          </div>
-        </div>
       </div>
     </div>
   );
