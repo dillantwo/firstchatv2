@@ -1428,3 +1428,34 @@ textarea {
     }
   }
 }
+
+/* iPad 竖屏模式下文件预览删除按钮优化 */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  /* 文件上传预览区域的删除按钮 */
+  .prompt-container .relative.group button.absolute {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+    top: -6px !important;
+    right: -6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+  }
+  
+  /* 删除按钮内的图标 */
+  .prompt-container .relative.group button.absolute img {
+    width: 12px !important;
+    height: 12px !important;
+    margin: auto !important;
+    flex-shrink: 0 !important;
+  }
+  
+  /* 上传中和已上传文件的删除按钮样式统一 */
+  .prompt-container .relative.group button.absolute.bg-white {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
+    border-width: 1px !important;
+  }
+}

@@ -939,10 +939,16 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
                 {/* 取消上传按钮 */}
                 <button
                   onClick={() => removeUploadingFile(file.id)}
-                  className={`absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 text-xs flex items-center justify-center transition-colors z-10 ${previewModal.isOpen ? 'hidden' : ''}`}
+                  className={`absolute -top-1 -right-1 bg-white hover:bg-gray-100 rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center transition-colors z-10 shadow-sm border border-gray-200 ${previewModal.isOpen ? 'hidden' : ''}`}
                   title={`${t('Cancel upload')} ${file.name}`}
                 >
-                  ×
+                  <Image 
+                    src={assets.delete_icon} 
+                    alt="delete" 
+                    width={12} 
+                    height={12} 
+                    className="filter brightness-0 saturate-100 invert-[25%] sepia-[100%] saturate-[2000%] hue-rotate-[330deg] brightness-[95%] contrast-[100%]"
+                  />
                 </button>
                 
                 {/* 文件名提示 */}
@@ -979,10 +985,16 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
                 )}
                 <button
                   onClick={() => removeImage(file.id)}
-                  className={`absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-4 h-4 sm:w-5 sm:h-5 text-xs flex items-center justify-center transition-colors z-10 ${previewModal.isOpen ? 'hidden' : ''}`}
+                  className={`absolute -top-1 -right-1 bg-white hover:bg-gray-100 rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center transition-colors z-10 shadow-sm border border-gray-200 ${previewModal.isOpen ? 'hidden' : ''}`}
                   title={`${t('Remove')} ${file.name}`}
                 >
-                  ×
+                  <Image 
+                    src={assets.delete_icon} 
+                    alt="delete" 
+                    width={12} 
+                    height={12} 
+                    className="filter brightness-0 saturate-100 invert-[25%] sepia-[100%] saturate-[2000%] hue-rotate-[330deg] brightness-[95%] contrast-[100%]"
+                  />
                 </button>
                 {/* 文件名提示 */}
                 <div className={`absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white text-xs px-1 py-0.5 rounded-b-lg truncate ${previewModal.isOpen ? 'hidden' : ''} w-full`}>
