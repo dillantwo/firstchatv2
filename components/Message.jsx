@@ -356,15 +356,21 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                         max-height: 100vh;
                                                         position: relative;
                                                     }
-                                                    /* Prevent draggable elements from expanding the container */
+                                                    /* 已禁用：阻止拖拽元素扩展容器 */
                                                     * {
                                                         max-width: 100% !important;
+                                                        -webkit-user-drag: none !important;
+                                                        -khtml-user-drag: none !important;
+                                                        -moz-user-drag: none !important;
+                                                        -o-user-drag: none !important;
+                                                        user-drag: none !important;
+                                                        draggable: false !important;
                                                     }
-                                                    /* Constrain draggable elements */
-                                                    [draggable="true"], .draggable {
-                                                        position: relative !important;
-                                                        max-width: 100% !important;
-                                                        contain: layout style paint !important;
+                                                    /* 已禁用：限制拖拽元素 */
+                                                    [draggable], .draggable {
+                                                        pointer-events: none !important;
+                                                        -webkit-user-drag: none !important;
+                                                        draggable: false !important;
                                                     }
                                                     /* Prevent elements from being positioned outside the viewport */
                                                     * {
@@ -449,37 +455,37 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                         }
                                                     });
                                                     
-                                                    // Prevent drag operations from expanding the container
-                                                    document.addEventListener('dragstart', function(e) {
-                                                        e.dataTransfer.effectAllowed = 'move';
-                                                    });
+                                                    // 已禁用：拖拽操作相关代码
+                                                    // document.addEventListener('dragstart', function(e) {
+                                                    //     e.dataTransfer.effectAllowed = 'move';
+                                                    // });
                                                     
-                                                    document.addEventListener('drag', function(e) {
-                                                        // Constrain drag to viewport
-                                                        const rect = document.body.getBoundingClientRect();
-                                                        if (e.clientX < 0 || e.clientX > rect.width || 
-                                                            e.clientY < 0 || e.clientY > rect.height) {
-                                                            e.preventDefault();
-                                                        }
-                                                    });
+                                                    // document.addEventListener('drag', function(e) {
+                                                    //     // Constrain drag to viewport
+                                                    //     const rect = document.body.getBoundingClientRect();
+                                                    //     if (e.clientX < 0 || e.clientX > rect.width || 
+                                                    //         e.clientY < 0 || e.clientY > rect.height) {
+                                                    //         e.preventDefault();
+                                                    //     }
+                                                    // });
                                                     
-                                                    document.addEventListener('dragend', function(e) {
-                                                        // Ensure dragged element stays within bounds
-                                                        const target = e.target;
-                                                        if (target.style.position === 'absolute' || target.style.position === 'fixed') {
-                                                            const rect = document.body.getBoundingClientRect();
-                                                            const targetRect = target.getBoundingClientRect();
-                                                            
-                                                            if (targetRect.left < 0) target.style.left = '0px';
-                                                            if (targetRect.top < 0) target.style.top = '0px';
-                                                            if (targetRect.right > rect.width) {
-                                                                target.style.left = (rect.width - targetRect.width) + 'px';
-                                                            }
-                                                            if (targetRect.bottom > rect.height) {
-                                                                target.style.top = (rect.height - targetRect.height) + 'px';
-                                                            }
-                                                        }
-                                                    });
+                                                    // document.addEventListener('dragend', function(e) {
+                                                    //     // Ensure dragged element stays within bounds
+                                                    //     const target = e.target;
+                                                    //     if (target.style.position === 'absolute' || target.style.position === 'fixed') {
+                                                    //         const rect = document.body.getBoundingClientRect();
+                                                    //         const targetRect = target.getBoundingClientRect();
+                                                    //         
+                                                    //         if (targetRect.left < 0) target.style.left = '0px';
+                                                    //         if (targetRect.top < 0) target.style.top = '0px';
+                                                    //         if (targetRect.right > rect.width) {
+                                                    //             target.style.left = (rect.width - targetRect.width) + 'px';
+                                                    //         }
+                                                    //         if (targetRect.bottom > rect.height) {
+                                                    //             target.style.top = (rect.height - targetRect.height) + 'px';
+                                                    //         }
+                                                    //     }
+                                                    // });
                                                     
                                                     // Listen for DOM changes and auto-adjust height
                                                     const observer = new MutationObserver(function(mutations) {

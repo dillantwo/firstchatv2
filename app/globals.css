@@ -50,26 +50,57 @@ body {
 }
 
 ::-webkit-scrollbar{
+  display: none !important;
+}
+
+/* 彻底隐藏所有滚动条 */
+* {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+
+*::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari and Opera */
+}
+
+/* 禁用所有resize功能和拖拽功能 */
+* {
+  resize: none !important;
+  -webkit-user-drag: none !important;
+  -khtml-user-drag: none !important;
+  -moz-user-drag: none !important;
+  -o-user-drag: none !important;
+}
+
+/* 禁用所有可拖拽属性 */
+*[draggable] {
+  -webkit-user-drag: none !important;
+  pointer-events: auto !important;
+}
+
+/* 保持正常的用户选择 */
+* {
+  -webkit-user-select: auto;
+  -moz-user-select: auto;
+  -ms-user-select: auto;
+  user-select: auto;
+}
+
+/* 自定义滚动条样式 - 已禁用 */
+.scrollbar-thin {
+  scrollbar-width: none;
+}
+
+.scrollbar-thumb-gray-600::-webkit-scrollbar {
   display: none;
 }
 
-/* 自定义滚动条样式 */
-.scrollbar-thin {
-  scrollbar-width: thin;
-}
-
-.scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
-  display: block;
-}
-
 .scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
-  background-color: rgba(75, 85, 99, 0.6);
-  border-radius: 3px;
+  display: none;
 }
 
 .scrollbar-thumb-gray-600::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(75, 85, 99, 0.8);
+  display: none;
 }
 
 /* 文本截断样式 */
@@ -101,29 +132,39 @@ body {
 
 /* 自定义响应式 margin-top 类 - 精确控制不同设备 */
 .chat-container-margin {
-  margin-top: 10px; /* 默认: 手机端 mt-16 */
+  margin-top: 10px; /* 默认: 手机端 */
 }
 
-/* iPad 竖屏 (768px - 1023px 且 orientation: portrait) */
-@media (min-width: 768px) and (max-width: 1023px) and (orientation: portrait) {
+/* 真正的移动设备 - 使用 hover: none 和 pointer: coarse 来检测触摸设备 */
+@media (hover: none) and (pointer: coarse) and (max-width: 1023px) {
+  .chat-container-margin {
+    margin-top: 0; /* 移动设备: 移除顶部间距 */
+  }
+}
+
+/* iPad 竖屏 - 只针对真正的触摸设备 */
+@media (hover: none) and (pointer: coarse) and (min-width: 768px) and (max-width: 1023px) and (orientation: portrait) {
   .chat-container-margin {
     margin-top: 0; /* iPad 竖屏: 移除顶部间距 */
   }
 }
 
-/* iPad 横屏 (768px - 1023px 且 orientation: landscape) */
-@media (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+/* iPad 横屏 - 只针对真正的触摸设备 */
+@media (hover: none) and (pointer: coarse) and (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
   .chat-container-margin {
     margin-top: 0; /* iPad 横屏: 移除顶部间距 */
   }
 }
 
-/* 桌面电脑 (1024px+) */
-@media (min-width: 1280px) {
+/* 桌面电脑 - 包括缩小窗口的情况 */
+@media (hover: hover) and (pointer: fine) {
   .chat-container-margin {
-    margin-top: 4rem; /* 桌面电脑: 恢复 mt-16 */
+    margin-top: 4rem; /* 桌面电脑: 始终保持 mt-16，无论窗口大小 */
   }
-  
+}
+
+/* 桌面电脑大屏幕的额外样式 */
+@media (min-width: 1024px) {
   .chat-container-with-pinned {
     margin-right: 58%;
   }

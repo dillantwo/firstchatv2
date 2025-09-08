@@ -25,8 +25,8 @@ const translations = {
     'Are you sure you want to delete this chat? This action cannot be undone.': '您確定要刪除此對話嗎？此操作無法復原。',
     
     // PromptBox
-    'Type a message, drag images, or use voice input...': '輸入訊息、拖曳文件或使用語音輸入...',
-    'Drag images here to upload...': '拖曳文件至此上傳...',
+    'Type a message, drag images, or use voice input...': '輸入訊息或使用語音輸入...',
+    'Drag images here to upload...': '點擊上傳檔案...',
     'Continuous listening...': '持續聆聽中...',
     'Upload Image': '上傳文件 (圖片/Word/PDF)',
     'Voice Input': '語音輸入',
@@ -157,8 +157,8 @@ const translations = {
     'Are you sure you want to delete this chat? This action cannot be undone.': 'Are you sure you want to delete this chat? This action cannot be undone.',
     
     // PromptBox
-    'Type a message, drag images, or use voice input...': 'Type a message, drag files, or use voice input...',
-    'Drag images here to upload...': 'Drag files here to upload...',
+    'Type a message, drag images, or use voice input...': 'Type a message or use voice input...',
+    'Drag images here to upload...': 'Click to upload files...',
     'Continuous listening...': 'Continuous listening...',
     'Upload Image': 'Upload Files (Images, Word, PDF)',
     'Voice Input': 'Voice Input',

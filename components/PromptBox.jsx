@@ -14,7 +14,6 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
 
     const [prompt, setPrompt] = useState('');
     const [uploadedImages, setUploadedImages] = useState([]);
-    const [isDragging, setIsDragging] = useState(false);
     const [previewModal, setPreviewModal] = useState({ isOpen: false, image: null });
     const [textareaHeight, setTextareaHeight] = useState('auto');
     const [isListening, setIsListening] = useState(false);
@@ -435,26 +434,6 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
     // Handle file selection
     const handleFileSelect = (e) => {
         const files = e.target.files;
-        if (files && files.length > 0) {
-            handleImageUpload(files);
-        }
-    };
-
-    // Handle drag and drop
-    const handleDragOver = (e) => {
-        e.preventDefault();
-        setIsDragging(true);
-    };
-
-    const handleDragLeave = (e) => {
-        e.preventDefault();
-        setIsDragging(false);
-    };
-
-    const handleDrop = (e) => {
-        e.preventDefault();
-        setIsDragging(false);
-        const files = e.dataTransfer.files;
         if (files && files.length > 0) {
             handleImageUpload(files);
         }
@@ -1100,10 +1079,7 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
       </div>
 
       <form onSubmit={sendPrompt}
-       className={`w-full ${isDark ? 'bg-[#404045]' : 'bg-gray-50 border-2 border-gray-300'} p-3 md:p-4 rounded-2xl md:rounded-3xl mt-3 md:mt-4 transition-all duration-300 ${isDragging ? 'border-2 border-blue-500 border-dashed bg-blue-50/50' : ''} shadow-sm hover:shadow-md`}
-       onDragOver={handleDragOver}
-       onDragLeave={handleDragLeave}
-       onDrop={handleDrop}>
+       className={`w-full ${isDark ? 'bg-[#404045]' : 'bg-gray-50 border-2 border-gray-300'} p-3 md:p-4 rounded-2xl md:rounded-3xl mt-3 md:mt-4 transition-all duration-300 shadow-sm hover:shadow-md`}>
         
         <input
           ref={fileInputRef}
@@ -1119,7 +1095,7 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
         onKeyDown={handleKeyDown}
         onPaste={handlePaste}
         disabled={isLoading || isStreaming}
-        className={`outline-none w-full resize-none bg-transparent leading-6 text-sm md:text-base ${isDark ? 'placeholder:text-gray-400 text-white' : 'placeholder:text-gray-500 text-gray-900'} scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent textarea-smooth ${
+        className={`outline-none w-full resize-none bg-transparent leading-6 text-sm md:text-base ${isDark ? 'placeholder:text-gray-400 text-white' : 'placeholder:text-gray-500 text-gray-900'} textarea-smooth ${
             (isLoading || isStreaming) ? 'opacity-50 cursor-not-allowed' : ''
         }`}
         style={{ 
@@ -1135,7 +1111,7 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
             touchAction: 'manipulation', // 优化触摸响应
             WebkitTapHighlightColor: 'transparent' // 移除点击高亮
         }}
-        placeholder={isDragging ? t('Drag files here to upload...') : isListening ? t('Continuous listening...') : t('Type a message, drag files, or use voice input...')} 
+        placeholder={isListening ? t('Continuous listening...') : t('Type a message or use voice input...')} 
         onChange={handleInputChange} 
         value={prompt}
         rows={2}/>
