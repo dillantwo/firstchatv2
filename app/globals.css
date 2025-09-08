@@ -97,6 +97,32 @@ body {
   .pinned-panel-layout {
     width: 58%; /* 稍微减少以在大屏幕上提供更好的阅读体验 */
   }
+}
+
+/* 自定义响应式 margin-top 类 - 精确控制不同设备 */
+.chat-container-margin {
+  margin-top: 10px; /* 默认: 手机端 mt-16 */
+}
+
+/* iPad 竖屏 (768px - 1023px 且 orientation: portrait) */
+@media (min-width: 768px) and (max-width: 1023px) and (orientation: portrait) {
+  .chat-container-margin {
+    margin-top: 0; /* iPad 竖屏: 移除顶部间距 */
+  }
+}
+
+/* iPad 横屏 (768px - 1023px 且 orientation: landscape) */
+@media (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+  .chat-container-margin {
+    margin-top: 0; /* iPad 横屏: 移除顶部间距 */
+  }
+}
+
+/* 桌面电脑 (1024px+) */
+@media (min-width: 1280px) {
+  .chat-container-margin {
+    margin-top: 4rem; /* 桌面电脑: 恢复 mt-16 */
+  }
   
   .chat-container-with-pinned {
     margin-right: 58%;
@@ -533,7 +559,7 @@ table td * {
   
   /* 由于隐藏了标题，减少聊天容器的顶部边距 */
   .relative.flex.flex-col.items-center.justify-start {
-    margin-top: 30px !important;
+    margin-top: 20px !important;
   }
   
   /* 钉选信息响应式适配 - 移动端优化 */

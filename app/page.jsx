@@ -293,7 +293,7 @@ export default function Home() {
             ):
             (
             <div ref={containerRef}
-            className="relative flex flex-col items-center justify-start w-full mt-16 md:mt-16 max-h-screen overflow-y-auto"
+            className="relative flex flex-col items-center justify-start w-full chat-container-margin max-h-screen overflow-y-auto"
             > 
             {messages.map((msg, index)=>(
               <Message 
