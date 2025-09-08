@@ -59,7 +59,7 @@ const TopNavigationBar = ({
       {/* Right side buttons */}
       <div className="flex items-center gap-2">
         {/* Theme Toggle Button */}
-        {!isPreviewModalOpen && (
+        {!isPreviewModalOpen && !showPinnedPanel && (
           <div className="group relative hidden md:block">
             <button
               onClick={toggleTheme}
@@ -98,7 +98,7 @@ const TopNavigationBar = ({
         )}
         
         {/* Language Toggle Button */}
-        {!isPreviewModalOpen && (
+        {!isPreviewModalOpen && !showPinnedPanel && (
           <div className="group relative hidden md:block">
             <button
               onClick={() => changeLanguage(currentLanguage === 'zh' ? 'en' : 'zh')}
