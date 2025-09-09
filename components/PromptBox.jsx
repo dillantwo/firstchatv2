@@ -1119,8 +1119,8 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
         <div className='flex items-center justify-between text-xs md:text-sm'>
             <div className='flex items-center gap-1.5 md:gap-2'>
                 {/* Chatflow selector - bottom left position */}
-                {/* 在iPad竖屏模式下，当PIN面板打开时隐藏chatflow选择器，为输入框腾出更多空间 */}
-                {!(isIPadPortrait && showPinnedPanel) && (
+                {/* 当PIN面板打开时隐藏chatflow选择器，为输入框腾出更多空间 */}
+                {!showPinnedPanel && (
                     <SimpleChatflowSelector 
                         selectedChatflow={selectedChatflow} 
                         onChatflowChange={handleChatflowChange}
