@@ -992,7 +992,7 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
           onClick={closePreviewModal}
         >
           <div 
-            className="relative max-w-4xl max-h-4xl p-4 m-4 overflow-hidden"
+            className="relative max-w-lg max-h-[60vh] p-4 m-4 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <button
