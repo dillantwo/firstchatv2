@@ -1151,13 +1151,13 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
             <select
               value={selectedLanguage}
               onChange={(e) => setSelectedLanguage(e.target.value)}
-              disabled={isLoading || isStreaming}
+              disabled={isLoading || isStreaming || isListening}
               className={`text-xs px-1.5 md:px-2 py-1 rounded-md border transition-all cursor-pointer ${
                 isDark 
                   ? 'bg-gray-700 border-gray-600 text-white hover:bg-gray-600' 
                   : 'bg-white border-gray-300 text-gray-700 hover:border-gray-400'
-              } ${(isLoading || isStreaming) ? 'opacity-30 cursor-not-allowed' : ''}`}
-              title={t("Select voice recognition language")}
+              } ${(isLoading || isStreaming || isListening) ? 'opacity-30 cursor-not-allowed' : ''}`}
+              title={isListening ? t("Cannot change language during voice input") : t("Select voice recognition language")}
             >
               {supportedLanguages.map((lang) => (
                 <option key={lang.code} value={lang.code}>
