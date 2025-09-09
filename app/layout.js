@@ -32,8 +32,8 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="bg-white light">
-      <body className={`${inter.className} antialiased bg-white`} suppressHydrationWarning={true}>
+    <html lang="en">
+      <body className={`${inter.className} antialiased`} suppressHydrationWarning={true}>
         <LanguageProvider>
           <ThemeProvider>
             <LTIAuthProvider>

@@ -19,7 +19,7 @@ const TopNavigationBar = ({
   const { currentLanguage, changeLanguage, t } = useLanguage();
 
   return (
-    <div className="fixed top-0 left-0 right-0 h-16 bg-inherit flex items-center justify-between px-2 sm:px-4 z-30 border-b border-gray-200/20">
+    <div className={`fixed top-0 left-0 right-0 h-16 ${isDark ? 'bg-gray-800' : 'bg-white'} flex items-center justify-between px-2 sm:px-4 z-30 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
       {/* Menu Button */}
       <div className="group relative">
         <Image 
@@ -58,8 +58,8 @@ const TopNavigationBar = ({
       
       {/* Right side buttons */}
       <div className="flex items-center gap-2">
-        {/* Theme Toggle Button - 始终显示 */}
-        <div className="group relative hidden md:block">
+        {/* Theme Toggle Button - 在所有设备上显示 */}
+        <div className="group relative">
           <button
             onClick={toggleTheme}
             className={`
@@ -67,7 +67,7 @@ const TopNavigationBar = ({
                 ? 'bg-gray-700 hover:bg-gray-600 text-white' 
                 : 'bg-gray-800 hover:bg-gray-900 text-white'
               } 
-              p-2 rounded-lg transition-colors duration-200 flex items-center justify-center shadow-sm w-[40px] h-[40px]
+              p-2 rounded-lg transition-colors duration-200 flex items-center justify-center shadow-sm w-[32px] h-[32px] sm:w-[40px] sm:h-[40px]
             `}
             title={t(isDark ? 'Switch to light mode' : 'Switch to dark mode')}
           >
@@ -75,27 +75,27 @@ const TopNavigationBar = ({
               <Image 
                 src={assets.moon_svg}
                 alt="Moon Icon"
-                width={20}
-                height={20}
-                className="w-5 h-5 filter brightness-0 invert"
+                width={16}
+                height={16}
+                className="w-4 h-4 sm:w-5 sm:h-5 filter brightness-0 invert"
               />
             ) : (
               <Image 
                 src={assets.sun_svg}
                 alt="Sun Icon"
-                width={20}
-                height={20}
-                className="w-5 h-5 filter brightness-0 invert"
+                width={16}
+                height={16}
+                className="w-4 h-4 sm:w-5 sm:h-5 filter brightness-0 invert"
               />
             )}
           </button>
-          <div className="absolute w-max top-12 right-0 opacity-0 group-hover:opacity-100 transition bg-black text-white text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]">
+          <div className="absolute w-max top-10 sm:top-12 right-0 opacity-0 group-hover:opacity-100 transition bg-black text-white text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]">
             {t(isDark ? 'Switch to light mode' : 'Switch to dark mode')}
             <div className="w-3 h-3 absolute bg-black rotate-45 right-4 -top-1.5"></div>
           </div>
         </div>
         
-        {/* Language Toggle Button - 始终显示 */}
+        {/* Language Toggle Button - 在桌面设备上显示 */}
         <div className="group relative hidden md:block">
           <button
             onClick={() => changeLanguage(currentLanguage === 'zh' ? 'en' : 'zh')}
@@ -118,7 +118,7 @@ const TopNavigationBar = ({
           </div>
         </div>
         
-        {/* Pin Messages Button - 始终显示 */}
+        {/* Pin Messages Button - 在所有设备上显示 */}
         <div className="group relative">
           <button
             onClick={() => setShowPinnedPanel(!showPinnedPanel)}
@@ -127,18 +127,18 @@ const TopNavigationBar = ({
                 ? 'bg-gray-700 hover:bg-gray-600 text-white' 
                 : 'bg-gray-800 hover:bg-gray-900 text-white'
               } 
-              p-2 rounded-lg transition-colors duration-200 flex items-center justify-center shadow-sm w-[40px] h-[40px] relative
+              p-2 rounded-lg transition-colors duration-200 flex items-center justify-center shadow-sm w-[32px] h-[32px] sm:w-[40px] sm:h-[40px] relative
             `}
             title={t(showPinnedPanel ? "Hide pinned messages" : "Show pinned messages")}
           >
-            <Image src={assets.pin_svgrepo_com} alt={t("Pin")} className="w-5 h-5 brightness-0 invert" />
+            <Image src={assets.pin_svgrepo_com} alt={t("Pin")} className="w-4 h-4 sm:w-5 sm:h-5 brightness-0 invert" />
             {pinnedMessages.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+              <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full min-w-[16px] h-[16px] sm:min-w-[18px] sm:h-[18px] flex items-center justify-center px-1">
                 {pinnedMessages.length}
               </span>
             )}
           </button>
-          <div className="absolute w-max top-12 right-0 opacity-0 group-hover:opacity-100 transition bg-black text-white text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]">
+          <div className="absolute w-max top-10 sm:top-12 right-0 opacity-0 group-hover:opacity-100 transition bg-black text-white text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]">
             {t(showPinnedPanel ? "Hide pinned messages" : "Show pinned messages")}
             <div className="w-3 h-3 absolute bg-black rotate-45 right-4 -top-1.5"></div>
           </div>
