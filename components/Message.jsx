@@ -638,81 +638,8 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
         </div>
       )}
 
-      <div className={`flex flex-col  w-full ${isInPinnedPanel ? 'mb-6' : 'mb-8'} ${role === 'user' && 'items-end'}`}>
+      <div className={`flex flex-col w-full ${isInPinnedPanel ? 'mb-6' : 'mb-8'} ${role === 'user' && 'items-end'}`}>
         <div className={`group relative flex ${isInPinnedPanel ? 'max-w-full py-3 px-2' : 'max-w-2xl py-3'} rounded-xl ${role === 'user' ? (isInPinnedPanel ? 'px-3' : `${isDark ? 'bg-[#414158]' : 'bg-blue-100'} px-5`) : 'gap-3'}`}>
-            <div className={`absolute ${role === 'user' ? `${isDark ? '-left-20' : '-left-20'} top-2.5` : 'left-9 -bottom-6'} transition-all ${isInPinnedPanel ? 'hidden' : ''}`}>
-                <div className='flex items-center gap-0 lg:gap-2'>
-                    {
-                        role === 'user' ? (
-                            <>
-                            <button
-                                onClick={copyMessage}
-                                className={`opacity-70 hover:opacity-100 w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
-                                    isDark ? 'hover:bg-gray-600/30' : 'hover:bg-gray-100/50'
-                                }`}
-                                title={t("Copy message")}
-                            >
-                                <Image 
-                                    src={assets.copy_icon} 
-                                    alt={t('Copy')} 
-                                    className={`w-4 transition-all ${isDark ? 'brightness-0 invert' : ''}`}
-                                    style={isDark ? {} : { filter: 'hue-rotate(220deg) saturate(2) brightness(0.4)' }}
-                                />
-                            </button>
-                            {showPinButton && (
-                                <button
-                                    onClick={handlePinMessage}
-                                    className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 -ml-1 lg:ml-0 ${
-                                        isDark ? 'hover:bg-gray-600/30' : 'hover:bg-gray-100/50'
-                                    } opacity-70 hover:opacity-100`}
-                                    title={t('Pin message')}
-                                >
-                                    <Image 
-                                        src={assets.pin_svgrepo_com} 
-                                        alt={t('Pin message')} 
-                                        className={`w-5 transition-all ${isDark ? 'brightness-0 invert' : ''}`}
-                                        style={isDark ? {} : { filter: 'hue-rotate(220deg) saturate(2) brightness(0.4)' }}
-                                    />
-                                </button>
-                            )}
-                            </>
-                        ):(
-                            <>
-                            <button
-                                onClick={copyMessage}
-                                className={`opacity-70 hover:opacity-100 w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
-                                    isDark ? 'hover:bg-gray-600/30' : 'hover:bg-gray-100/50'
-                                }`}
-                                title={t("Copy message")}
-                            >
-                                <Image 
-                                    src={assets.copy_icon} 
-                                    alt={t('Copy')} 
-                                    className={`w-4 transition-all ${isDark ? 'brightness-0 invert' : ''}`}
-                                    style={isDark ? {} : { filter: 'hue-rotate(220deg) saturate(2) brightness(0.4)' }}
-                                />
-                            </button>
-                            {showPinButton && (
-                                <button
-                                    onClick={handlePinMessage}
-                                    className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 -ml-1 lg:ml-0 ${
-                                        isDark ? 'hover:bg-gray-600/30' : 'hover:bg-gray-100/50'
-                                    } opacity-70 hover:opacity-100`}
-                                    title={t('Pin message')}
-                                >
-                                    <Image 
-                                        src={assets.pin_svgrepo_com} 
-                                        alt={t('Pin message')} 
-                                        className={`w-5 transition-all ${isDark ? 'brightness-0 invert' : ''}`}
-                                        style={isDark ? {} : { filter: 'hue-rotate(220deg) saturate(2) brightness(0.4)' }}
-                                    />
-                                </button>
-                            )}
-                            </>
-                        )
-                    }
-                </div>
-            </div>
             {
                 role === 'user' ? 
                 (
@@ -795,6 +722,42 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                 )
             }
         </div>
+        
+        {/* 统一的按钮区域 - 放在消息下方 */}
+        {!isInPinnedPanel && (
+          <div className={`mt-1 flex items-center gap-2 ${role === 'user' ? 'justify-end' : 'justify-start pl-9'}`}>
+            <button
+              onClick={copyMessage}
+              className={`opacity-70 hover:opacity-100 w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
+                isDark ? 'hover:bg-gray-600/30' : 'hover:bg-gray-100/50'
+              }`}
+              title={t("Copy message")}
+            >
+              <Image 
+                src={assets.copy_icon} 
+                alt={t('Copy')} 
+                className={`w-4 transition-all ${isDark ? 'brightness-0 invert' : ''}`}
+                style={isDark ? {} : { filter: 'hue-rotate(220deg) saturate(2) brightness(0.4)' }}
+              />
+            </button>
+            {showPinButton && (
+              <button
+                onClick={handlePinMessage}
+                className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
+                  isDark ? 'hover:bg-gray-600/30' : 'hover:bg-gray-100/50'
+                } opacity-70 hover:opacity-100`}
+                title={t('Pin message')}
+              >
+                <Image 
+                  src={assets.pin_svgrepo_com} 
+                  alt={t('Pin message')} 
+                  className={`w-5 transition-all ${isDark ? 'brightness-0 invert' : ''}`}
+                  style={isDark ? {} : { filter: 'hue-rotate(220deg) saturate(2) brightness(0.4)' }}
+                />
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

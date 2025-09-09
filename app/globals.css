@@ -112,48 +112,82 @@ body {
   overflow: hidden;
 }
 
-/* Pinned Messages 自适应布局 - 1.5倍关系 */
-@media (min-width: 640px) {
-  .pinned-panel-layout {
-    width: 60%; /* Pinned Messages 占 60% */
-  }
-  
-  .chat-container-with-pinned {
-    margin-right: 60%; /* Chat 区域右边距 60%，实际可用空间 40% */
-  }
+/* Pinned Messages 布局 - 统一大屏幕样式 */
+.pinned-panel-layout {
+  width: 55%; /* 统一使用大屏幕样式 */
+  position: fixed;
+  right: 0;
+  top: 4rem; /* 从导航栏下方开始 */
+  height: calc(100vh - 4rem); /* 扣除导航栏高度 */
 }
 
-/* 在更大屏幕上微调比例以保持良好的用户体验 */
-@media (min-width: 1024px) {
-  .pinned-panel-layout {
-    width: 58%; /* 稍微减少以在大屏幕上提供更好的阅读体验 */
-  }
+.chat-container-with-pinned {
+  margin-right: 55% !important; /* 统一使用大屏幕样式 */
+  width: 45% !important; /* 明确设置宽度 */
+  max-width: 45% !important; /* 防止溢出 */
+  flex: none !important; /* 覆盖flex-1类 */
+  flex-grow: 0 !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important; /* 确保盒模型正确 */
 }
 
 /* 简化的导航栏布局 - 使用固定高度 */
 .top-navigation-bar {
   height: 4rem; /* 64px - 固定导航栏高度 */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
 }
 
 .content-with-nav {
   padding-top: 4rem; /* 64px - 为导航栏留出空间 */
 }
 
-/* 桌面电脑大屏幕的额外样式 */
-@media (min-width: 1024px) {
-  .chat-container-with-pinned {
-    margin-right: 58%;
-  }
+/* 主容器布局优化 */
+.main-container {
+  height: 100vh;
+  overflow: hidden;
 }
 
-@media (min-width: 1280px) {
-  .pinned-panel-layout {
-    width: 55%; /* 在超大屏幕上进一步优化 */
-  }
-  
-  .chat-container-with-pinned {
-    margin-right: 55%;
-  }
+.main-container .flex.h-screen {
+  height: 100vh;
+}
+
+/* 聊天容器在PIN模式下的优化 */
+.chat-container-with-pinned {
+  transition: all 0.3s ease;
+  position: relative;
+  height: 100vh;
+  padding-top: 4rem; /* 为顶部导航栏留出空间 */
+}
+
+/* 确保PIN模式下聊天区域的内容容器也正确适配 */
+.chat-container-with-pinned .relative.flex.flex-col {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+/* 确保PIN模式下的PromptBox也正确适配 */
+.chat-container-with-pinned .prompt-container {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+/* 确保PIN模式下的消息容器也正确适配 */
+.chat-container-with-pinned .max-w-3xl {
+  max-width: 95% !important;
+}
+
+/* 确保PIN面板不会被导航栏遮挡 */
+.pinned-panel-layout {
+  z-index: 999; /* 低于导航栏但高于其他内容 */
+}
+
+/* 调整PIN面板内容区域顶部空间 */
+.pinned-panel-layout .flex-1.overflow-y-auto {
+  padding-top: 1rem; /* 顶部留出一点空间 */
 }
 
 .line-clamp-4 {
@@ -243,17 +277,8 @@ pre{
 }
 
 /* iPad 和觸屏設備上強制顯示三個點菜單 */
-@media (hover: none) and (pointer: coarse) {
-  .touch-device-visible {
-    display: block !important;
-  }
-}
-
-/* 專門針對 iPad 的媒體查詢 - 统一响应式 */
-@media (min-width: 768px) and (max-width: 1024px) {
-  .touch-device-visible {
-    display: block !important;
-  }
+.touch-device-visible {
+  display: block !important;
 }
 
 .message-with-math p {
@@ -357,7 +382,7 @@ table {
 table th {
   padding: 0.75rem 1rem;
   text-align: left;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -383,20 +408,6 @@ table td {
 /* 最后一行去掉下边框 */
 table tbody tr:last-child td {
   border-bottom: none;
-}
-
-/* 响应式设计 - 更紧凑的移动端样式 */
-@media (max-width: 640px) {
-  table th,
-  table td {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8rem;
-    line-height: 1.5;
-  }
-  
-  table th {
-    font-size: 0.7rem;
-  }
 }
 
 /* 确保长单词和URL能够断行 */
@@ -426,236 +437,73 @@ table td * {
   z-index: 99999 !important;
 }
 
-/* iPad Safari 特定优化 */
-@supports (-webkit-touch-callout: none) {
-  /* iOS Safari 特定样式 */
-  html, body {
-    height: 100vh;
-    height: -webkit-fill-available;
-    overflow-x: hidden;
-  }
-  
-  /* 修复iOS Safari中100vh的问题 */
-  .h-screen {
-    height: 100vh;
-    height: -webkit-fill-available;
-  }
-  
-  /* 防止iOS Safari中的橡皮筋效果 */
-  body {
-    position: fixed;
-    width: 100%;
-    overflow: hidden;
-  }
-  
-  /* 确保主容器可以滚动 */
-  .main-container {
-    height: 100vh;
-    height: -webkit-fill-available;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+/* 统一的视口设置 */
+html, body {
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background-color: var(--bg-primary);
 }
 
-/* 统一的平板设备响应式样式 - 支持iPad和其他平板 */
-@media only screen 
-  and (min-width: 768px) 
-  and (max-width: 1024px) 
-  and (pointer: coarse),
-  screen and (min-device-width: 768px) and (max-device-width: 1366px) {
-  
-  /* 统一的视口设置 - 兼容横屏和竖屏 */
-  html, body {
-    width: 100%;
-    height: 100vh;
-    height: calc(var(--vh, 1vh) * 100);
-    height: 100svh;
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
-    background-color: var(--bg-primary);
-  }
-  
-  /* 主容器响应式适配 */
-  .main-container {
-    width: 100vw;
-    height: 100vh;
-    height: calc(var(--vh, 1vh) * 100);
-    height: 100svh;
-    background-color: var(--bg-primary) !important;
-    margin: 0;
-    padding: 0;
-    padding-bottom: max(16px, env(safe-area-inset-bottom));
-  }
-  
-  /* 聊天容器优化 */
-  .chat-container {
-    max-width: 95%;
-    margin: 0 auto;
-    padding: 0 clamp(12px, 3vw, 24px);
-    background-color: var(--bg-primary) !important;
-    min-height: calc(100vh - 40px);
-    min-height: calc(100svh - 40px);
-    padding-top: clamp(60px, 8vh, 80px) !important;
-    padding-bottom: max(20px, env(safe-area-inset-bottom));
-  }
-  
-  /* 输入框容器响应式优化 */
-  .prompt-container {
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
-    margin-bottom: max(16px, env(safe-area-inset-bottom));
-  }
-  
-  /* 文本输入优化 */
-  textarea {
-    font-size: clamp(16px, 4vw, 18px) !important;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-  }
+/* 主容器样式 */
+.main-container {
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg-primary) !important;
+  margin: 0;
+  padding: 0;
 }
 
-/* 额外的布局调整 */
-@media (max-width: 1024px) {
-  /* 钉选信息响应式适配 - 移动端优化 */
-  .pinned-panel-layout {
-    width: 50%; /* 移动端 PIN 面板占 50% */
-  }
-  
-  .chat-container-with-pinned {
-    margin-right: 50%; /* 聊天容器右边距 50%，实际可用空间 50% */
-    transition: margin-right 0.3s ease; /* 添加平滑过渡动画 */
-  }
-  
-  /* 侧边栏自适应显示 */
-  .sidebar-auto-expand {
-    display: block;
-  }
+/* 聊天容器优化 */
+.chat-container {
+  max-width: 95%;
+  margin: 0 auto;
+  padding: 0 24px;
+  background-color: var(--bg-primary) !important;
+  min-height: calc(100vh - 40px);
+  padding-top: 80px !important;
+  padding-bottom: 20px;
 }
 
-/* 通用移动设备优化 - 包括iPad Chrome */
-@media (max-width: 1024px) {
-  /* 防止水平滚动 */
-  * {
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-  
-  /* 优化触摸目标大小 */
-  button, 
-  [role="button"],
-  input,
-  textarea {
-    min-height: 44px; /* Apple HIG 推荐的最小触摸目标 */
-    min-width: 44px;
-  }
-  
-  /* 改善滚动性能 */
-  .overflow-y-auto {
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
-  }
-  
-  /* iPad Chrome特定：确保界面完整显示 */
-  .main-container {
-    min-height: 100vh;
-    min-height: 100svh;
-    position: relative;
-  }
-  
-  /* 确保底部输入框可见 */
-  .prompt-container {
-    position: relative;
-    z-index: 10;
-    margin-bottom: max(env(safe-area-inset-bottom, 12px), 16px);
-  }
-  
-  /* 聊天容器适配 */
-  .chat-container {
-    padding-bottom: 80px; /* 为输入框预留足够空间，从120px减少到80px */
-    min-height: calc(100vh - 200px);
-    min-height: calc(100svh - 200px);
-  }
+/* 输入框容器样式 */
+.prompt-container {
+  padding-bottom: 12px;
+  margin-bottom: 16px;
 }
 
-/* 修复Safari中的输入框问题 */
+/* 文本输入样式 */
+textarea {
+  font-size: 18px !important;
+}
+
+/* 通用按钮优化 */
+button, 
+[role="button"],
+input,
+textarea {
+  min-height: 24px;
+  min-width: 24px;
+}
+
+/* 改善滚动性能 */
+.overflow-y-auto {
+  scroll-behavior: smooth;
+}
+
+/* 修复输入框样式 */
 input, textarea {
   -webkit-appearance: none;
   appearance: none;
   border-radius: 0;
+  font-size: 16px;
 }
 
-/* 防止Safari中的缩放 */
-input[type="text"],
-input[type="search"],
-textarea {
-  font-size: 16px; /* 防止iOS Safari自动缩放 */
-}
-
-/* 优化选择器下拉菜单在移动设备上的显示 */
-@media (max-width: 768px) {
-  select {
-    font-size: 16px;
-    padding: 12px;
-  }
-  
-  /* 移动端：减少顶部导航栏高度 */
-  .md\\:hidden.absolute.px-2.sm\\:px-4 {
-    top: 0.25rem !important; /* 减少顶部距离 */
-    height: 1.5rem !important; /* 固定高度为24px，更紧凑 */
-  }
-  
-  /* 移动端：减少图标大小 */
-  .md\\:hidden img {
-    width: 1.25rem !important; /* 20px */
-    height: 1.25rem !important; /* 20px */
-  }
-}
-
-/* 通用移动设备优化 - 简化版本 */
-@media (max-width: 1024px) {
-  /* 防止意外的水平滚动 */
-  body {
-    overflow-x: hidden;
-    background-color: var(--bg-primary);
-  }
-  
-  /* 确保所有容器都不会超出视口 */
-  .container, .flex, div {
-    max-width: 100vw;
-    box-sizing: border-box;
-  }
-  
-  /* 优化按钮大小以适合触摸 */
-  button {
-    min-height: 44px;
-    padding: 8px 12px;
-  }
-  
-  /* 修复移动端固定定位 */
-  .fixed {
-    position: absolute;
-  }
-  
-  /* 优化移动端的消息容器 */
-  .message-container {
-    padding: 8px 12px;
-    max-width: calc(100vw - 24px);
-  }
-  
-  /* 修复移动端Sidebar高度问题 */
-  .max-md\:h-screen {
-    height: 100vh !important;
-    height: -webkit-fill-available !important;
-    min-height: calc(100vh - 30px); /* 减少30px，与底部文字对齐 */
-    min-height: calc(-webkit-fill-available - 30px);
-  }
-  
-  /* 确保绝对定位的Sidebar完全覆盖 */
-  .max-md\:absolute {
-    top: 0;
-    left: 0;
-    bottom: 30px; /* 底部留出30px空间给"AI-generated"文字 */
-  }
+/* 选择器下拉菜单优化 */
+select {
+  font-size: 16px;
+  padding: 12px;
 }
 
 /* 取消固定按钮美化样式 */
@@ -664,6 +512,9 @@ textarea {
   backdrop-filter: blur(8px);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-height: 32px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
 }
 
 .unpin-button:hover {
@@ -686,25 +537,6 @@ textarea {
   transform: rotate(45deg) scale(1.1);
 }
 
-/* 确保在触摸设备上按钮足够大 */
-@media (max-width: 640px) {
-  .unpin-button {
-    min-height: 36px;
-    min-width: 36px;
-    padding: 8px 10px;
-    font-size: 0.75rem;
-  }
-}
-
-/* iPad 和平板优化 */
-@media (min-width: 641px) and (max-width: 1024px) {
-  .unpin-button {
-    min-height: 32px;
-    padding: 6px 12px;
-    font-size: 0.75rem;
-  }
-}
-
 /* 增强触摸区域 */
 .unpin-button::before {
   content: '';
@@ -716,726 +548,64 @@ textarea {
   z-index: -1;
 }
 
-/* 移动端按钮对齐增强 - 确保钉选按钮与语言/主题按钮完美对齐 */
-@media (max-width: 1024px) {
-  /* 统一所有顶部控制按钮的基础样式 */
-  .pin-button,
-  .fixed.top-3.right-20,
-  .fixed.top-3.right-32 {
-    top: 12px !important; /* 统一的top位置 */
-  }
-  
-  /* 统一按钮内部样式 */
-  .pin-button button,
-  .fixed.top-3.right-20 button,
-  .fixed.top-3.right-32 button {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
-    padding: 8px !important; /* 统一的内边距 */
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border-radius: 8px !important; /* 统一的圆角 */
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important; /* 统一的阴影 */
-  }
-  
-  /* 按钮图标大小统一 */
-  .pin-button button img,
-  .fixed.top-3.right-20 button span,
-  .fixed.top-3.right-32 button img {
-    width: 20px !important;
-    height: 20px !important;
-  }
-  
-  /* 钉选按钮数字徽章调整 */
-  .pin-button button span.bg-blue-500 {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    min-width: 16px !important;
-    height: 16px !important;
-    font-size: 10px !important;
-    line-height: 1 !important;
-    margin-left: 0 !important; /* 重置margin */
-  }
-  
-  /* 确保语言按钮文字居中 */
-  .fixed.top-3.right-20 button span {
-    font-size: 14px !important;
-    font-weight: 500 !important;
-    line-height: 1 !important;
-  }
+/* 统一按钮样式 */
+.pin-button button,
+.fixed.top-3.right-20 button,
+.fixed.top-3.right-32 button {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  padding: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 8px !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
 }
 
-/* iPad专门优化 - 横竖屏适配 */
-@media (min-width: 768px) and (max-width: 1024px) {
-  .pin-button {
-    right: 16px !important; /* iPad上稍微增加右边距 */
-  }
-  
-  .fixed.top-3.right-20 {
-    right: 68px !important; /* 调整语言按钮位置 */
-  }
-  
-  .fixed.top-3.right-32 {
-    right: 120px !important; /* 调整主题按钮位置 */
-  }
-  
-  /* 确保按钮在iPad上有足够的触摸区域 */
-  .pin-button button,
-  .fixed.top-3.right-20 button,
-  .fixed.top-3.right-32 button {
-    min-width: 44px !important; /* iPad推荐的最小触摸区域 */
-    min-height: 44px !important;
-  }
-  
-  /* ========== iPad PIN 面板自适应布局 ========== */
-  /* iPad 横屏和竖屏通用 PIN 面板布局 - 增强优先级 */
-  .main-container .flex.h-screen .chat-container.chat-container-with-pinned {
-    margin-right: 50% !important; /* iPad 聊天容器占据左侧 50% */
-    width: 50% !important;
-    max-width: 50% !important; /* 覆盖基础样式 */
-    margin-left: 0 !important; /* 覆盖基础样式 */
-    margin-top: 0 !important; /* 覆盖基础样式 */
-    flex: none !important; /* 覆盖 flex-1 */
-    flex-grow: 0 !important; /* 覆盖 flex-1 */
-    flex-shrink: 0 !important; /* 防止收缩 */
-    transition: all 0.3s ease !important;
-    box-sizing: border-box !important;
-    position: relative !important;
-    transform: translateX(0) !important; /* 强制位置 */
-  }
-  
-  .main-container .flex.h-screen .pinned-panel-layout {
-    width: 50% !important; /* iPad PIN 面板占据右侧 50% */
-    transition: transform 0.3s ease !important;
-    box-sizing: border-box !important;
-    position: fixed !important;
-    right: 0 !important;
-    top: 0 !important;
-  }
-  
-  /* iPad PIN 模式下确保聊天容器内容不溢出 */
-  .main-container .flex.h-screen .chat-container.chat-container-with-pinned .relative.flex.flex-col {
-    max-width: 100% !important;
-    overflow-x: hidden !important;
-    box-sizing: border-box !important;
-  }
-  
-  /* iPad PIN 模式下调整消息宽度 */
-  .main-container .flex.h-screen .chat-container.chat-container-with-pinned .max-w-3xl {
-    max-width: 95% !important;
-    box-sizing: border-box !important;
-  }
-  
-  /* iPad PIN 模式下确保输入框正确适配 */
-  .main-container .flex.h-screen .chat-container.chat-container-with-pinned .prompt-container {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-  }
-  
-  /* iPad PIN 模式下强制调整所有容器元素 */
-  .main-container .flex.h-screen .chat-container.chat-container-with-pinned > * {
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-  }
-  
-  /* 终极修复：直接覆盖 flex-1 类的影响 */
-  .main-container .flex.h-screen .flex-1.chat-container-with-pinned {
-    flex: none !important;
-    flex-grow: 0 !important;
-    flex-shrink: 0 !important;
-    flex-basis: auto !important;
-  }
+/* 按钮图标大小统一 */
+.pin-button button img,
+.fixed.top-3.right-20 button span,
+.fixed.top-3.right-32 button img {
+  width: 20px !important;
+  height: 20px !important;
 }
 
-/* ========== 横屏测试 - 最简单的条件 ========== */
-/* 横屏检测已确认正常工作，移除调试样式 */
-
-/* ========== 通用横屏模式 PIN 面板优化 ========== */
-/* 任何横屏设备的备选方案 */
-@media (orientation: landscape) {
-  /* 通用横屏下的 PIN 面板布局 */
-  .main-container .flex.h-screen .chat-container.chat-container-with-pinned {
-    margin-right: 45% !important;
-    width: 55% !important;
-    max-width: 55% !important;
-    margin-left: 0 !important;
-    flex: none !important;
-    flex-grow: 0 !important;
-    flex-shrink: 0 !important;
-    transition: all 0.3s ease !important;
-    box-sizing: border-box !important;
-    position: relative !important;
-  }
-  
-  .main-container .flex.h-screen .pinned-panel-layout {
-    width: 45% !important;
-    transition: transform 0.3s ease !important;
-    box-sizing: border-box !important;
-    right: 0 !important;
-    position: fixed !important;
-  }
-  
-  /* 通用横屏下覆盖 flex-1 */
-  .main-container .flex.h-screen .flex-1.chat-container-with-pinned {
-    flex: none !important;
-    flex-grow: 0 !important;
-    flex-shrink: 0 !important;
-    flex-basis: auto !important;
-  }
+/* 钉选按钮数字徽章 */
+.pin-button button span.bg-blue-500 {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px !important;
+  height: 16px !important;
+  font-size: 10px !important;
+  line-height: 1 !important;
+  margin-left: 0 !important;
 }
 
-/* ========== iPad 横屏模式专门优化 ========== */
-/* iPad 横屏模式下的 PIN 面板特殊处理 - 简化媒体查询 */
-@media (orientation: landscape) and (min-width: 768px) and (max-width: 1366px) {
-  /* iPad 横屏下优化空间分配 - 强制应用 */
-  .main-container .flex.h-screen .chat-container.chat-container-with-pinned {
-    margin-right: 45% !important; /* iPad 横屏时聊天容器占据 55% */
-    width: 55% !important; /* 给聊天区域更多空间 */
-    max-width: 55% !important; /* 覆盖基础样式 */
-    margin-left: 0 !important; /* 覆盖基础样式 */
-    margin-top: 0 !important; /* 覆盖基础样式 */
-    flex: none !important; /* 覆盖 flex-1 */
-    flex-grow: 0 !important; /* 覆盖 flex-1 */
-    flex-shrink: 0 !important; /* 防止收缩 */
-    transition: all 0.3s ease !important;
-    box-sizing: border-box !important;
-    transform: translateX(0) !important; /* 强制位置 */
-    position: relative !important;
-  }
-  
-  .main-container .flex.h-screen .pinned-panel-layout {
-    width: 45% !important; /* iPad 横屏时 PIN 面板占据 45% */
-    transition: transform 0.3s ease !important;
-    box-sizing: border-box !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
-    right: 0 !important; /* 确保在右侧 */
-    position: fixed !important;
-  }
-  
-  /* iPad 横屏模式下确保聊天容器完全适配 */
-  .main-container .flex.h-screen .chat-container.chat-container-with-pinned {
-    height: 100vh !important;
-    max-height: 100vh !important;
-    overflow-y: auto !important;
-    position: relative !important;
-  }
-  
-  /* iPad 横屏下强制应用容器样式 */
-  .main-container .flex.h-screen .chat-container.chat-container-with-pinned .relative.flex.flex-col.items-center.justify-start {
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow-x: hidden !important;
-    box-sizing: border-box !important;
-  }
-  
-  /* iPad 横屏下确保输入框容器正确适配 */
-  .main-container .flex.h-screen .chat-container.chat-container-with-pinned .prompt-container {
-    width: 100% !important;
-    max-width: 100% !important;
-    position: relative !important;
-    box-sizing: border-box !important;
-  }
-  
-  /* iPad 横屏下调整消息最大宽度 */
-  .main-container .flex.h-screen .chat-container.chat-container-with-pinned .max-w-3xl {
-    max-width: 90% !important; /* 横屏时留出更多边距 */
-    box-sizing: border-box !important;
-  }
-  
-  /* iPad 横屏下强制所有子元素适配 */
-  .main-container .flex.h-screen .chat-container.chat-container-with-pinned * {
-    box-sizing: border-box !important;
-  }
-  
-  /* 终极修复：直接覆盖 flex-1 类的影响 */
-  .main-container .flex.h-screen .flex-1.chat-container-with-pinned {
-    flex: none !important;
-    flex-grow: 0 !important;
-    flex-shrink: 0 !important;
-    flex-basis: auto !important;
-  }
+/* 确保语言按钮文字居中 */
+.fixed.top-3.right-20 button span {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
 }
 
-/* ========== 超强力横屏修复 ========== */
-/* 最终确保横屏模式下的 PIN 面板自适应正常工作 */
-@media screen and (orientation: landscape) {
-  /* 使用最高优先级强制应用横屏布局 */
-  html body .main-container .flex.h-screen .flex-1.chat-container.chat-container-with-pinned {
-    margin-right: 45% !important;
-    width: 55% !important;
-    max-width: 55% !important;
-    flex: 0 0 55% !important;
-    flex-grow: 0 !important;
-    flex-shrink: 0 !important;
-    flex-basis: 55% !important;
-    position: relative !important;
-    box-sizing: border-box !important;
-    transition: all 0.3s ease !important;
-  }
-  
-  /* 强制 PIN 面板位置 */
-  html body .main-container .pinned-panel-layout {
-    width: 45% !important;
-    right: 0 !important;
-    position: fixed !important;
-    top: 0 !important;
-    height: 100vh !important;
-  }
+/* 顶部控制按钮位置 */
+.pin-button,
+.fixed.top-3.right-20,
+.fixed.top-3.right-32 {
+  top: 12px !important;
 }
 
-/* 小屏手机优化 */
-@media (max-width: 640px) {
-  /* 在小屏上调整按钮间距，确保不重叠 */
-  .pin-button {
-    right: 12px !important;
-  }
-  
-  .fixed.top-3.right-20 {
-    right: 56px !important; /* 缩小间距 */
-  }
-  
-  .fixed.top-3.right-32 {
-    right: 100px !important; /* 缩小间距 */
-  }
-  
-  /* 小屏上稍微减小按钮尺寸 */
-  .pin-button button,
-  .fixed.top-3.right-20 button,
-  .fixed.top-3.right-32 button {
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
-    min-height: 36px !important;
-    padding: 6px !important;
-  }
-  
-  /* 调整图标大小 */
-  .pin-button button img,
-  .fixed.top-3.right-20 button span,
-  .fixed.top-3.right-32 button img {
-    width: 18px !important;
-    height: 18px !important;
-  }
-  
-  /* 调整语言按钮文字大小 */
-  .fixed.top-3.right-20 button span {
-    font-size: 12px !important;
-  }
+.pin-button {
+  right: 16px !important;
 }
 
-/* ========== 移动端 PIN 面板自适应布局 ========== */
-/* 移动端（手机）PIN 面板优化 - 排除 iPad */
-@media (max-width: 767px) {
-  /* PIN 面板显示时的布局调整 */
-  .chat-container-with-pinned {
-    margin-right: 50% !important; /* 聊天容器占据左侧 50% */
-    width: 50% !important; /* 明确设置宽度 */
-    transition: all 0.3s ease !important; /* 平滑动画过渡 */
-  }
-  
-  .pinned-panel-layout {
-    width: 50% !important; /* PIN 面板占据右侧 50% */
-    transition: transform 0.3s ease !important; /* 平滑滑入动画 */
-  }
-  
-  /* 确保聊天容器内容不溢出 */
-  .chat-container-with-pinned .relative.flex.flex-col {
-    max-width: 100% !important;
-    overflow-x: hidden !important;
-  }
-  
-  /* 调整消息宽度以适应较窄的聊天区域 */
-  .chat-container-with-pinned .max-w-3xl {
-    max-width: 95% !important; /* 在较窄空间中调整消息最大宽度 */
-  }
-  
-  /* 确保 PromptBox 在 PIN 面板显示时也能正确适配 */
-  .chat-container-with-pinned .fixed.bottom-0 {
-    width: 50% !important; /* 输入框也只占据聊天区域宽度 */
-    max-width: 50% !important;
-  }
+.fixed.top-3.right-20 {
+  right: 68px !important;
 }
 
-/* 小屏手机特殊适配 */
-@media (max-width: 640px) {
-  /* 在小屏上可以调整为更合适的比例 */
-  .chat-container-with-pinned {
-    margin-right: 55% !important; /* 聊天容器占据左侧 45% */
-    width: 45% !important;
-  }
-  
-  .pinned-panel-layout {
-    width: 55% !important; /* PIN 面板占据右侧 55%，给 PIN 面板更多空间 */
-  }
-  
-  /* 小屏上调整输入框宽度 */
-  .chat-container-with-pinned .fixed.bottom-0 {
-    width: 45% !important;
-    max-width: 45% !important;
-  }
-  
-  /* 调整消息间距以适应更窄的空间 */
-  .chat-container-with-pinned .flex.gap-4 {
-    gap: 0.5rem !important; /* 减少消息间距 */
-  }
-  
-  /* 调整消息内容的最大宽度 */
-  .chat-container-with-pinned .max-w-3xl {
-    max-width: 100% !important;
-    padding: 0.5rem !important; /* 减少内边距 */
-  }
-}
-
-/* ========== 横屏模式 PIN 面板自适应布局 ========== */
-/* 横屏模式特殊适配 - 手机横屏，排除 iPad */
-@media (max-width: 767px) and (orientation: landscape) {
-  /* 横屏模式下的 PIN 面板布局 */
-  .chat-container-with-pinned {
-    margin-right: 45% !important; /* 横屏时聊天容器占据左侧 55% */
-    width: 55% !important; /* 给聊天区域更多空间 */
-    transition: all 0.3s ease !important;
-  }
-  
-  .pinned-panel-layout {
-    width: 45% !important; /* PIN 面板占据右侧 45% */
-    transition: transform 0.3s ease !important;
-  }
-  
-  /* 横屏模式下调整输入框宽度 */
-  .chat-container-with-pinned .fixed.bottom-0 {
-    width: 55% !important;
-    max-width: 55% !important;
-  }
-  
-  /* 横屏模式下确保聊天容器完全利用可用空间 */
-  .chat-container-with-pinned .relative.flex.flex-col {
-    max-width: 100% !important;
-    overflow-x: hidden !important;
-    height: 100% !important; /* 确保占满高度 */
-  }
-  
-  /* 横屏模式下调整消息容器高度 */
-  .chat-container-with-pinned {
-    height: 100vh !important;
-    max-height: 100vh !important;
-    overflow-y: auto !important;
-  }
-  
-  /* 横屏模式下确保 PromptBox 容器正确定位 */
-  .chat-container-with-pinned .prompt-container {
-    width: 100% !important;
-    max-width: 100% !important;
-    position: relative !important;
-  }
-  
-  /* 横屏模式下调整消息最大宽度 */
-  .chat-container-with-pinned .max-w-3xl {
-    max-width: 90% !important; /* 横屏时稍微减少宽度留出更多空间 */
-  }
-}
-
-/* 横屏模式下的小屏设备（手机横屏）特殊处理 */
-@media (max-width: 768px) and (orientation: landscape) {
-  .chat-container-with-pinned {
-    margin-right: 50% !important; /* 手机横屏时保持 50-50 分割 */
-    width: 50% !important;
-  }
-  
-  .pinned-panel-layout {
-    width: 50% !important;
-  }
-  
-  .chat-container-with-pinned .fixed.bottom-0 {
-    width: 50% !important;
-    max-width: 50% !important;
-  }
-  
-  /* 手机横屏模式下调整消息间距 */
-  .chat-container-with-pinned .flex.gap-4 {
-    gap: 0.25rem !important; /* 进一步减少间距 */
-  }
-  
-  /* 手机横屏下减少顶部边距 */
-  .chat-container-with-pinned .mt-32,
-  .chat-container-with-pinned .md\\:mt-20 {
-    margin-top: 1rem !important; /* 减少顶部边距以节省垂直空间 */
-  }
-}
-
-/* ========== 通用横屏模式优化 ========== */
-/* 所有横屏模式下的通用优化 */
-@media (orientation: landscape) and (max-height: 600px) {
-  /* 横屏且高度较小时的优化 */
-  .main-container {
-    height: 100vh !important;
-    max-height: 100vh !important;
-    overflow: hidden !important;
-  }
-  
-  /* 确保聊天容器在横屏时正确适配 */
-  .chat-container {
-    height: 100vh !important;
-    max-height: 100vh !important;
-  }
-  
-  /* 横屏模式下的 PIN 面板确保不会超出视口 */
-  .pinned-panel-layout {
-    height: 100vh !important;
-    max-height: 100vh !important;
-    overflow-y: auto !important;
-  }
-  
-  /* 横屏模式下优化控制栏位置 */
-  .fixed.top-3 {
-    top: 0.5rem !important; /* 减少顶部距离 */
-  }
-  
-  /* 横屏模式下减少底部文字的边距 */
-  .absolute.bottom-1 {
-    bottom: 0.25rem !important;
-  }
-}
-
-/* iPad 竖屏模式下的 chatflow 选择器样式优化 */
-@media only screen and (max-width: 1024px) and (orientation: portrait) {
-  /* 限制 chatflow 选择器按钮的最大宽度 */
-  .relative button.flex.items-center.gap-2 {
-    max-width: 140px !important;
-  }
-  
-  /* 确保 chatflow 名称被截断显示 */
-  .relative button.flex.items-center.gap-2 .truncate {
-    max-width: 60px !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-  }
-
-  /* iPad 竖屏模式下的文件预览模态框优化 - 与横屏保持一致 */
-  /* 文件预览模态框容器 - 强制与横屏模式一致的样式 */
-  .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center {
-    /* 确保模态框背景覆盖整个屏幕 */
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    z-index: 10000 !important;
-  }
-  
-  /* 文件预览内容容器 - 与横屏模式完全一致 */
-  .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center .relative.max-w-4xl.max-h-4xl {
-    max-width: 90vw !important; /* 在竖屏模式下使用更大的宽度比例 */
-    max-height: 80vh !important; /* 限制高度以确保不会超出屏幕 */
-    width: auto !important;
-    height: auto !important;
-    margin: 2rem !important; /* 保持适当的边距 */
-    padding: 1rem !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-  
-  /* 图片预览优化 - 与横屏模式一致 */
-  .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center img {
-    max-width: 100% !important;
-    max-height: 100% !important;
-    object-fit: contain !important;
-    width: auto !important;
-    height: auto !important;
-  }
-  
-  /* 文档预览容器优化 */
-  .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center .rounded-lg.shadow-2xl {
-    max-height: 75vh !important; /* 与横屏模式保持一致的高度限制 */
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-  
-  /* 文档内容区域优化 */
-  .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center .max-h-96.overflow-y-auto {
-    max-height: 50vh !important; /* 确保内容区域有足够的滚动空间 */
-  }
-  
-  /* 关闭按钮确保在正确位置 */
-  .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center .absolute.-top-2.-right-2 {
-    top: -0.5rem !important;
-    right: -0.5rem !important;
-    z-index: 10001 !important;
-  }
-
-  /* Message 组件的文件预览模态框优化 (z-50) */
-  .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center.z-50 .relative.max-w-4xl.max-h-4xl {
-    max-width: 90vw !important;
-    max-height: 80vh !important;
-    width: auto !important;
-    height: auto !important;
-    margin: 2rem !important;
-    padding: 1rem !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-  
-  /* Message 组件图片预览优化 */
-  .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center.z-50 img {
-    max-width: 100% !important;
-    max-height: 100% !important;
-    object-fit: contain !important;
-    width: auto !important;
-    height: auto !important;
-  }
-  
-  /* Message 组件文档预览容器优化 */
-  .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center.z-50 .rounded-lg.shadow-2xl {
-    max-height: 75vh !important;
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-  
-  /* Message 组件文档内容区域优化 */
-  .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center.z-50 .max-h-96.overflow-y-auto {
-    max-height: 50vh !important;
-  }
-  
-  /* Message 组件关闭按钮优化 */
-  .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center.z-50 .absolute.-top-2.-right-2 {
-    top: -0.5rem !important;
-    right: -0.5rem !important;
-    z-index: 51 !important;
-  }
-
-  /* 通用文件预览优化 - 确保竖屏模式下与横屏完全一致 */
-  /* 优化预览区域的显示效果，使其在竖屏下更像横屏模式 */
-  .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center > div {
-    /* 强制容器采用横屏式的宽高比例 */
-    aspect-ratio: auto !important;
-    transform: none !important;
-    position: relative !important;
-  }
-  
-  /* 确保文档预览的文本内容区域与横屏一致 */
-  .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center pre.whitespace-pre-wrap {
-    font-size: 0.875rem !important; /* 与横屏模式保持一致的字体大小 */
-    line-height: 1.5 !important;
-    max-width: 100% !important;
-    word-wrap: break-word !important;
-  }
-  
-  /* 文档标题和元信息区域优化 */
-  .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center h3 {
-    font-size: 1.125rem !important; /* 与横屏模式一致 */
-    margin-bottom: 0.5rem !important;
-  }
-  
-  .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center p {
-    font-size: 0.875rem !important; /* 与横屏模式一致 */
-  }
-}
-
-/* iPad 设备专门的文件预览模态框优化 - 确保横竖屏一致性 */
-@media only screen and (min-device-width: 768px) and (max-device-width: 1024px) {
-  /* iPad 设备通用的文件预览优化 */
-  .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center {
-    padding: 1rem !important;
-  }
-  
-  /* iPad 竖屏模式特别优化 - 强制使用类似横屏的显示方式 */
-  @media (orientation: portrait) {
-    /* 当文件预览模态框打开时，隐藏侧边栏 */
-    body:has(.fixed.inset-0.bg-black.bg-opacity-75) .flex.flex-col.justify-between:has(.pt-7) {
-      display: none !important;
-    }
-    
-    /* 备用选择器，针对不同的z-index值 */
-    body:has([class*="z-\\[10000\\]"]) .flex.flex-col.justify-between:has(.pt-7),
-    body:has([class*="z-50"][class*="fixed"][class*="inset-0"]) .flex.flex-col.justify-between:has(.pt-7) {
-      display: none !important;
-    }
-    
-    /* 当侧边栏隐藏时，确保主内容区域占满全屏 */
-    body:has(.fixed.inset-0.bg-black.bg-opacity-75) .flex-1 {
-      width: 100vw !important;
-      margin-left: 0 !important;
-    }
-    
-    .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center .relative {
-      /* 在竖屏模式下，使预览模态框更接近横屏时的显示效果 */
-      max-width: 85vw !important;
-      max-height: 75vh !important;
-      width: auto !important;
-      height: auto !important;
-      min-height: auto !important;
-      min-width: auto !important;
-    }
-    
-    /* 图片预览在iPad竖屏下的优化 */
-    .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center img {
-      max-width: 100% !important;
-      max-height: 100% !important;
-      width: auto !important;
-      height: auto !important;
-      object-fit: contain !important;
-      object-position: center !important;
-    }
-    
-    /* 文档预览在iPad竖屏下的优化 */
-    .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center .rounded-lg.shadow-2xl {
-      max-width: 100% !important;
-      max-height: 70vh !important;
-      overflow: hidden !important;
-    }
-    
-    /* 文档内容滚动区域优化 */
-    .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center .overflow-y-auto {
-      max-height: 45vh !important;
-      overflow-y: auto !important;
-      overflow-x: hidden !important;
-    }
-  }
-  
-  /* iPad 横屏模式保持原有效果 */
-  @media (orientation: landscape) {
-    .fixed.inset-0.bg-black.bg-opacity-75.flex.items-center.justify-center .relative {
-      max-width: 90vw !important;
-      max-height: 85vh !important;
-    }
-  }
-}
-
-/* iPad 竖屏模式下文件预览删除按钮优化 */
-@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
-  /* 文件上传预览区域的删除按钮 */
-  .prompt-container .relative.group button.absolute {
-    width: 20px !important;
-    height: 20px !important;
-    min-width: 20px !important;
-    min-height: 20px !important;
-    top: -6px !important;
-    right: -6px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 0 !important;
-  }
-  
-  /* 删除按钮内的图标 */
-  .prompt-container .relative.group button.absolute img {
-    width: 12px !important;
-    height: 12px !important;
-    margin: auto !important;
-    flex-shrink: 0 !important;
-  }
-  
-  /* 上传中和已上传文件的删除按钮样式统一 */
-  .prompt-container .relative.group button.absolute.bg-white {
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
-    border-width: 1px !important;
-  }
+.fixed.top-3.right-32 {
+  right: 120px !important;
 }

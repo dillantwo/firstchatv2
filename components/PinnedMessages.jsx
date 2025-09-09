@@ -27,20 +27,6 @@ const PinnedMessages = ({ pinnedMessages, onUnpinMessage, isVisible, onToggleVis
       <div className={`fixed right-0 top-0 h-full w-full pinned-panel-layout ${isDark ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'} border-l z-10 transform transition-transform duration-300 shadow-2xl flex flex-col ${
         isVisible ? 'translate-x-0' : 'translate-x-full'
       }`}>
-      {/* Header */}
-      <div className={`flex items-center justify-between p-3 sm:p-4 ${isDark ? 'border-gray-600' : 'border-gray-300'} border-b flex-shrink-0`}>
-        <div className="flex items-center gap-2">
-          <Image src={assets.pin_svgrepo_com} alt={t("Pinned")} className="w-5 h-5 sm:w-6 sm:h-6" />
-          <h3 className={`${isDark ? 'text-white' : 'text-gray-900'} font-medium text-sm sm:text-base`}>{t("Pinned Messages")}</h3>
-          <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>({pinnedMessages.length})</span>
-        </div>
-        <button
-          onClick={onToggleVisibility}
-          className={`${isDark ? 'text-gray-400 hover:text-white hover:bg-gray-700' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'} transition-colors rounded-lg`}
-        >
-          <Image src={assets.sidebar_close_icon} alt={t("Close")} className="w-6 h-6 sm:w-8 sm:h-8" />
-        </button>
-      </div>
 
       {/* Pinned Messages List */}
       <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 min-h-0">

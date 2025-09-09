@@ -58,97 +58,91 @@ const TopNavigationBar = ({
       
       {/* Right side buttons */}
       <div className="flex items-center gap-2">
-        {/* Theme Toggle Button */}
-        {!isPreviewModalOpen && !showPinnedPanel && (
-          <div className="group relative hidden md:block">
-            <button
-              onClick={toggleTheme}
-              className={`
-                ${isDark 
-                  ? 'bg-gray-700 hover:bg-gray-600 text-white' 
-                  : 'bg-gray-800 hover:bg-gray-900 text-white'
-                } 
-                p-2 rounded-lg transition-colors duration-200 flex items-center justify-center shadow-sm min-h-[40px] min-w-[40px]
-              `}
-              title={t(isDark ? 'Switch to light mode' : 'Switch to dark mode')}
-            >
-              {isDark ? (
-                <Image 
-                  src={assets.moon_svg}
-                  alt="Moon Icon"
-                  width={20}
-                  height={20}
-                  className="w-5 h-5 filter brightness-0 invert"
-                />
-              ) : (
-                <Image 
-                  src={assets.sun_svg}
-                  alt="Sun Icon"
-                  width={20}
-                  height={20}
-                  className="w-5 h-5 filter brightness-0 invert"
-                />
-              )}
-            </button>
-            <div className="absolute w-max top-12 right-0 opacity-0 group-hover:opacity-100 transition bg-black text-white text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]">
-              {t(isDark ? 'Switch to light mode' : 'Switch to dark mode')}
-              <div className="w-3 h-3 absolute bg-black rotate-45 right-4 -top-1.5"></div>
-            </div>
+        {/* Theme Toggle Button - 始终显示 */}
+        <div className="group relative hidden md:block">
+          <button
+            onClick={toggleTheme}
+            className={`
+              ${isDark 
+                ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+                : 'bg-gray-800 hover:bg-gray-900 text-white'
+              } 
+              p-2 rounded-lg transition-colors duration-200 flex items-center justify-center shadow-sm w-[40px] h-[40px]
+            `}
+            title={t(isDark ? 'Switch to light mode' : 'Switch to dark mode')}
+          >
+            {isDark ? (
+              <Image 
+                src={assets.moon_svg}
+                alt="Moon Icon"
+                width={20}
+                height={20}
+                className="w-5 h-5 filter brightness-0 invert"
+              />
+            ) : (
+              <Image 
+                src={assets.sun_svg}
+                alt="Sun Icon"
+                width={20}
+                height={20}
+                className="w-5 h-5 filter brightness-0 invert"
+              />
+            )}
+          </button>
+          <div className="absolute w-max top-12 right-0 opacity-0 group-hover:opacity-100 transition bg-black text-white text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]">
+            {t(isDark ? 'Switch to light mode' : 'Switch to dark mode')}
+            <div className="w-3 h-3 absolute bg-black rotate-45 right-4 -top-1.5"></div>
           </div>
-        )}
+        </div>
         
-        {/* Language Toggle Button */}
-        {!isPreviewModalOpen && !showPinnedPanel && (
-          <div className="group relative hidden md:block">
-            <button
-              onClick={() => changeLanguage(currentLanguage === 'zh' ? 'en' : 'zh')}
-              className={`
-                ${isDark 
-                  ? 'bg-gray-700 hover:bg-gray-600 text-white' 
-                  : 'bg-gray-800 hover:bg-gray-900 text-white'
-                } 
-                p-2 rounded-lg transition-colors duration-200 flex items-center justify-center shadow-sm min-h-[40px] min-w-[40px]
-              `}
-              title={t('Switch Language')}
-            >
-              <span className="text-sm font-medium leading-none text-center">
-                {currentLanguage === 'zh' ? '中' : 'EN'}
+        {/* Language Toggle Button - 始终显示 */}
+        <div className="group relative hidden md:block">
+          <button
+            onClick={() => changeLanguage(currentLanguage === 'zh' ? 'en' : 'zh')}
+            className={`
+              ${isDark 
+                ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+                : 'bg-gray-800 hover:bg-gray-900 text-white'
+              } 
+              p-2 rounded-lg transition-colors duration-200 flex items-center justify-center shadow-sm w-[40px] h-[40px]
+            `}
+            title={t('Switch Language')}
+          >
+            <span className="text-sm font-medium leading-none text-center">
+              {currentLanguage === 'zh' ? '中' : 'EN'}
+            </span>
+          </button>
+          <div className="absolute w-max top-12 right-0 opacity-0 group-hover:opacity-100 transition bg-black text-white text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]">
+            {t('Switch Language')}
+            <div className="w-3 h-3 absolute bg-black rotate-45 right-4 -top-1.5"></div>
+          </div>
+        </div>
+        
+        {/* Pin Messages Button - 始终显示 */}
+        <div className="group relative">
+          <button
+            onClick={() => setShowPinnedPanel(!showPinnedPanel)}
+            className={`
+              ${isDark 
+                ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+                : 'bg-gray-800 hover:bg-gray-900 text-white'
+              } 
+              p-2 rounded-lg transition-colors duration-200 flex items-center justify-center shadow-sm w-[40px] h-[40px] relative
+            `}
+            title={t(showPinnedPanel ? "Hide pinned messages" : "Show pinned messages")}
+          >
+            <Image src={assets.pin_svgrepo_com} alt={t("Pin")} className="w-5 h-5 brightness-0 invert" />
+            {pinnedMessages.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                {pinnedMessages.length}
               </span>
-            </button>
-            <div className="absolute w-max top-12 right-0 opacity-0 group-hover:opacity-100 transition bg-black text-white text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]">
-              {t('Switch Language')}
-              <div className="w-3 h-3 absolute bg-black rotate-45 right-4 -top-1.5"></div>
-            </div>
+            )}
+          </button>
+          <div className="absolute w-max top-12 right-0 opacity-0 group-hover:opacity-100 transition bg-black text-white text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]">
+            {t(showPinnedPanel ? "Hide pinned messages" : "Show pinned messages")}
+            <div className="w-3 h-3 absolute bg-black rotate-45 right-4 -top-1.5"></div>
           </div>
-        )}
-        
-        {/* Pin Messages Button */}
-        {!isPreviewModalOpen && (
-          <div className="group relative">
-            <button
-              onClick={() => setShowPinnedPanel(!showPinnedPanel)}
-              className={`
-                ${isDark 
-                  ? 'bg-gray-700 hover:bg-gray-600 text-white' 
-                  : 'bg-gray-800 hover:bg-gray-900 text-white'
-                } 
-                p-2 rounded-lg transition-colors duration-200 flex items-center gap-2 shadow-sm min-h-[40px] min-w-[40px]
-              `}
-              title={t(showPinnedPanel ? "Hide pinned messages" : "Show pinned messages")}
-            >
-              <Image src={assets.pin_svgrepo_com} alt={t("Pin")} className="w-5 h-5 brightness-0 invert" />
-              {pinnedMessages.length > 0 && (
-                <span className="bg-blue-500 text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 -ml-1">
-                  {pinnedMessages.length}
-                </span>
-              )}
-            </button>
-            <div className="absolute w-max top-12 right-0 opacity-0 group-hover:opacity-100 transition bg-black text-white text-xs px-3 py-2 rounded-lg shadow-lg pointer-events-none z-[9999]">
-              {t(showPinnedPanel ? "Hide pinned messages" : "Show pinned messages")}
-              <div className="w-3 h-3 absolute bg-black rotate-45 right-4 -top-1.5"></div>
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );
