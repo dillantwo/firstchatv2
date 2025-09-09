@@ -14,7 +14,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useHydration } from "@/utils/useHydration";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import toast from 'react-hot-toast';
 
 export default function Home() {
@@ -49,9 +49,9 @@ export default function Home() {
   },[messages])
 
   // Handle preview modal state change
-  const handlePreviewModalChange = (isOpen) => {
+  const handlePreviewModalChange = useCallback((isOpen) => {
     setIsPreviewModalOpen(isOpen);
-  };
+  }, []);
 
   // Handle pinning/unpinning messages
   const handlePinMessage = (message) => {

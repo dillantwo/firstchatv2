@@ -8,7 +8,6 @@ import axios from 'axios';
 import Image from 'next/image'
 import React, { useState, useRef, useEffect } from 'react'
 import toast from 'react-hot-toast';
-import { performanceMonitor, withPerformanceTracking } from '@/utils/performanceMonitor';
 
 const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPanel = false}) => {
 
@@ -30,21 +29,6 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
     const { isAuthenticated, user: authUser } = useLTIAuth();
     const { isDark } = useTheme();
     const { t } = useLanguage();
-
-    // Add performance monitoring effect
-    useEffect(() => {
-        // Show performance summary every 10 API calls
-        const metrics = performanceMonitor.getMetrics();
-        if (metrics.apiCalls > 0 && metrics.apiCalls % 10 === 0) {
-            performanceMonitor.logSummary();
-            
-            // Show warning if average response time is too high
-            if (metrics.averageResponseTime > 8000) {
-                console.warn(`⚠️ High average response time: ${metrics.averageResponseTime.toFixed(2)}ms`);
-                toast.error(t('AI 响应速度较慢，建议检查网络连接'), { duration: 3000 });
-            }
-        }
-    }, []);
 
     // Notify parent component when preview modal state changes
     useEffect(() => {
@@ -655,18 +639,15 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
             sendData.courseId = authUser.context_id;
         }        
         
-        // 优化：添加超时配置和错误处理，集成性能监控
-        const chatId = `chat-${currentChat._id}-${Date.now()}`;
-        const {data} = await withPerformanceTracking(chatId, () => 
-            axios.post('/api/chat/ai', sendData, {
-                timeout: 60000, // 60秒超时
-                signal: abortControllerRef.current?.signal, // Add abort signal
-                withCredentials: true,
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-        );
+        // 优化：添加超时配置和错误处理
+        const {data} = await axios.post('/api/chat/ai', sendData, {
+            timeout: 60000, // 60秒超时
+            signal: abortControllerRef.current?.signal, // Add abort signal
+            withCredentials: true,
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
 
         if(data.success){
             const message = data.data.content;
