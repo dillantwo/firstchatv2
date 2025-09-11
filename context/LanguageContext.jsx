@@ -127,6 +127,18 @@ const translations = {
     'Failed to retrieve chat after creation.': '建立後無法取得對話',
     'AI 响应速度较慢，建议检查网络连接': 'AI 回應速度較慢，建議檢查網路連線',
     
+    // API Error messages
+    'User not authenticated': '用戶未驗證',
+    'Invalid session': '無效的會話',
+    'Prompt is required': '提示內容為必填',
+    'Chatflow selection is required': '必須選擇聊天流程',
+    'User not found': '找不到用戶',
+    'No course association found': '找不到課程關聯',
+    'You do not have permission to use this chatflow': '您沒有權限使用此聊天流程',
+    'Chat not found': '找不到對話',
+    'Request timeout - AI service took too long to respond': '請求超時 - AI 服務回應時間過長',
+    'An error occurred while processing your request': '處理您的請求時發生錯誤',
+    
     // SimpleChatflowSelector
     'Select Chatflow': '選擇聊天流程',
     'All Chatflows': '所有聊天流程',
@@ -253,6 +265,18 @@ const translations = {
     'Failed to find created chat.': 'Failed to find created chat.',
     'Failed to retrieve chat after creation.': 'Failed to retrieve chat after creation.',
     'AI 响应速度较慢，建议检查网络连接': 'AI response is slow, please check your network connection',
+    
+    // API Error messages
+    'User not authenticated': 'User not authenticated',
+    'Invalid session': 'Invalid session',
+    'Prompt is required': 'Prompt is required',
+    'Chatflow selection is required': 'Chatflow selection is required',
+    'User not found': 'User not found',
+    'No course association found': 'No course association found',
+    'You do not have permission to use this chatflow': 'You do not have permission to use this chatflow',
+    'Chat not found': 'Chat not found',
+    'Request timeout - AI service took too long to respond': 'Request timeout - AI service took too long to respond',
+    'An error occurred while processing your request': 'An error occurred while processing your request',
     
     // SimpleChatflowSelector
     'Select Chatflow': 'Select Chatflow',

@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { checkChatflowPermission } from "@/utils/permissionUtilsNew.mjs";
+import { getLanguageFromRequest, createTranslator } from "@/utils/serverTranslations.js";
 
 // Flowise API configuration
 const FLOWISE_BASE_URL = process.env.FLOWISE_BASE_URL;
@@ -38,7 +39,7 @@ function createSessionId(userId, chatId) {
 }
 
 // Helper function to query Flowise API
-async function queryFlowise(data, chatflowId) {
+async function queryFlowise(data, chatflowId, t = (key) => key) {
     const FLOWISE_API_URL = `${FLOWISE_BASE_URL}/api/v1/prediction/${chatflowId}`;
     
     // 添加超时控制和重试机制
@@ -80,7 +81,7 @@ async function queryFlowise(data, chatflowId) {
     } catch (error) {
         clearTimeout(timeoutId);
         if (error.name === 'AbortError') {
-            throw new Error('Request timeout - AI service took too long to respond');
+            throw new Error(t('Request timeout - AI service took too long to respond'));
         }
         throw error;
     }
@@ -88,13 +89,17 @@ async function queryFlowise(data, chatflowId) {
 
 export async function POST(req){
     try {
+        // Get language preference and create translator
+        const language = getLanguageFromRequest(req);
+        const t = createTranslator(language);
+        
         // Get user ID from LTI session cookie
         const token = req.cookies.get('lti_session')?.value;
         
         if (!token) {
             return NextResponse.json({
                 success: false,
-                message: "User not authenticated",
+                message: t("User not authenticated"),
             });
         }
 
@@ -107,7 +112,7 @@ export async function POST(req){
         } catch (error) {
             return NextResponse.json({
                 success: false,
-                message: "Invalid session",
+                message: t("Invalid session"),
             });
         }
 
@@ -118,14 +123,14 @@ export async function POST(req){
         if(!prompt?.trim()){
             return NextResponse.json({
                 success: false,
-                message: "Prompt is required",
+                message: t("Prompt is required"),
               });
         }
 
         if(!chatflowId){
             return NextResponse.json({
                 success: false,
-                message: "Chatflow selection is required",
+                message: t("Chatflow selection is required"),
               });
         }
 
@@ -146,14 +151,14 @@ export async function POST(req){
         if (!user) {
             return NextResponse.json({
                 success: false,
-                message: "User not found",
+                message: t("User not found"),
             });
         }
 
         if (!courseAssociation) {
             return NextResponse.json({
                 success: false,
-                message: "No course association found",
+                message: t("No course association found"),
             });
         }
 
@@ -169,7 +174,7 @@ export async function POST(req){
         if (!hasPermission) {
             return NextResponse.json({
                 success: false,
-                message: "您没有权限使用此聊天流",
+                message: t("You do not have permission to use this chatflow"),
             });
         }
 
@@ -183,7 +188,7 @@ export async function POST(req){
         if(!data){
             return NextResponse.json({
                 success: false,
-                message: "Chat not found",
+                message: t("Chat not found"),
               });
         }
 
@@ -285,7 +290,7 @@ export async function POST(req){
             });
         }
         
-        const completion = await queryFlowise(requestData, chatflowId);
+        const completion = await queryFlowise(requestData, chatflowId, t);
 
         // Log the actual content length for debugging
         let debugResponseContent = '';
@@ -429,7 +434,7 @@ export async function POST(req){
     } catch (error) {
         return NextResponse.json({ 
             success: false, 
-            message: error.message || 'An error occurred while processing your request',
+            message: error.message || t('An error occurred while processing your request'),
             error: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
