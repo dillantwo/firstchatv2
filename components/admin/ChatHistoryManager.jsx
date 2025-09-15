@@ -105,7 +105,8 @@ const ChatHistoryManager = ({ userPermissions }) => {
   const formatDate = (date) => {
     if (!date) return 'Never';
     return new Date(date).toLocaleString('zh-HK', {
-      timeZone: 'Asia/Hong_Kong'
+      timeZone: 'Asia/Hong_Kong',
+      hour12: false
     });
   };
 
@@ -116,7 +117,8 @@ const ChatHistoryManager = ({ userPermissions }) => {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      hour12: false
     });
   };
 

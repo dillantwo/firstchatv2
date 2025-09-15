@@ -176,7 +176,8 @@ const DashboardOverview = () => {
             <div className="flex items-center justify-between">
               <span className="text-gray-600">Last Updated</span>
               <span className="text-gray-600">{new Date().toLocaleString('zh-HK', {
-                timeZone: 'Asia/Hong_Kong'
+                timeZone: 'Asia/Hong_Kong',
+                hour12: false
               })}</span>
             </div>
           </div>
