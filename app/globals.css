@@ -487,7 +487,7 @@ html, body {
   padding: 0 24px;
   background-color: var(--bg-primary) !important;
   min-height: calc(100vh - 40px);
-  padding-top: 20px !important;
+  padding-top: 3px !important;
   padding-bottom: 20px;
 }
 
