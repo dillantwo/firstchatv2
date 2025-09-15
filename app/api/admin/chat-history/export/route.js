@@ -26,10 +26,14 @@ export async function GET(request) {
     if (startDate || endDate) {
       chatQuery.createdAt = {};
       if (startDate) {
-        chatQuery.createdAt.$gte = new Date(startDate);
+        // 将开始日期转换为香港时区的开始时间 (00:00:00)
+        const startDateTime = new Date(startDate + 'T00:00:00.000+08:00');
+        chatQuery.createdAt.$gte = startDateTime;
       }
       if (endDate) {
-        chatQuery.createdAt.$lte = new Date(endDate + 'T23:59:59.999Z');
+        // 将结束日期转换为香港时区的结束时间 (23:59:59)
+        const endDateTime = new Date(endDate + 'T23:59:59.999+08:00');
+        chatQuery.createdAt.$lte = endDateTime;
       }
     }
 
