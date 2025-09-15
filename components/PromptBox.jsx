@@ -1050,7 +1050,7 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
     <div className={`w-full px-2 sm:px-4 md:px-0 ${selectedChat?.messages.length > 0 ? "max-w-3xl" : "max-w-2xl"} transition-all duration-300 prompt-container`}
          style={{
            paddingBottom: 'max(env(safe-area-inset-bottom, 8px), 12px)',
-           marginBottom: 'max(32px, env(safe-area-inset-bottom))',
+           marginBottom: 'max(55px, env(safe-area-inset-bottom))',
            position: 'relative',
            zIndex: 10
          }}>
