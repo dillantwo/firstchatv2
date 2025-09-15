@@ -104,11 +104,14 @@ const ChatHistoryManager = ({ userPermissions }) => {
 
   const formatDate = (date) => {
     if (!date) return 'Never';
-    return new Date(date).toLocaleString('en-US');
+    return new Date(date).toLocaleString('zh-HK', {
+      timeZone: 'Asia/Hong_Kong'
+    });
   };
 
   const formatTime = (timestamp) => {
-    return new Date(timestamp).toLocaleString('en-US', {
+    return new Date(timestamp).toLocaleString('zh-HK', {
+      timeZone: 'Asia/Hong_Kong',
       year: 'numeric',
       month: 'short',
       day: 'numeric',

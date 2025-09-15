@@ -63,7 +63,9 @@ const UserManagement = () => {
 
   const formatDate = (date) => {
     if (!date) return 'Never';
-    return new Date(date).toLocaleString('en-US');
+    return new Date(date).toLocaleString('zh-HK', {
+      timeZone: 'Asia/Hong_Kong'
+    });
   };
 
   return (
