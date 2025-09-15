@@ -1,6 +1,6 @@
 import { assets } from '@/assets/assets'
 import Image from 'next/image'
-import React, { useEffect, useState, useMemo, useCallback } from 'react'
+import React, { useEffect, useState, useMemo, useCallback, memo } from 'react'
 import Markdown from 'react-markdown'
 import remarkMath from 'remark-math'
 import remarkGfm from 'remark-gfm'
@@ -77,9 +77,10 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
         setPreviewModal({ isOpen: false, image: null });
     };
 
-    // Extract HTML code - optimized with useCallback
+    // Extract HTML code - optimized with useCallback - Updated for better streaming compatibility
     const extractHTMLCode = useCallback((markdownContent) => {
-        const htmlCodeRegex = /```html\s*\n([\s\S]*?)\n```/gi;
+        // More flexible regex that handles different line endings and spacing
+        const htmlCodeRegex = /```html\s*([\s\S]*?)\s*```/gi;
         const match = htmlCodeRegex.exec(markdownContent);
         return match && match[1] ? match[1].trim() : null;
     }, []);
@@ -236,7 +237,7 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                     srcDoc={processMathContent(htmlCode)}
                                     className="w-full border-0 rounded"
                                     title={t("HTML Render Preview")}
-                                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock"
+                                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-modals allow-storage-access-by-user-activation"
                                     style={{ 
                                         height: isInPinnedPanel ? '200px' : '350px', // Initial height for pinned panel, will be set to actual content height by adjustHeight
                                         minHeight: isInPinnedPanel ? '200px' : '150px', // Initial minHeight for pinned panel, will be set to actual content height by adjustHeight
@@ -340,6 +341,73 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                 
                                                 doc.head.appendChild(katexJS);
                                             }
+                                            
+                                            // Load Chart.js for data visualization
+                                            if (!doc.querySelector('script[data-chartjs]')) {
+                                                const chartJS = doc.createElement('script');
+                                                chartJS.setAttribute('data-chartjs', 'true');
+                                                chartJS.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js';
+                                                chartJS.integrity = 'sha384-6eDaF6RN8e6T3d7x8T8VxX9NyJ6HcEZzOo/w5K5Pk1mKb8l1pQ3lOJKN3lK7OLd';
+                                                chartJS.crossOrigin = 'anonymous';
+                                                doc.head.appendChild(chartJS);
+                                            }
+                                            
+                                            // Load D3.js for advanced visualizations
+                                            if (!doc.querySelector('script[data-d3js]')) {
+                                                const d3JS = doc.createElement('script');
+                                                d3JS.setAttribute('data-d3js', 'true');
+                                                d3JS.src = 'https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js';
+                                                d3JS.crossOrigin = 'anonymous';
+                                                doc.head.appendChild(d3JS);
+                                            }
+                                            
+                                            // Load Three.js for 3D graphics
+                                            if (!doc.querySelector('script[data-threejs]')) {
+                                                const threeJS = doc.createElement('script');
+                                                threeJS.setAttribute('data-threejs', 'true');
+                                                threeJS.src = 'https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js';
+                                                threeJS.crossOrigin = 'anonymous';
+                                                doc.head.appendChild(threeJS);
+                                            }
+                                            
+                                            // Load Lodash for utility functions
+                                            if (!doc.querySelector('script[data-lodash]')) {
+                                                const lodashJS = doc.createElement('script');
+                                                lodashJS.setAttribute('data-lodash', 'true');
+                                                lodashJS.src = 'https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js';
+                                                lodashJS.crossOrigin = 'anonymous';
+                                                doc.head.appendChild(lodashJS);
+                                            }
+                                            
+                                            // Load Moment.js for date handling
+                                            if (!doc.querySelector('script[data-momentjs]')) {
+                                                const momentJS = doc.createElement('script');
+                                                momentJS.setAttribute('data-momentjs', 'true');
+                                                momentJS.src = 'https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js';
+                                                momentJS.crossOrigin = 'anonymous';
+                                                doc.head.appendChild(momentJS);
+                                            }
+                                            
+                                            // Load Bootstrap CSS for styling
+                                            if (!doc.querySelector('link[data-bootstrap-css]')) {
+                                                const bootstrapCSS = doc.createElement('link');
+                                                bootstrapCSS.setAttribute('data-bootstrap-css', 'true');
+                                                bootstrapCSS.rel = 'stylesheet';
+                                                bootstrapCSS.href = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css';
+                                                bootstrapCSS.integrity = 'sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN';
+                                                bootstrapCSS.crossOrigin = 'anonymous';
+                                                doc.head.appendChild(bootstrapCSS);
+                                            }
+                                            
+                                            // Load Bootstrap JS for interactive components
+                                            if (!doc.querySelector('script[data-bootstrap-js]')) {
+                                                const bootstrapJS = doc.createElement('script');
+                                                bootstrapJS.setAttribute('data-bootstrap-js', 'true');
+                                                bootstrapJS.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js';
+                                                bootstrapJS.integrity = 'sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL';
+                                                bootstrapJS.crossOrigin = 'anonymous';
+                                                doc.head.appendChild(bootstrapJS);
+                                            }
 
                                             // Add basic styles to ensure content displays properly
                                             if (!doc.querySelector('style[data-iframe-styles]')) {
@@ -356,7 +424,12 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                         max-height: 100vh;
                                                         position: relative;
                                                     }
-                                                    /* 已禁用：阻止拖拽元素扩展容器 */
+                                                    
+                                                    /* Enhanced CSS support */
+                                                    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+                                                    @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+                                                    
+                                                    /* Element constraints for better containment */
                                                     * {
                                                         max-width: 100% !important;
                                                         -webkit-user-drag: none !important;
@@ -366,34 +439,152 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                         user-drag: none !important;
                                                         draggable: false !important;
                                                     }
-                                                    /* 已禁用：限制拖拽元素 */
-                                                    [draggable], .draggable {
-                                                        pointer-events: none !important;
-                                                        -webkit-user-drag: none !important;
-                                                        draggable: false !important;
-                                                    }
-                                                    /* Prevent elements from being positioned outside the viewport */
-                                                    * {
-                                                        contain: layout style paint;
-                                                    }
+                                                    
+                                                    /* Enhanced interactive elements */
                                                     button, input, select, textarea { 
                                                         cursor: pointer; 
                                                         font-family: inherit;
                                                         pointer-events: auto;
                                                         max-width: 100%;
+                                                        border-radius: 4px;
+                                                        border: 1px solid #ddd;
+                                                        padding: 4px 8px;
+                                                        transition: all 0.2s ease;
                                                     }
-                                                    /* Prevent form submission from causing page refresh */
+                                                    
+                                                    button:hover {
+                                                        background-color: #f0f0f0;
+                                                        border-color: #999;
+                                                    }
+                                                    
+                                                    input:focus, textarea:focus, select:focus {
+                                                        outline: 2px solid #007acc;
+                                                        border-color: #007acc;
+                                                    }
+                                                    
+                                                    /* Form styling */
                                                     form { 
                                                         display: inline-block; 
                                                         max-width: 100%;
                                                     }
+                                                    
+                                                    /* Enhanced table styling */
+                                                    table {
+                                                        border-collapse: collapse;
+                                                        width: 100%;
+                                                        margin: 1em 0;
+                                                    }
+                                                    
+                                                    th, td {
+                                                        border: 1px solid #ddd;
+                                                        padding: 8px;
+                                                        text-align: left;
+                                                    }
+                                                    
+                                                    th {
+                                                        background-color: #f5f5f5;
+                                                        font-weight: bold;
+                                                    }
+                                                    
+                                                    /* CSS Grid and Flexbox support */
+                                                    .grid {
+                                                        display: grid;
+                                                    }
+                                                    
+                                                    .flex {
+                                                        display: flex;
+                                                    }
+                                                    
+                                                    /* CSS Animation support */
+                                                    @keyframes fadeIn {
+                                                        from { opacity: 0; }
+                                                        to { opacity: 1; }
+                                                    }
+                                                    
+                                                    @keyframes slideIn {
+                                                        from { transform: translateX(-100%); }
+                                                        to { transform: translateX(0); }
+                                                    }
+                                                    
+                                                    @keyframes bounce {
+                                                        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+                                                        40% { transform: translateY(-10px); }
+                                                        60% { transform: translateY(-5px); }
+                                                    }
+                                                    
+                                                    /* Common utility classes */
+                                                    .fade-in { animation: fadeIn 0.5s ease-in; }
+                                                    .slide-in { animation: slideIn 0.5s ease-out; }
+                                                    .bounce { animation: bounce 2s infinite; }
+                                                    
+                                                    .text-center { text-align: center; }
+                                                    .text-left { text-align: left; }
+                                                    .text-right { text-align: right; }
+                                                    
+                                                    .m-1 { margin: 0.25rem; }
+                                                    .m-2 { margin: 0.5rem; }
+                                                    .m-4 { margin: 1rem; }
+                                                    .p-1 { padding: 0.25rem; }
+                                                    .p-2 { padding: 0.5rem; }
+                                                    .p-4 { padding: 1rem; }
+                                                    
+                                                    .rounded { border-radius: 0.25rem; }
+                                                    .rounded-lg { border-radius: 0.5rem; }
+                                                    .shadow { box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+                                                    .shadow-lg { box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+                                                    
                                                     /* KaTeX math styling */
                                                     .katex { font-size: 1.1em; }
                                                     .katex-display { margin: 1em 0; }
+                                                    
                                                     /* Container constraints */
                                                     div, section, article, main {
                                                         max-width: 100%;
                                                         overflow: hidden;
+                                                    }
+                                                    
+                                                    /* Media queries for responsive design */
+                                                    @media (max-width: 768px) {
+                                                        body { padding: 4px; }
+                                                        table { font-size: 0.8em; }
+                                                    }
+                                                    
+                                                    /* Enhanced styling for common HTML elements */
+                                                    h1, h2, h3, h4, h5, h6 {
+                                                        margin: 0.5em 0;
+                                                        line-height: 1.4;
+                                                    }
+                                                    
+                                                    p {
+                                                        margin: 0.5em 0;
+                                                        line-height: 1.6;
+                                                    }
+                                                    
+                                                    a {
+                                                        color: #007acc;
+                                                        text-decoration: none;
+                                                    }
+                                                    
+                                                    a:hover {
+                                                        text-decoration: underline;
+                                                    }
+                                                    
+                                                    img {
+                                                        max-width: 100%;
+                                                        height: auto;
+                                                    }
+                                                    
+                                                    pre, code {
+                                                        background-color: #f5f5f5;
+                                                        padding: 0.2em 0.4em;
+                                                        border-radius: 3px;
+                                                        font-family: 'Courier New', monospace;
+                                                    }
+                                                    
+                                                    pre {
+                                                        padding: 1em;
+                                                        overflow-x: auto;
+                                                        white-space: pre-wrap;
                                                     }
                                                 `;
                                                 doc.head.appendChild(style);
@@ -404,6 +595,18 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                 const script = doc.createElement('script');
                                                 script.setAttribute('data-event-handler', 'true');
                                                 script.textContent = `
+                                                    // Enhanced JavaScript environment for HTML rendering
+                                                    
+                                                    // Console polyfill for debugging
+                                                    if (!window.console) {
+                                                        window.console = {};
+                                                    }
+                                                    if (!window.console.log) {
+                                                        window.console.log = function() {
+                                                            // You can extend this to show logs in a dev panel if needed
+                                                        };
+                                                    }
+                                                    
                                                     // Function to render math formulas
                                                     function renderMath() {
                                                         // Wait for KaTeX to be available
@@ -421,10 +624,112 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                             setTimeout(renderMath, 200);
                                                         }
                                                     }
+                                                    
+                                                    // Enhanced DOM manipulation utilities
+                                                    window.$ = function(selector) {
+                                                        return document.querySelector(selector);
+                                                    };
+                                                    
+                                                    window.$$ = function(selector) {
+                                                        return document.querySelectorAll(selector);
+                                                    };
+                                                    
+                                                    // Animation utilities
+                                                    window.animate = function(element, animation, duration = 1000) {
+                                                        if (typeof element === 'string') {
+                                                            element = document.querySelector(element);
+                                                        }
+                                                        if (element) {
+                                                            element.style.animation = animation + ' ' + duration + 'ms';
+                                                            setTimeout(() => {
+                                                                element.style.animation = '';
+                                                            }, duration);
+                                                        }
+                                                    };
+                                                    
+                                                    // Simple state management
+                                                    window.state = {};
+                                                    window.setState = function(key, value) {
+                                                        window.state[key] = value;
+                                                        // Trigger custom event for state change
+                                                        const event = new CustomEvent('statechange', {
+                                                            detail: { key, value }
+                                                        });
+                                                        document.dispatchEvent(event);
+                                                    };
+                                                    
+                                                    window.getState = function(key) {
+                                                        return window.state[key];
+                                                    };
+                                                    
+                                                    // Enhanced event handling
+                                                    window.on = function(selector, event, handler) {
+                                                        const elements = document.querySelectorAll(selector);
+                                                        elements.forEach(el => {
+                                                            el.addEventListener(event, handler);
+                                                        });
+                                                    };
+                                                    
+                                                    // AJAX utilities (fetch wrapper)
+                                                    window.request = function(url, options = {}) {
+                                                        return fetch(url, {
+                                                            headers: {
+                                                                'Content-Type': 'application/json',
+                                                                ...options.headers
+                                                            },
+                                                            ...options
+                                                        }).then(response => {
+                                                            if (!response.ok) {
+                                                                throw new Error('Network response was not ok');
+                                                            }
+                                                            return response.json();
+                                                        });
+                                                    };
+                                                    
+                                                    // Storage utilities (localStorage wrapper)
+                                                    window.store = {
+                                                        set: function(key, value) {
+                                                            try {
+                                                                localStorage.setItem(key, JSON.stringify(value));
+                                                            } catch (e) {
+                                                                console.warn('LocalStorage not available');
+                                                            }
+                                                        },
+                                                        get: function(key) {
+                                                            try {
+                                                                const item = localStorage.getItem(key);
+                                                                return item ? JSON.parse(item) : null;
+                                                            } catch (e) {
+                                                                console.warn('LocalStorage not available');
+                                                                return null;
+                                                            }
+                                                        },
+                                                        remove: function(key) {
+                                                            try {
+                                                                localStorage.removeItem(key);
+                                                            } catch (e) {
+                                                                console.warn('LocalStorage not available');
+                                                            }
+                                                        }
+                                                    };
 
                                                     // Prevent form submission from causing page refresh
                                                     document.addEventListener('submit', function(e) {
                                                         e.preventDefault();
+                                                        
+                                                        // Allow custom form handling
+                                                        const form = e.target;
+                                                        const formData = new FormData(form);
+                                                        const formObject = {};
+                                                        formData.forEach((value, key) => {
+                                                            formObject[key] = value;
+                                                        });
+                                                        
+                                                        // Trigger custom submit event with form data
+                                                        const customEvent = new CustomEvent('formsubmit', {
+                                                            detail: { form, data: formObject }
+                                                        });
+                                                        document.dispatchEvent(customEvent);
                                                         
                                                         // Delay height adjustment to allow content changes to recalculate (disabled for pinned panels)
                                                         if (!${isInPinnedPanel}) {
@@ -437,10 +742,20 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                         return false;
                                                     });
                                                     
-                                                    // Prevent link navigation
+                                                    // Prevent link navigation but allow custom handling
                                                     document.addEventListener('click', function(e) {
                                                         if (e.target.tagName === 'A' && e.target.href) {
                                                             e.preventDefault();
+                                                            
+                                                            // Trigger custom link click event
+                                                            const customEvent = new CustomEvent('linkclick', {
+                                                                detail: { 
+                                                                    href: e.target.href, 
+                                                                    text: e.target.textContent,
+                                                                    target: e.target 
+                                                                }
+                                                            });
+                                                            document.dispatchEvent(customEvent);
                                                             return false;
                                                         }
                                                         
@@ -455,43 +770,13 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                         }
                                                     });
                                                     
-                                                    // 已禁用：拖拽操作相关代码
-                                                    // document.addEventListener('dragstart', function(e) {
-                                                    //     e.dataTransfer.effectAllowed = 'move';
-                                                    // });
-                                                    
-                                                    // document.addEventListener('drag', function(e) {
-                                                    //     // Constrain drag to viewport
-                                                    //     const rect = document.body.getBoundingClientRect();
-                                                    //     if (e.clientX < 0 || e.clientX > rect.width || 
-                                                    //         e.clientY < 0 || e.clientY > rect.height) {
-                                                    //         e.preventDefault();
-                                                    //     }
-                                                    // });
-                                                    
-                                                    // document.addEventListener('dragend', function(e) {
-                                                    //     // Ensure dragged element stays within bounds
-                                                    //     const target = e.target;
-                                                    //     if (target.style.position === 'absolute' || target.style.position === 'fixed') {
-                                                    //         const rect = document.body.getBoundingClientRect();
-                                                    //         const targetRect = target.getBoundingClientRect();
-                                                    //         
-                                                    //         if (targetRect.left < 0) target.style.left = '0px';
-                                                    //         if (targetRect.top < 0) target.style.top = '0px';
-                                                    //         if (targetRect.right > rect.width) {
-                                                    //             target.style.left = (rect.width - targetRect.width) + 'px';
-                                                    //         }
-                                                    //         if (targetRect.bottom > rect.height) {
-                                                    //             target.style.top = (rect.height - targetRect.height) + 'px';
-                                                    //         }
-                                                    //     }
-                                                    // });
-                                                    
                                                     // Listen for DOM changes and auto-adjust height
                                                     const observer = new MutationObserver(function(mutations) {
                                                         let shouldResize = false;
                                                         mutations.forEach(function(mutation) {
-                                                            if (mutation.type === 'childList' || mutation.type === 'attributes') {
+                                                            if (mutation.type === 'childList' || 
+                                                                (mutation.type === 'attributes' && 
+                                                                 ['style', 'class'].includes(mutation.attributeName))) {
                                                                 shouldResize = true;
                                                             }
                                                         });
@@ -518,10 +803,16 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                         return false;
                                                     });
                                                     
-                                                    // Initial math rendering with multiple retries
+                                                    // Initialize math rendering with multiple retries
                                                     setTimeout(renderMath, 200);
                                                     setTimeout(renderMath, 500);
                                                     setTimeout(renderMath, 1000);
+                                                    
+                                                    // Trigger ready event for user scripts
+                                                    setTimeout(() => {
+                                                        const readyEvent = new Event('iframeready');
+                                                        document.dispatchEvent(readyEvent);
+                                                    }, 100);
                                                 `;
                                                 doc.head.appendChild(script);
                                             }
@@ -763,4 +1054,4 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
   )
 }
 
-export default Message
+export default memo(Message)

@@ -38,13 +38,13 @@ function createSessionId(userId, chatId) {
     return uuid;
 }
 
-// Helper function to query Flowise API
-async function queryFlowise(data, chatflowId, t = (key) => key) {
+// Helper function to query Flowise API with streaming support
+async function queryFlowise(data, chatflowId, streaming = false, t = (key) => key) {
     const FLOWISE_API_URL = `${FLOWISE_BASE_URL}/api/v1/prediction/${chatflowId}`;
     
-    // 添加超时控制和重试机制
+    // 添加超时控制
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000); // 45秒超时
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60秒超时（streaming需要更长时间）
     
     try {
         const response = await fetch(FLOWISE_API_URL, {
@@ -55,7 +55,6 @@ async function queryFlowise(data, chatflowId, t = (key) => key) {
             },
             body: JSON.stringify(data),
             signal: controller.signal,
-            // 添加额外的网络优化选项
             keepalive: true,
             cache: 'no-cache'
         });
@@ -76,6 +75,12 @@ async function queryFlowise(data, chatflowId, t = (key) => key) {
             throw new Error(errorMessage);
         }
         
+        // For streaming responses, return the response object directly
+        if (streaming) {
+            return response;
+        }
+        
+        // For non-streaming responses, parse as JSON
         const result = await response.json();
         return result;
     } catch (error) {
@@ -108,7 +113,6 @@ export async function POST(req){
             const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
             userId = decoded.userId;
             currentContextId = decoded.context_id; // 从token获取当前课程ID
-            console.log('[Chat AI] Using context from token:', currentContextId);
         } catch (error) {
             return NextResponse.json({
                 success: false,
@@ -257,7 +261,7 @@ export async function POST(req){
             ...(msg.documents && { documents: msg.documents })
         }));
 
-        // Call the Flowise API to get a chat completion
+        // Call the Flowise API to get a chat completion with streaming
         // Use the session ID generated earlier
         
         // Prepare the enhanced prompt with document content if available
@@ -269,168 +273,191 @@ export async function POST(req){
             enhancedPrompt = `${prompt}\n\nAttached Documents:${documentContent}`;
         }
         
-        // First test the simplest request format
+        // Request data for Flowise API
         const requestData = {
             question: enhancedPrompt,
             overrideConfig: {
                 sessionId: sessionId
-            }
+            },
+            streaming: true  // Enable streaming
         };
         
         // Only add uploads field when there are images
         if (images && images.length > 0) {
             requestData.uploads = images.map((img, index) => {
                 const upload = {
-                    data: img, // Should be base64 string or URL
-                    type: img.startsWith('data:') ? 'file' : 'url', // Determine type based on data format
-                    name: `image_${index + 1}.png`, // Give the image a name
-                    mime: img.startsWith('data:image/') ? img.split(';')[0].split(':')[1] : 'image/png' // Extract MIME type from data URL
+                    data: img,
+                    type: img.startsWith('data:') ? 'file' : 'url',
+                    name: `image_${index + 1}.png`,
+                    mime: img.startsWith('data:image/') ? img.split(';')[0].split(':')[1] : 'image/png'
                 };
                 return upload;
             });
         }
         
-        const completion = await queryFlowise(requestData, chatflowId, t);
-
-        // Log the actual content length for debugging
-        let debugResponseContent = '';
-        if (typeof completion === 'string') {
-            debugResponseContent = completion;
-        } else if (completion && typeof completion === 'object') {
-            debugResponseContent = completion.text || 
-                             completion.response || 
-                             completion.answer || 
-                             completion.data || 
-                             completion.result ||
-                             completion.message ||
-                             (typeof completion.content === 'string' ? completion.content : '') ||
-                             JSON.stringify(completion);
+        // Get streaming response from Flowise
+        let streamResponse;
+        try {
+            streamResponse = await queryFlowise(requestData, chatflowId, true, t);
+        } catch (error) {
+            // Fallback to non-streaming request
+            const fallbackData = { ...requestData };
+            delete fallbackData.streaming;
+            const completion = await queryFlowise(fallbackData, chatflowId, false, t);
+            
+            // Handle non-streaming response
+            let responseContent = '';
+            if (typeof completion === 'string') {
+                responseContent = completion;
+            } else if (completion && typeof completion === 'object') {
+                responseContent = completion.text || 
+                                 completion.response || 
+                                 completion.answer || 
+                                 completion.data || 
+                                 completion.result ||
+                                 completion.message ||
+                                 (typeof completion.content === 'string' ? completion.content : '') ||
+                                 JSON.stringify(completion);
+            } else {
+                responseContent = "Sorry, I couldn't generate a response.";
+            }
+            
+            const message = {
+                role: "assistant",
+                content: responseContent,
+                timestamp: Date.now()
+            };
+            
+            data.messages.push(message);
+            await data.save();
+            
+            return NextResponse.json({
+                success: true, 
+                data: message,
+                chatName: data.name
+            });
         }
         
-        // Extract token usage information if available
-        let tokenUsage = null;
-        if (completion && typeof completion === 'object') {
-            // First, try to extract from agentFlowExecutedData (Flowise specific)
-            if (completion.agentFlowExecutedData && Array.isArray(completion.agentFlowExecutedData)) {
+        // Create a ReadableStream for streaming the response
+        const stream = new ReadableStream({
+            async start(controller) {
+                const reader = streamResponse.body.getReader();
+                const decoder = new TextDecoder();
+                let fullMessage = '';
+                let tokenUsage = null;
                 
-                for (let i = 0; i < completion.agentFlowExecutedData.length; i++) {
-                    const executedData = completion.agentFlowExecutedData[i];
-                    
-                    // Check in data.outputs.output.usageMetadata (correct path based on actual response)
-                    if (executedData.data && executedData.data.outputs && executedData.data.outputs.output && executedData.data.outputs.output.usageMetadata) {
-                        const usage = executedData.data.outputs.output.usageMetadata;
-                        tokenUsage = {
-                            input_tokens: usage.input_tokens || 0,
-                            output_tokens: usage.output_tokens || 0,
-                            total_tokens: usage.total_tokens || 0,
-                            input_token_details: usage.input_token_details,
-                            output_token_details: usage.output_token_details
-                        };
-                        break;
+                try {
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        
+                        if (done) {
+                            // Streaming completed, save the final message to database
+                            const message = {
+                                role: "assistant",
+                                content: fullMessage,
+                                timestamp: Date.now(),
+                                ...(tokenUsage && { tokenUsage })
+                            };
+                            
+                            data.messages.push(message);
+                            
+                            // Update aggregate token usage for the chat
+                            if (tokenUsage) {
+                                if (!data.totalTokenUsage) {
+                                    data.totalTokenUsage = {
+                                        promptTokens: 0,
+                                        completionTokens: 0,
+                                        totalTokens: 0,
+                                        lastUpdated: new Date()
+                                    };
+                                }
+                                
+                                data.totalTokenUsage.promptTokens += tokenUsage.promptTokens;
+                                data.totalTokenUsage.completionTokens += tokenUsage.completionTokens;
+                                data.totalTokenUsage.totalTokens += tokenUsage.totalTokens;
+                                data.totalTokenUsage.lastUpdated = new Date();
+                            }
+                            
+                            await data.save();
+                            
+                            // Send final completion signal
+                            controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({
+                                type: 'done',
+                                chatName: data.name,
+                                tokenUsage: tokenUsage
+                            })}\n\n`));
+                            
+                            controller.close();
+                            break;
+                        }
+                        
+                        const chunk = decoder.decode(value, { stream: true });
+                        const lines = chunk.split('\n');
+                        
+                        for (const line of lines) {
+                            if (line.startsWith('data:')) {
+                                const dataStr = line.slice(5); // Remove 'data:' prefix
+                                if (dataStr === '[DONE]') {
+                                    continue;
+                                }
+                                
+                                try {
+                                    const parsed = JSON.parse(dataStr);
+                                    
+                                    // Handle token events from Flowise
+                                    if (parsed.event === 'token' && parsed.data) {
+                                        const content = parsed.data;
+                                        if (content && content.trim()) {
+                                            fullMessage += content;
+                                            
+                                            // Send the streaming content to client
+                                            controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({
+                                                type: 'content',
+                                                content: content
+                                            })}\n\n`));
+                                        }
+                                    }
+                                    // Handle usage metadata for token tracking
+                                    else if (parsed.event === 'usageMetadata' && parsed.data) {
+                                        const usage = parsed.data;
+                                        tokenUsage = {
+                                            promptTokens: usage.input_tokens || 0,
+                                            completionTokens: usage.output_tokens || 0,
+                                            totalTokens: usage.total_tokens || 0
+                                        };
+                                    }
+                                    // Handle end event
+                                    else if (parsed.event === 'end') {
+                                        break;
+                                    }
+                                    // Ignore other events like agentFlowEvent, nextAgentFlow, etc.
+                                } catch (e) {
+                                    // Skip non-JSON data - don't send to client
+                                }
+                            }
+                            // Skip all other lines including 'message:' lines and raw text
+                        }
                     }
-                    // Also check alternative path data.output.usageMetadata
-                    else if (executedData.data && executedData.data.output && executedData.data.output.usageMetadata) {
-                        const usage = executedData.data.output.usageMetadata;
-                        tokenUsage = {
-                            input_tokens: usage.input_tokens || 0,
-                            output_tokens: usage.output_tokens || 0,
-                            total_tokens: usage.total_tokens || 0,
-                            input_token_details: usage.input_token_details,
-                            output_token_details: usage.output_token_details
-                        };
-                        break;
-                    }
+                } catch (error) {
+                    controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({
+                        type: 'error',
+                        error: error.message
+                    })}\n\n`));
+                    controller.close();
                 }
             }
-            
-            // If not found in agentFlowExecutedData, check for common token usage fields
-            if (!tokenUsage) {
-                tokenUsage = completion.usage || 
-                            completion.token_usage || 
-                            completion.tokens || 
-                            completion.usage_metadata ||
-                            completion.usageMetadata ||
-                            completion.metadata?.usage ||
-                            null;
+        });
+        
+        // Return streaming response
+        return new Response(stream, {
+            headers: {
+                'Content-Type': 'text/plain; charset=utf-8',
+                'Transfer-Encoding': 'chunked',
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'X-Accel-Buffering': 'no' // Disable Nginx buffering
             }
-            
-            if (tokenUsage) {
-                // Log detailed token information
-                const promptTokens = tokenUsage.prompt_tokens || tokenUsage.input_tokens || tokenUsage.prompt || 0;
-                const completionTokens = tokenUsage.completion_tokens || tokenUsage.output_tokens || tokenUsage.completion || 0;
-                const totalTokens = tokenUsage.total_tokens || tokenUsage.total || (promptTokens + completionTokens);
-            }
-        }
-        
-        // Extract response content and token usage
-        let responseContent = '';
-        let extractedTokenUsage = null;
-        
-        if (typeof completion === 'string') {
-            responseContent = completion;
-        } else if (completion && typeof completion === 'object') {
-            // Try common response fields
-            responseContent = completion.text || 
-                             completion.response || 
-                             completion.answer || 
-                             completion.data || 
-                             completion.result ||
-                             completion.message ||
-                             (typeof completion.content === 'string' ? completion.content : '') ||
-                             JSON.stringify(completion);
-            
-            // Extract token usage if available
-            if (tokenUsage) {
-                extractedTokenUsage = {
-                    promptTokens: tokenUsage.prompt_tokens || tokenUsage.input_tokens || tokenUsage.prompt || 0,
-                    completionTokens: tokenUsage.completion_tokens || tokenUsage.output_tokens || tokenUsage.completion || 0,
-                    totalTokens: tokenUsage.total_tokens || tokenUsage.total || 0
-                };
-                
-                // If total tokens not provided, calculate it
-                if (!extractedTokenUsage.totalTokens && (extractedTokenUsage.promptTokens || extractedTokenUsage.completionTokens)) {
-                    extractedTokenUsage.totalTokens = extractedTokenUsage.promptTokens + extractedTokenUsage.completionTokens;
-                }
-            }
-        } else {
-            responseContent = "Sorry, I couldn't generate a response.";
-        }
-        
-        const message = {
-            role: "assistant",
-            content: responseContent,
-            timestamp: Date.now(),
-            ...(extractedTokenUsage && { tokenUsage: extractedTokenUsage })
-        };
-        
-        data.messages.push(message);
-        
-        // Update aggregate token usage for the chat
-        if (extractedTokenUsage) {
-            if (!data.totalTokenUsage) {
-                data.totalTokenUsage = {
-                    promptTokens: 0,
-                    completionTokens: 0,
-                    totalTokens: 0,
-                    lastUpdated: new Date()
-                };
-            }
-            
-            data.totalTokenUsage.promptTokens += extractedTokenUsage.promptTokens;
-            data.totalTokenUsage.completionTokens += extractedTokenUsage.completionTokens;
-            data.totalTokenUsage.totalTokens += extractedTokenUsage.totalTokens;
-            data.totalTokenUsage.lastUpdated = new Date();
-        }
-        
-        await data.save();
-
-        // Return assistant message and updated chat information (including possibly updated name)
-        return NextResponse.json({
-            success: true, 
-            data: message,
-            chatName: data.name, // Return updated chat name
-            ...(extractedTokenUsage && { tokenUsage: extractedTokenUsage }) // Include token usage in response
-        })
+        });
     } catch (error) {
         return NextResponse.json({ 
             success: false, 

@@ -22,16 +22,9 @@ export function middleware(request) {
   
   // For API routes (except LTI), check authentication
   if (pathname.startsWith('/api/')) {
-    console.log('[Middleware] Checking authentication for API route:', pathname);
     const token = request.cookies.get('lti_session')?.value;
     
-    console.log('[Middleware] LTI session token found:', !!token);
-    if (token) {
-      console.log('[Middleware] Token length:', token.length);
-    }
-    
     if (!token) {
-      console.log('[Middleware] No token found, returning 401');
       return NextResponse.json(
         { error: 'Unauthorized - LTI session required' },
         { status: 401 }
@@ -40,7 +33,6 @@ export function middleware(request) {
     
     // Instead of verifying JWT in middleware, just check if token exists
     // Let the API routes handle JWT verification with proper Node.js runtime
-    console.log('[Middleware] Token found, passing request to API route for verification');
     return NextResponse.next();
   }
   

@@ -8,9 +8,6 @@ const ControlBar = ({ showPinnedPanel = false, hideControls = false }) => {
   const { theme, toggleTheme, isDark } = useTheme();
   const { currentLanguage: language, changeLanguage, t } = useLanguage();
   
-  // 调试输出
-  console.log('ControlBarNew - Current theme:', theme, 'isDark:', isDark);
-  
   const toggleLanguage = () => {
     changeLanguage(language === 'zh' ? 'en' : 'zh');
   };

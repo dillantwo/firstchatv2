@@ -640,183 +640,180 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
         }        
         
         // 优化：添加超时配置和错误处理
-        const {data} = await axios.post('/api/chat/ai', sendData, {
-            timeout: 60000, // 60秒超时
-            signal: abortControllerRef.current?.signal, // Add abort signal
-            withCredentials: true,
+        const response = await fetch('/api/chat/ai', {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-            }
+            },
+            body: JSON.stringify(sendData),
+            signal: abortControllerRef.current?.signal, // Add abort signal
         });
 
-        if(data.success){
-            const message = data.data.content;
-            
-            const messageTokens = message.split(" ");
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // Check if response is streaming
+        const contentType = response.headers.get('content-type');
+        
+        if (contentType && contentType.includes('text/plain')) {
+            // Handle streaming response
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
             let assistantMessage = {
                 role: 'assistant',
                 content: "",
                 timestamp: Date.now(),
-            }
+            };
 
             // If backend returned updated chat name, update related state
-            if(data.chatName && data.chatName !== currentChat.name) {
-                // Update chat name in chats array - but don't add the message yet, wait for streaming
-                setChats((prevChats)=>prevChats.map((chat)=>
-                    chat._id === currentChat._id 
-                        ? {...chat, name: data.chatName} 
-                        : chat
-                ))
-                // Update currently selected chat name and add empty assistant message for streaming
-                setSelectedChat((prev) => ({
-                    ...prev,
-                    name: data.chatName,
-                    messages: [...prev.messages, assistantMessage],
-                }))
-            } else {
-                // Only add empty assistant message for streaming, don't add the backend message yet
-                setSelectedChat((prev) => ({
-                    ...prev,
-                    messages: [...prev.messages, assistantMessage],
-                }))
-            }
+            setSelectedChat((prev) => ({
+                ...prev,
+                messages: [...prev.messages, assistantMessage],
+            }))
 
-            // Optimized streaming effect - 提升显示速度
-            const streamMessage = (fullContent) => {
-                streamingRef.current = true; // Start streaming
-                setIsStreaming(true); // 设置流式传输状态
+            // Start streaming
+            streamingRef.current = true;
+            setIsStreaming(true);
+            
+            let fullContent = '';
+            let finalTokenUsage = null;
+            let finalChatName = null;
+            let updateBuffer = ''; // 添加缓冲区
+            let lastUpdateTime = 0;
+            const UPDATE_INTERVAL = 30; // 降低到30ms更新间隔，更加顺滑
+            let updateTimeoutId = null;
+            
+            // 智能缓冲更新函数
+            const flushUpdate = () => {
+                if (updateTimeoutId) {
+                    clearTimeout(updateTimeoutId);
+                    updateTimeoutId = null;
+                }
                 
-                // Use Array.from to properly handle Unicode characters including Chinese
-                const chars = Array.from(fullContent);
-                let currentIndex = 0;
-                const baseSpeed = 15; // 加快速度：从30改为15ms
-                
-                const typeNextChunk = () => {
-                    if (!streamingRef.current) {
-                        return;
-                    }
-                    
-                    if (currentIndex >= chars.length) {
-                        streamingRef.current = false;
-                        setIsStreaming(false); // 清除流式传输状态
-                        // Final update to ensure complete content is displayed
-                        setSelectedChat((prev) => {
-                            if (!prev) return prev;
-                            const updatedMessages = [
-                                ...prev.messages.slice(0, -1),
-                                { ...assistantMessage, content: fullContent }
-                            ];
-                            return { ...prev, messages: updatedMessages };
-                        });
-                        
-                        // Also update the chats array with final content
-                        setChats((prevChats) => prevChats.map((chat) =>
-                            chat._id === currentChat._id 
-                                ? {
-                                    ...chat, 
-                                    messages: [...chat.messages, { ...assistantMessage, content: fullContent }]
-                                } 
-                                : chat
-                        ));
-                        return;
-                    }
-                    
-                    // 优化：增加每次显示的字符数量，减少更新频率
-                    let chunkSize = 2; // 从1改为2
-                    const remainingChars = chars.length - currentIndex;
-                    
-                    if (remainingChars > 300) {
-                        chunkSize = 4; // 长文本显示更快
-                    } else if (remainingChars > 100) {
-                        chunkSize = 3;
-                        chunkSize = Math.min(3, remainingChars); // Fast display for long content
-                    } else if (remainingChars > 50) {
-                        chunkSize = Math.min(2, remainingChars); // Medium display for medium content
-                    } else {
-                        chunkSize = 1; // Slower display for short content, character by character
-                    }
-                    
-                    currentIndex += chunkSize;
-                    // Ensure we don't go beyond the content length
-                    if (currentIndex > chars.length) {
-                        currentIndex = chars.length;
-                    }
-                    
-                    const currentContent = chars.slice(0, currentIndex).join('');
-                    
-                    // Use requestAnimationFrame to avoid frequent state updates
-                    requestAnimationFrame(() => {
-                        if (!streamingRef.current) return;
-                        
-                        setSelectedChat((prev) => {
-                            if (!prev) return prev;
-                            
-                            const updatedMessages = [
-                                ...prev.messages.slice(0, -1),
-                                { ...assistantMessage, content: currentContent }
-                            ];
-                            return { ...prev, messages: updatedMessages };
-                        });
+                if (updateBuffer !== fullContent) {
+                    setSelectedChat((prev) => {
+                        if (!prev) return prev;
+                        const updatedMessages = [
+                            ...prev.messages.slice(0, -1),
+                            { ...assistantMessage, content: fullContent }
+                        ];
+                        return { ...prev, messages: updatedMessages };
                     });
-                    
-                    if (currentIndex < chars.length && streamingRef.current) {
-                        // Dynamic speed adjustment
-                        let delay = baseSpeed;
-                        const currentChar = chars[currentIndex - 1];
-                        
-                        // Check if current character is Chinese
-                        const isChineseChar = /[\u4e00-\u9fff]/.test(currentChar);
-                        if (isChineseChar) {
-                            delay = baseSpeed * 1.2; // Slightly slower for Chinese characters
-                        } else if (currentChar === '.' || currentChar === '!' || currentChar === '?') {
-                            delay = baseSpeed * 2; // Brief pause after period
-                        } else if (currentChar === ',' || currentChar === ';') {
-                            delay = baseSpeed * 1.5; // Light pause after comma
-                        } else if (currentChar === ' ') {
-                            delay = baseSpeed * 0.8; // Slightly faster for spaces
-                        }
-                        
-                        // Fast display for code blocks
-                        if (currentContent.includes('```') && !currentContent.trim().endsWith('```')) {
-                            delay = baseSpeed * 0.5;
-                        }
-                        
-                        setTimeout(typeNextChunk, delay);
-                    } else if (currentIndex >= chars.length) {
-                        // Reached the end, trigger final update
-                        setTimeout(() => {
-                            if (streamingRef.current) {
-                                streamingRef.current = false;
-                                setIsStreaming(false); // 清除流式传输状态
-                                setSelectedChat((prev) => {
-                                    if (!prev) return prev;
-                                    const updatedMessages = [
-                                        ...prev.messages.slice(0, -1),
-                                        { ...assistantMessage, content: fullContent }
-                                    ];
-                                    return { ...prev, messages: updatedMessages };
-                                });
-                                
-                                // Also update the chats array with final content
-                                setChats((prevChats) => prevChats.map((chat) =>
-                                    chat._id === currentChat._id 
-                                        ? {
-                                            ...chat, 
-                                            messages: [...chat.messages, { ...assistantMessage, content: fullContent }]
-                                        } 
-                                        : chat
-                                ));
-                            }
-                        }, 50);
-                    }
-                };
-                
-                // Start displaying
-                setTimeout(typeNextChunk, 100); // Initial delay
+                    updateBuffer = fullContent;
+                }
             };
             
-            // Start streaming
-            streamMessage(message);
+            // 延迟更新函数
+            const scheduleUpdate = () => {
+                if (updateTimeoutId) return; // 已经有更新计划
+                
+                updateTimeoutId = setTimeout(() => {
+                    flushUpdate();
+                    updateTimeoutId = null;
+                }, UPDATE_INTERVAL);
+            };
+            
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split('\n');
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            if (data.trim()) {
+                                try {
+                                    const parsed = JSON.parse(data);
+                                    
+                                    if (parsed.type === 'content' && parsed.content) {
+                                        if (!streamingRef.current) break;
+                                        
+                                        fullContent += parsed.content;
+                                        
+                                        // 使用智能缓冲更新
+                                        const now = Date.now();
+                                        if (now - lastUpdateTime > UPDATE_INTERVAL) {
+                                            flushUpdate();
+                                            lastUpdateTime = now;
+                                        } else {
+                                            scheduleUpdate(); // 计划延迟更新
+                                        }
+                                    } else if (parsed.type === 'done') {
+                                        // Streaming completed
+                                        if (parsed.chatName) {
+                                            finalChatName = parsed.chatName;
+                                        }
+                                        if (parsed.tokenUsage) {
+                                            finalTokenUsage = parsed.tokenUsage;
+                                        }
+                                        streamingRef.current = false;
+                                        setIsStreaming(false);
+                                        
+                                        // 确保最终内容显示
+                                        flushUpdate();
+                                        
+                                        // Final update
+                                        setSelectedChat((prev) => {
+                                            if (!prev) return prev;
+                                            const finalMessage = { 
+                                                ...assistantMessage, 
+                                                content: fullContent,
+                                                ...(finalTokenUsage && { tokenUsage: finalTokenUsage })
+                                            };
+                                            const updatedMessages = [
+                                                ...prev.messages.slice(0, -1),
+                                                finalMessage
+                                            ];
+                                            return { 
+                                                ...prev, 
+                                                messages: updatedMessages,
+                                                ...(finalChatName && { name: finalChatName })
+                                            };
+                                        });
+                                        
+                                        // Update chats array
+                                        setChats((prevChats) => prevChats.map((chat) =>
+                                            chat._id === currentChat._id 
+                                                ? {
+                                                    ...chat, 
+                                                    messages: [...chat.messages, { 
+                                                        ...assistantMessage, 
+                                                        content: fullContent,
+                                                        ...(finalTokenUsage && { tokenUsage: finalTokenUsage })
+                                                    }],
+                                                    ...(finalChatName && { name: finalChatName })
+                                                } 
+                                                : chat
+                                        ));
+                                        break;
+                                    } else if (parsed.type === 'error') {
+                                        streamingRef.current = false;
+                                        setIsStreaming(false);
+                                        throw new Error(parsed.error);
+                                    }
+                                } catch (e) {
+                                    // Skip parsing errors
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (!streamingRef.current) break;
+                }
+            } catch (error) {
+                streamingRef.current = false;
+                setIsStreaming(false);
+                // 确保显示错误前的最后内容
+                if (fullContent) {
+                    flushUpdate();
+                }
+                throw error;
+            }
             
             // Clear uploaded images and uploading files
             setUploadedImages([]);
@@ -824,12 +821,200 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
             
             // Clear abort controller since request completed successfully
             abortControllerRef.current = null;
-        }else{
-            toast.error(data.message);
-            // 恢复状态
-            setIsStreaming(false);
-            abortControllerRef.current = null;
-            setPrompt(contentToSend);
+            
+        } else {
+            // Handle non-streaming response (fallback)
+            const data = await response.json();
+            
+            if(data.success){
+                const message = data.data.content;
+                
+                let assistantMessage = {
+                    role: 'assistant',
+                    content: "",
+                    timestamp: Date.now(),
+                }
+
+                // If backend returned updated chat name, update related state
+                if(data.chatName && data.chatName !== currentChat.name) {
+                    // Update chat name in chats array - but don't add the message yet, wait for streaming
+                    setChats((prevChats)=>prevChats.map((chat)=>
+                        chat._id === currentChat._id 
+                            ? {...chat, name: data.chatName} 
+                            : chat
+                    ))
+                    // Update currently selected chat name and add empty assistant message for streaming
+                    setSelectedChat((prev) => ({
+                        ...prev,
+                        name: data.chatName,
+                        messages: [...prev.messages, assistantMessage],
+                    }))
+                } else {
+                    // Only add empty assistant message for streaming, don't add the backend message yet
+                    setSelectedChat((prev) => ({
+                        ...prev,
+                        messages: [...prev.messages, assistantMessage],
+                    }))
+                }
+
+                // Optimized streaming effect - 提升显示速度和顺滑度
+                const streamMessage = (fullContent) => {
+                    streamingRef.current = true; // Start streaming
+                    setIsStreaming(true); // 设置流式传输状态
+                    
+                    // Use Array.from to properly handle Unicode characters including Chinese
+                    const chars = Array.from(fullContent);
+                    let currentIndex = 0;
+                    const baseSpeed = 8; // 进一步加快速度：从15改为8ms
+                    
+                    const typeNextChunk = () => {
+                        if (!streamingRef.current) {
+                            return;
+                        }
+                        
+                        if (currentIndex >= chars.length) {
+                            streamingRef.current = false;
+                            setIsStreaming(false); // 清除流式传输状态
+                            // Final update to ensure complete content is displayed
+                            setSelectedChat((prev) => {
+                                if (!prev) return prev;
+                                const updatedMessages = [
+                                    ...prev.messages.slice(0, -1),
+                                    { ...assistantMessage, content: fullContent }
+                                ];
+                                return { ...prev, messages: updatedMessages };
+                            });
+                            
+                            // Also update the chats array with final content
+                            setChats((prevChats) => prevChats.map((chat) =>
+                                chat._id === currentChat._id 
+                                    ? {
+                                        ...chat, 
+                                        messages: [...chat.messages, { ...assistantMessage, content: fullContent }]
+                                    } 
+                                    : chat
+                            ));
+                            return;
+                        }
+                        
+                        // 优化：智能批量显示字符，提升流畅度
+                        let chunkSize = 1;
+                        const remainingChars = chars.length - currentIndex;
+                        const currentContent = chars.slice(0, currentIndex).join('');
+                        
+                        // 根据内容类型和剩余长度动态调整显示块大小
+                        if (currentContent.includes('```') && !currentContent.trim().endsWith('```')) {
+                            // 代码块内容：快速显示
+                            chunkSize = Math.min(5, remainingChars);
+                        } else if (remainingChars > 500) {
+                            chunkSize = 4; // 超长文本：快速显示
+                        } else if (remainingChars > 200) {
+                            chunkSize = 3; // 长文本：中等速度
+                        } else if (remainingChars > 50) {
+                            chunkSize = 2; // 中等文本：稍快显示
+                        } else {
+                            chunkSize = 1; // 短文本：逐字显示，保持效果
+                        }
+                        
+                        currentIndex += chunkSize;
+                        // Ensure we don't go beyond the content length
+                        if (currentIndex > chars.length) {
+                            currentIndex = chars.length;
+                        }
+                        
+                        const newContent = chars.slice(0, currentIndex).join('');
+                        
+                        // 使用防抖优化减少重复渲染
+                        if (!streamingRef.current) return;
+                        
+                        setSelectedChat((prev) => {
+                            if (!prev) return prev;
+                            
+                            const updatedMessages = [
+                                ...prev.messages.slice(0, -1),
+                                { ...assistantMessage, content: newContent }
+                            ];
+                            return { ...prev, messages: updatedMessages };
+                        });
+                        
+                        if (currentIndex < chars.length && streamingRef.current) {
+                            // 优化的动态速度调整
+                            let delay = baseSpeed;
+                            const lastChar = chars[currentIndex - 1];
+                            const nextChar = chars[currentIndex] || '';
+                            const currentDisplayContent = newContent;
+                            
+                            // 根据当前内容类型调整速度
+                            if (currentDisplayContent.includes('```') && !currentDisplayContent.trim().endsWith('```')) {
+                                delay = baseSpeed * 0.3; // 代码块内容快速显示
+                            } else if (/[\u4e00-\u9fff]/.test(lastChar)) {
+                                delay = baseSpeed * 0.8; // 中文字符稍快显示
+                            } else if (lastChar === '.' || lastChar === '!' || lastChar === '?' || lastChar === '。' || lastChar === '！' || lastChar === '？') {
+                                delay = baseSpeed * 1.8; // 句号后稍作停顿
+                            } else if (lastChar === ',' || lastChar === ';' || lastChar === '，' || lastChar === '；') {
+                                delay = baseSpeed * 1.2; // 逗号后轻微停顿
+                            } else if (lastChar === ' ' || lastChar === '\n') {
+                                delay = baseSpeed * 0.6; // 空格和换行快速显示
+                            }
+                            
+                            // 根据剩余内容长度调整整体速度
+                            const remaining = chars.length - currentIndex;
+                            if (remaining > 300) {
+                                delay *= 0.7; // 长文本整体加速
+                            } else if (remaining < 20) {
+                                delay *= 1.3; // 短文本尾部稍慢，增加效果
+                            }
+                            
+                            setTimeout(typeNextChunk, Math.max(2, delay)); // 最小2ms间隔
+                        } else if (currentIndex >= chars.length) {
+                            // Reached the end, trigger final update
+                            setTimeout(() => {
+                                if (streamingRef.current) {
+                                    streamingRef.current = false;
+                                    setIsStreaming(false); // 清除流式传输状态
+                                    setSelectedChat((prev) => {
+                                        if (!prev) return prev;
+                                        const updatedMessages = [
+                                            ...prev.messages.slice(0, -1),
+                                            { ...assistantMessage, content: fullContent }
+                                        ];
+                                        return { ...prev, messages: updatedMessages };
+                                    });
+                                    
+                                    // Also update the chats array with final content
+                                    setChats((prevChats) => prevChats.map((chat) =>
+                                        chat._id === currentChat._id 
+                                            ? {
+                                                ...chat, 
+                                                messages: [...chat.messages, { ...assistantMessage, content: fullContent }]
+                                            } 
+                                            : chat
+                                    ));
+                                }
+                            }, 50);
+                        }
+                    };
+                    
+                    // Start displaying
+                    setTimeout(typeNextChunk, 100); // Initial delay
+                };
+                
+                // Start streaming
+                streamMessage(message);
+                
+                // Clear uploaded images and uploading files
+                setUploadedImages([]);
+                setUploadingFiles([]);
+                
+                // Clear abort controller since request completed successfully
+                abortControllerRef.current = null;
+            }else{
+                toast.error(data.message);
+                // 恢复状态
+                setIsStreaming(false);
+                abortControllerRef.current = null;
+                setPrompt(contentToSend);
+            }
         }
 
         } catch (error) {

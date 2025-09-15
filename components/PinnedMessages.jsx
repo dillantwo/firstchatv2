@@ -18,15 +18,25 @@ const PinnedMessages = ({ pinnedMessages, onUnpinMessage, isVisible, onToggleVis
       {/* Mobile backdrop */}
       {isVisible && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-[9] md:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-[998] md:hidden"
           onClick={onToggleVisibility}
         />
       )}
       
       {/* Pinned panel - responsive width with custom CSS classes */}
-      <div className={`fixed right-0 top-0 h-full w-full pinned-panel-layout ${isDark ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'} border-l z-10 transform transition-transform duration-300 shadow-2xl flex flex-col ${
-        isVisible ? 'translate-x-0' : 'translate-x-full'
-      }`}>
+      <div 
+        className={`pinned-panel-layout ${isDark ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'} border-l transform transition-transform duration-300 shadow-2xl flex flex-col ${
+          isVisible ? 'translate-x-0' : 'translate-x-full'
+        }`}
+        style={{
+          position: 'fixed',
+          right: 0,
+          top: '4rem',
+          height: 'calc(100vh - 4rem)',
+          width: '55%',
+          zIndex: 999
+        }}
+      >
 
       {/* Pinned Messages List */}
       <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 min-h-0">

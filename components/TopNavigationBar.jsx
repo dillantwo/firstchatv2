@@ -19,7 +19,19 @@ const TopNavigationBar = ({
   const { currentLanguage, changeLanguage, t } = useLanguage();
 
   return (
-    <div className={`fixed top-0 left-0 right-0 h-16 ${isDark ? 'bg-gray-800' : 'bg-white'} flex items-center justify-between px-2 sm:px-4 z-30 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+    <div 
+      className={`top-navigation-bar fixed top-0 left-0 right-0 h-16 ${isDark ? 'bg-gray-800' : 'bg-white'} flex items-center justify-between px-2 sm:px-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        width: '100vw',
+        zIndex: 1000,
+        transform: 'none',
+        transition: 'none'
+      }}
+    >
       {/* Menu Button */}
       <div className="group relative">
         <Image 

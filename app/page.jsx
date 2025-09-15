@@ -125,28 +125,29 @@ export default function Home() {
     <LTIAuthGuard>
       <ErrorBoundary>
         <ViewportHandler />
+        
+        {/* 独立的顶部导航栏 */}
+        <TopNavigationBar 
+          expand={expand}
+          setExpand={setExpand}
+          showPinnedPanel={showPinnedPanel}
+          setShowPinnedPanel={setShowPinnedPanel}
+          pinnedMessages={pinnedMessages}
+          createNewChat={createNewChat}
+          isPreviewModalOpen={isPreviewModalOpen}
+        />
+        
         <div className={`main-container ${isDark ? 'bg-[#292a2d]' : 'bg-white'} transition-colors duration-300`}>
-          <div className={`flex h-screen ${isDark ? 'bg-[#292a2d]' : 'bg-white'} transition-colors duration-300`}>
-            <Sidebar expand={expand} setExpand={setExpand} isPreviewModalOpen={isPreviewModalOpen}/>
-            <div className={`flex-1 flex flex-col items-center justify-center px-2 sm:px-4 pb-2 ${isDark ? 'bg-[#292a2d] text-white' : 'bg-white text-gray-900'} relative transition-all duration-300 chat-container ${
-              showPinnedPanel ? 'chat-container-with-pinned mr-0' : 'mr-0'
-            }`}>
-            
-            {/* Unified Top Navigation Bar */}
-            <TopNavigationBar 
-              expand={expand}
-              setExpand={setExpand}
-              showPinnedPanel={showPinnedPanel}
-              setShowPinnedPanel={setShowPinnedPanel}
-              pinnedMessages={pinnedMessages}
-              createNewChat={createNewChat}
-              isPreviewModalOpen={isPreviewModalOpen}
-            />
+        <div className={`flex h-screen ${isDark ? 'bg-[#292a2d]' : 'bg-white'} transition-colors duration-300`} style={{ paddingTop: '4rem' }}>
+          <Sidebar expand={expand} setExpand={setExpand} isPreviewModalOpen={isPreviewModalOpen}/>
+          <div className={`flex-1 flex flex-col items-center justify-center px-2 sm:px-4 pb-2 ${isDark ? 'bg-[#292a2d] text-white' : 'bg-white text-gray-900'} relative transition-all duration-300 chat-container ${
+            showPinnedPanel ? 'chat-container-with-pinned mr-0' : 'mr-0'
+          }`}>
 
             {/* Mobile ChatflowSelector - removed as it's now shown in the middle when chatting */}
 
             {messages.length === 0 || !selectedChat ? (
-              <div className="pt-20 mb-24 md:mb-32 px-4">
+              <div className="pt-4 mb-24 md:mb-32 px-4">
               <div className="flex items-center gap-3">
                 <Image src={assets.reshot_icon} alt="" className="h-8 sm:h-10 w-8 sm:w-10"/>
                 <p className="text-xl sm:text-2xl font-medium">{t("Hi, I'm AI ChatBot.")}</p>
@@ -161,7 +162,7 @@ export default function Home() {
             ):
             (
             <div ref={containerRef}
-            className="relative flex flex-col items-center justify-start w-full pt-16 max-h-screen overflow-y-auto"
+            className="relative flex flex-col items-center justify-start w-full max-h-screen overflow-y-auto"
             > 
             {messages.map((msg, index)=>(
               <Message 
