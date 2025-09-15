@@ -199,7 +199,7 @@ export default function Home() {
             onPreviewModalChange={handlePreviewModalChange}
             showPinnedPanel={showPinnedPanel}
           />
-          <p className={`text-xs absolute bottom-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t("AI-generated, for reference only")}</p>
+          <p className={`text-xs absolute bottom-6 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t("AI-generated, for reference only")}</p>
 
           </div>
 
