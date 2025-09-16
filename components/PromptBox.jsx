@@ -23,6 +23,9 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
     const [isIPadPortrait, setIsIPadPortrait] = useState(false); // 检测iPad竖屏模式
     const streamingRef = useRef(false); // Track streaming status
     const abortControllerRef = useRef(null); // Track current request for cancellation
+    const charQueue = useRef([]);
+    const isProcessingQueue = useRef(false);
+    const streamCompleted = useRef(false);
     const fileInputRef = useRef(null);
     const textareaRef = useRef(null);
     const {user, chats, setChats, selectedChat, setSelectedChat, selectedChatflow, setSelectedChatflow, createNewChat, handleChatflowChange} = useAppContext();
@@ -679,19 +682,73 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
             let fullContent = '';
             let finalTokenUsage = null;
             let finalChatName = null;
-            let updateBuffer = ''; // 添加缓冲区
-            let lastUpdateTime = 0;
-            const UPDATE_INTERVAL = 30; // 降低到30ms更新间隔，更加顺滑
-            let updateTimeoutId = null;
             
-            // 智能缓冲更新函数
-            const flushUpdate = () => {
-                if (updateTimeoutId) {
-                    clearTimeout(updateTimeoutId);
-                    updateTimeoutId = null;
+            const processQueue = () => {
+                if (charQueue.current.length === 0) {
+                    if (streamCompleted.current) {
+                        isProcessingQueue.current = false;
+                        
+                        // Final update
+                        setSelectedChat((prev) => {
+                            if (!prev) return prev;
+                            const finalMessage = { 
+                                ...assistantMessage, 
+                                content: fullContent,
+                                ...(finalTokenUsage && { tokenUsage: finalTokenUsage })
+                            };
+                            const updatedMessages = [
+                                ...prev.messages.slice(0, -1),
+                                finalMessage
+                            ];
+                            return { 
+                                ...prev, 
+                                messages: updatedMessages,
+                                ...(finalChatName && { name: finalChatName })
+                            };
+                        });
+
+                        // Update chats array
+                        setChats((prevChats) => prevChats.map((chat) =>
+                            chat._id === currentChat._id 
+                                ? {
+                                    ...chat, 
+                                    messages: [...chat.messages, { 
+                                        ...assistantMessage, 
+                                        content: fullContent,
+                                        ...(finalTokenUsage && { tokenUsage: finalTokenUsage })
+                                    }],
+                                    ...(finalChatName && { name: finalChatName })
+                                } 
+                                : chat
+                        ));
+
+                        // Clear uploaded images and uploading files
+                        setUploadedImages([]);
+                        setUploadingFiles([]);
+                        
+                        // Clear abort controller since request completed successfully
+                        abortControllerRef.current = null;
+                        setIsLoading(false); // Set loading to false when everything is done
+                        return;
+                    }
+                    setTimeout(processQueue, 50);
+                    return;
                 }
+
+                isProcessingQueue.current = true;
                 
-                if (updateBuffer !== fullContent) {
+                // Process multiple characters in batches to reduce state updates
+                let batchCount = 0;
+                const maxBatchSize = Math.min(3, charQueue.current.length); // Process up to 3 characters at once
+                
+                while (batchCount < maxBatchSize && charQueue.current.length > 0) {
+                    const char = charQueue.current.shift();
+                    fullContent += char;
+                    batchCount++;
+                }
+
+                // Use requestAnimationFrame to batch state updates and prevent excessive re-renders
+                requestAnimationFrame(() => {
                     setSelectedChat((prev) => {
                         if (!prev) return prev;
                         const updatedMessages = [
@@ -700,25 +757,23 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
                         ];
                         return { ...prev, messages: updatedMessages };
                     });
-                    updateBuffer = fullContent;
-                }
-            };
-            
-            // 延迟更新函数
-            const scheduleUpdate = () => {
-                if (updateTimeoutId) return; // 已经有更新计划
-                
-                updateTimeoutId = setTimeout(() => {
-                    flushUpdate();
-                    updateTimeoutId = null;
-                }, UPDATE_INTERVAL);
+                });
+
+                // Increase delay to prevent maximum update depth exceeded
+                setTimeout(processQueue, 20); // Increased from 5ms to 20ms for stability
             };
             
             try {
+                streamCompleted.current = false;
+                charQueue.current = [];
+
                 while (true) {
                     const { done, value } = await reader.read();
                     
-                    if (done) break;
+                    if (done) {
+                        streamCompleted.current = true;
+                        break;
+                    }
                     
                     const chunk = decoder.decode(value, { stream: true });
                     const lines = chunk.split('\n');
@@ -733,18 +788,14 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
                                     if (parsed.type === 'content' && parsed.content) {
                                         if (!streamingRef.current) break;
                                         
-                                        fullContent += parsed.content;
-                                        
-                                        // 使用智能缓冲更新
-                                        const now = Date.now();
-                                        if (now - lastUpdateTime > UPDATE_INTERVAL) {
-                                            flushUpdate();
-                                            lastUpdateTime = now;
-                                        } else {
-                                            scheduleUpdate(); // 计划延迟更新
+                                        for (const char of parsed.content) {
+                                            charQueue.current.push(char);
+                                        }
+
+                                        if (!isProcessingQueue.current) {
+                                            processQueue();
                                         }
                                     } else if (parsed.type === 'done') {
-                                        // Streaming completed
                                         if (parsed.chatName) {
                                             finalChatName = parsed.chatName;
                                         }
@@ -753,47 +804,12 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
                                         }
                                         streamingRef.current = false;
                                         setIsStreaming(false);
-                                        
-                                        // 确保最终内容显示
-                                        flushUpdate();
-                                        
-                                        // Final update
-                                        setSelectedChat((prev) => {
-                                            if (!prev) return prev;
-                                            const finalMessage = { 
-                                                ...assistantMessage, 
-                                                content: fullContent,
-                                                ...(finalTokenUsage && { tokenUsage: finalTokenUsage })
-                                            };
-                                            const updatedMessages = [
-                                                ...prev.messages.slice(0, -1),
-                                                finalMessage
-                                            ];
-                                            return { 
-                                                ...prev, 
-                                                messages: updatedMessages,
-                                                ...(finalChatName && { name: finalChatName })
-                                            };
-                                        });
-                                        
-                                        // Update chats array
-                                        setChats((prevChats) => prevChats.map((chat) =>
-                                            chat._id === currentChat._id 
-                                                ? {
-                                                    ...chat, 
-                                                    messages: [...chat.messages, { 
-                                                        ...assistantMessage, 
-                                                        content: fullContent,
-                                                        ...(finalTokenUsage && { tokenUsage: finalTokenUsage })
-                                                    }],
-                                                    ...(finalChatName && { name: finalChatName })
-                                                } 
-                                                : chat
-                                        ));
+                                        streamCompleted.current = true;
                                         break;
                                     } else if (parsed.type === 'error') {
                                         streamingRef.current = false;
                                         setIsStreaming(false);
+                                        streamCompleted.current = true;
                                         throw new Error(parsed.error);
                                     }
                                 } catch (e) {
@@ -808,19 +824,16 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
             } catch (error) {
                 streamingRef.current = false;
                 setIsStreaming(false);
-                // 确保显示错误前的最后内容
-                if (fullContent) {
-                    flushUpdate();
+                streamCompleted.current = true;
+                if (!isProcessingQueue.current) {
+                    processQueue(); // Ensure queue processing stops and final state is updated
                 }
                 throw error;
             }
             
-            // Clear uploaded images and uploading files
-            setUploadedImages([]);
-            setUploadingFiles([]);
-            
-            // Clear abort controller since request completed successfully
-            abortControllerRef.current = null;
+            if (!isProcessingQueue.current) {
+                processQueue();
+            }
             
         } else {
             // Handle non-streaming response (fallback)
@@ -865,7 +878,7 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
                     // Use Array.from to properly handle Unicode characters including Chinese
                     const chars = Array.from(fullContent);
                     let currentIndex = 0;
-                    const baseSpeed = 8; // 进一步加快速度：从15改为8ms
+                    const baseSpeed = 5; // 进一步加快速度：从15改为8ms
                     
                     const typeNextChunk = () => {
                         if (!streamingRef.current) {
@@ -1018,31 +1031,22 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
         }
 
         } catch (error) {
-            // 清除流式传输状态
-            streamingRef.current = false;
+            if (error.name === 'AbortError') {
+                // Request was cancelled, do nothing
+            } else {
+                toast.error(t('An error occurred while sending the message. Please try again.'));
+            }
+            setIsLoading(false);
             setIsStreaming(false);
-            
-            // Clear abort controller
+            streamingRef.current = false;
+            streamCompleted.current = true;
             abortControllerRef.current = null;
             
-            // Handle aborted requests (when user clicks stop)
-            if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
-                // Request was cancelled by user, don't show error message
-                return;
-            }
-            
-            // 401 errors are automatically handled by axios interceptor
-            if (error.response?.status === 401) {
-                // Token expired, interceptor will handle the popup
-                setPrompt(contentToSend);
-            } else {
-                toast.error(t(error.message || 'Failed to send message'));
-                setPrompt(contentToSend);
-            }
+            // Restore input content if sending failed
+            setPrompt(contentToSend);
         } finally {
-            setIsLoading(false);
-            // 注意：这里不清除 isStreaming，因为可能正在流式传输
-            // isStreaming 会在流式传输完成或被停止时清除
+            // This block will run after try/catch, but streaming is async.
+            // Final state updates are handled within the streaming logic.
         }
     }
 

@@ -22,7 +22,7 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
         Prism.highlightAll()
     }, [content])
 
-    // Specialized processing for LaTeX mathematical formula formats
+    // Specialized processing for LaTeX mathematical formula formats and table formatting
     const processMathContent = (text) => {
         if (!text) return text;
         
@@ -37,6 +37,56 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
             .replace(/\\\[/g, '$$').replace(/\\\]/g, '$$')
             // Handle escaped dollar signs that should remain as math delimiters
             .replace(/\\\$/g, '$');
+        
+        // Fix malformed table formatting where header and separator are merged
+        // Pattern: "header1 | header2 | header3---|---|---content1 | content2 | content3"
+        processed = processed.replace(
+            /([^|\n]*\|[^|\n]*\|[^|\n]*?)(-{3,}\|){2,}(-{3,})([^|\n]*\|[^|\n]*\|[^|\n]*)/g,
+            (match, headerPart, separatorMiddle, separatorEnd, contentPart) => {
+                // Clean up the header part
+                const cleanHeader = headerPart.trim();
+                // Count the number of columns based on separators
+                const separatorCount = (match.match(/\|/g) || []).length;
+                const dashCount = (match.match(/-{3,}/g) || []).length;
+                
+                // Create proper separator row based on column count
+                let separator = '';
+                for (let i = 0; i < dashCount; i++) {
+                    separator += (i > 0 ? '|' : '') + '---';
+                }
+                
+                return `${cleanHeader}\n${separator}\n${contentPart.trim()}`;
+            }
+        );
+        
+        // Handle simpler case where just the separator is attached to header
+        // Pattern: "header1 | header2---|---content"
+        processed = processed.replace(
+            /([^|\n-]+\|[^|\n-]+?)(-{3,}\|)(-{3,})([^|\n]*)/g,
+            (match, headerPart, sep1, sep2, contentPart) => {
+                const cleanHeader = headerPart.trim();
+                const separator = sep1 + sep2;
+                const cleanContent = contentPart.trim();
+                
+                if (cleanContent && cleanContent.includes('|')) {
+                    return `${cleanHeader}\n${separator}\n${cleanContent}`;
+                }
+                return match;
+            }
+        );
+        
+        // Handle the specific case from the user's example
+        // "原有表達 | 替代建議 | 範例句---|---|--- 太陽好像金黃色的大火球"
+        processed = processed.replace(
+            /([^|\n]+\|[^|\n]+\|[^|\n]+?)(-{3,}\|){2}(-{3,})\s+([^|\n]+\|[^|\n]+\|[^|\n]+)/g,
+            (match, headerPart, sepMiddle, sepEnd, contentPart) => {
+                const cleanHeader = headerPart.trim();
+                const separator = '---|---|---';
+                const cleanContent = contentPart.trim();
+                
+                return `${cleanHeader}\n${separator}\n${cleanContent}`;
+            }
+        );
             
         return processed;
     };
