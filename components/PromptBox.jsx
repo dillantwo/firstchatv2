@@ -487,6 +487,11 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
             abortControllerRef.current = null;
         }
         
+        // Clear character queue to stop rendering
+        charQueue.current = [];
+        isProcessingQueue.current = false;
+        streamCompleted.current = true; // Mark as completed to stop queue processing
+
         // 显示停止消息
         toast.success(t('Response stopped'));
     };
@@ -1356,8 +1361,14 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
             </button>
             
             <button 
-                type={(isLoading || isStreaming) ? "button" : "submit"}
-                onClick={(isLoading || isStreaming) ? stopStreaming : undefined}
+                type="button"
+                onClick={() => {
+                    if (isLoading || isStreaming) {
+                        stopStreaming();
+                    } else {
+                        sendPrompt(new Event('submit'));
+                    }
+                }}
                 className={`${
                     (isLoading || isStreaming)
                         ? "bg-red-600 hover:bg-red-700" 
@@ -1365,13 +1376,13 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
                             ? "bg-blue-700 hover:bg-blue-800" 
                             : "bg-blue-600"
                 } rounded-full p-1.5 md:p-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-md`}
-                disabled={!selectedChatflow && !(isLoading || isStreaming)}
+                disabled={!((prompt || uploadedImages.length > 0) && selectedChatflow) && !(isLoading || isStreaming)}
                 title={
                     (isLoading || isStreaming)
                         ? t("Click to stop response") 
                         : !selectedChatflow 
                             ? t("Please select a chatflow first") 
-                            : ""
+                            : t("Send")
                 }
             >
                 <Image 
