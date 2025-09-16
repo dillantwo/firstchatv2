@@ -98,13 +98,13 @@ const DashboardOverview = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">{card.title}</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <div className="text-2xl font-bold text-gray-900">
                   {loading ? (
                     <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
                   ) : (
                     card.value
                   )}
-                </p>
+                </div>
               </div>
               <div className={`w-12 h-12 ${card.bgColor} rounded-xl flex items-center justify-center`}>
                 <span className="text-2xl">{card.icon}</span>

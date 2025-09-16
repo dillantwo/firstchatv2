@@ -197,7 +197,7 @@ const ChatHistoryManager = ({ userPermissions }) => {
   return (
     <div className="space-y-6">
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0">
@@ -243,13 +243,27 @@ const ChatHistoryManager = ({ userPermissions }) => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                <span className="text-orange-600 text-sm font-medium">📊</span>
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <span className="text-green-600 text-sm font-medium">�</span>
               </div>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Avg Messages/Chat</p>
-              <p className="text-2xl font-semibold text-gray-900">{(stats.avgMessagesPerChat || 0).toFixed(1)}</p>
+              <p className="text-sm font-medium text-gray-600">Input Tokens</p>
+              <p className="text-2xl font-semibold text-gray-900">{(stats.totalPromptTokens || 0).toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <span className="text-blue-600 text-sm font-medium">📤</span>
+              </div>
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Output Tokens</p>
+              <p className="text-2xl font-semibold text-gray-900">{(stats.totalCompletionTokens || 0).toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -464,8 +478,18 @@ const ChatHistoryManager = ({ userPermissions }) => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-xs text-gray-600">
-                        <div>{chat.estimatedTokens.toLocaleString()} tokens</div>
-                        <div>${chat.estimatedCost.toFixed(4)}</div>
+                        <div className="mb-1">
+                          <span className="font-medium">Total:</span> {((chat.totalTokenUsage?.totalTokens) || chat.estimatedTokens || 0).toLocaleString()}
+                        </div>
+                        <div className="mb-1">
+                          <span className="font-medium">Input:</span> {(chat.totalTokenUsage?.promptTokens || 0).toLocaleString()}
+                        </div>
+                        <div className="mb-1">
+                          <span className="font-medium">Output:</span> {(chat.totalTokenUsage?.completionTokens || 0).toLocaleString()}
+                        </div>
+                        <div className="text-green-600 font-medium">
+                          ${chat.estimatedCost.toFixed(4)}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -571,22 +595,26 @@ const ChatHistoryManager = ({ userPermissions }) => {
             </div>
             
             <div className="p-6 border-t border-gray-200 bg-gray-50">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-sm">
                 <div>
                   <span className="font-medium text-gray-600">Messages:</span>
                   <span className="ml-2">{selectedChat.messages?.length || 0}</span>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-600">Tokens:</span>
+                  <span className="font-medium text-gray-600">Total Tokens:</span>
                   <span className="ml-2">{selectedChat.totalTokenUsage?.totalTokens?.toLocaleString() || 0}</span>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-600">Input Tokens:</span>
+                  <span className="ml-2">{selectedChat.totalTokenUsage?.promptTokens?.toLocaleString() || 0}</span>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-600">Output Tokens:</span>
+                  <span className="ml-2">{selectedChat.totalTokenUsage?.completionTokens?.toLocaleString() || 0}</span>
                 </div>
                 <div>
                   <span className="font-medium text-gray-600">Cost:</span>
                   <span className="ml-2">${((selectedChat.totalTokenUsage?.totalTokens || 0) * 0.000001).toFixed(4)}</span>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600">Last Updated:</span>
-                  <span className="ml-2">{formatDate(selectedChat.updatedAt)}</span>
                 </div>
               </div>
             </div>

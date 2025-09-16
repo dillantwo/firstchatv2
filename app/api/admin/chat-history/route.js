@@ -121,6 +121,8 @@ export async function GET(request) {
           totalChats: { $sum: 1 },
           totalMessages: { $sum: { $size: '$messages' } },
           totalTokens: { $sum: '$totalTokenUsage.totalTokens' },
+          totalPromptTokens: { $sum: '$totalTokenUsage.promptTokens' },
+          totalCompletionTokens: { $sum: '$totalTokenUsage.completionTokens' },
           avgMessagesPerChat: { $avg: { $size: '$messages' } }
         }
       }
@@ -130,6 +132,8 @@ export async function GET(request) {
       totalChats: 0,
       totalMessages: 0,
       totalTokens: 0,
+      totalPromptTokens: 0,
+      totalCompletionTokens: 0,
       avgMessagesPerChat: 0
     };
 
