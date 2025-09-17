@@ -40,9 +40,15 @@ export class LTI13Service {
       // and just decode the payload to see what Moodle is sending
       const payload = decoded.payload;
       
-      // Basic validation
-      if (payload.iss !== this.issuer) {
-        throw new Error(`Invalid issuer: ${payload.iss}, expected: ${this.issuer}`);
+      // Basic validation - support both www and non-www versions
+      const allowedIssuers = [
+        this.issuer,
+        this.issuer.replace('://', '://www.'), // Add www version
+        this.issuer.replace('://www.', '://'), // Remove www if present
+      ];
+      
+      if (!allowedIssuers.includes(payload.iss)) {
+        throw new Error(`Invalid issuer: ${payload.iss}, expected one of: ${allowedIssuers.join(', ')}`);
       }
       
       if (payload.aud !== this.clientId) {
