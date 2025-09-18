@@ -79,6 +79,14 @@ const SimpleChatflowSelector = ({ selectedChatflow, onChatflowChange, disabled =
         setIsOpen(false);
     };
 
+    const handleButtonClick = (e) => {
+        e.preventDefault(); // Prevent form submission
+        e.stopPropagation(); // Stop event bubbling
+        if (!disabled) {
+            setIsOpen(!isOpen);
+        }
+    };
+
     // Don't render until hydrated
     if (!hasHydrated) {
         return null;
@@ -102,7 +110,8 @@ const SimpleChatflowSelector = ({ selectedChatflow, onChatflowChange, disabled =
         <div className="relative">
             {/* Simple selection button */}
             <button
-                onClick={() => !disabled && setIsOpen(!isOpen)}
+                type="button"
+                onClick={handleButtonClick}
                 className={`flex items-center gap-2 px-2 py-1.5 ${isDark ? 'bg-[#404045] border-gray-500 text-white hover:bg-gray-600' : 'bg-gray-800 border-gray-600 text-gray-100 hover:bg-gray-900 opacity-70 hover:opacity-100'} border rounded-md transition-all text-xs shadow-sm ${
                     disabled ? 'opacity-30 cursor-not-allowed' : ''
                 }`}
@@ -130,7 +139,12 @@ const SimpleChatflowSelector = ({ selectedChatflow, onChatflowChange, disabled =
                         chatflows.map((chatflow) => (
                             <button
                                 key={chatflow.id}
-                                onClick={() => handleSelect(chatflow)}
+                                type="button"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleSelect(chatflow);
+                                }}
                                 className={`w-full text-left px-3 py-2 ${isDark ? 'hover:bg-gray-600 border-gray-600' : 'hover:bg-gray-100 border-gray-200'} transition-colors text-xs border-b last:border-b-0 ${
                                     selectedChatflow?.id === chatflow.id ? (isDark ? 'bg-gray-600' : 'bg-gray-100') : ''
                                 }`}

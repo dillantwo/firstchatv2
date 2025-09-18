@@ -140,8 +140,22 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
                 const recognition = new SpeechRecognition();
                 recognition.continuous = true; // Enable continuous recognition
                 recognition.interimResults = true; // Show interim results
-                recognition.maxAlternatives = 1;
+                recognition.maxAlternatives = 3; // Increase alternatives for better accuracy
                 recognition.lang = selectedLanguage; // Use selected language
+                
+                // Enhanced audio processing settings for better accuracy
+                if (recognition.audioCapture) {
+                    recognition.audioCapture = true;
+                }
+                
+                // Set grammar weights for better recognition (if supported)
+                if (recognition.grammars && window.SpeechGrammarList) {
+                    const grammarList = new window.SpeechGrammarList();
+                    // Add common phrases for better context recognition
+                    const commonPhrases = '#JSGF V1.0; grammar phrases; public <phrase> = 你好 | 请问 | 谢谢 | 再见 | 请继续 | 让我们学习;';
+                    grammarList.addFromString(commonPhrases, 1);
+                    recognition.grammars = grammarList;
+                }
                 
                 recognition.onstart = () => {
                     setIsListening(true);
@@ -150,30 +164,58 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
                 recognition.onresult = (event) => {
                     let finalTranscript = '';
                     let interimTranscript = '';
+                    let bestConfidence = 0;
                     
-                    // Process all recognition results
+                    // Process all recognition results with confidence scoring
                     for (let i = event.resultIndex; i < event.results.length; i++) {
-                        const transcript = event.results[i][0].transcript;
-                        if (event.results[i].isFinal) {
-                            finalTranscript += transcript;
+                        const result = event.results[i];
+                        
+                        // Choose the alternative with highest confidence
+                        let bestAlternative = result[0];
+                        for (let j = 0; j < result.length; j++) {
+                            if (result[j].confidence > bestAlternative.confidence) {
+                                bestAlternative = result[j];
+                            }
+                        }
+                        
+                        const transcript = bestAlternative.transcript;
+                        const confidence = bestAlternative.confidence || 0.5; // Default confidence if not available
+                        
+                        if (result.isFinal) {
+                            // Only accept results with reasonable confidence
+                            if (confidence > 0.3) {
+                                finalTranscript += transcript;
+                                bestConfidence = Math.max(bestConfidence, confidence);
+                            }
                         } else {
                             interimTranscript += transcript;
                         }
                     }
                     
-                    // Only update input box when there's final result
-                    if (finalTranscript) {
-                        setPrompt(prev => prev + finalTranscript + ' ');
+                    // Only update input box when there's final result with good confidence
+                    if (finalTranscript && finalTranscript.trim()) {
+                        // Clean up the transcript
+                        const cleanedTranscript = finalTranscript
+                            .trim()
+                            .replace(/\s+/g, ' ') // Remove multiple spaces
+                            .replace(/[。，、；：！？]+$/, ''); // Remove trailing punctuation for continuation
+                        
+                        setPrompt(prev => {
+                            const newPrompt = prev + cleanedTranscript + ' ';
+                            return newPrompt;
+                        });
                         setTimeout(adjustTextareaHeight, 0);
                     }
                     
-                    // Can display interim results here (optional)
-                    if (interimTranscript) {
-                        // Interim results processing
+                    // Display interim results for user feedback (optional enhancement)
+                    if (interimTranscript && interimTranscript.trim()) {
+                        // You can add visual feedback for interim results here
+                        console.log('Interim:', interimTranscript);
                     }
                 };
                 
                 recognition.onerror = (event) => {
+                    console.log('Speech recognition error:', event.error);
                     
                     if (event.error === 'not-allowed') {
                         setIsListening(false);
@@ -181,26 +223,59 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
                     } else if (event.error === 'network') {
                         setIsListening(false);
                         toast.error('Network error, please check network connection');
+                        // Attempt to reconnect after a delay
+                        setTimeout(() => {
+                            if (isListening) {
+                                try {
+                                    recognition.start();
+                                } catch (e) {
+                                    console.log('Failed to reconnect after network error');
+                                }
+                            }
+                        }, 3000);
                     } else if (event.error === 'language-not-supported') {
-                        // If Cantonese is not supported, automatically switch to English
-                        recognition.lang = 'en-US';
-                        toast.error('Cantonese recognition not supported, switched to English recognition');
+                        // If current language is not supported, try fallback
+                        const fallbackLang = selectedLanguage.startsWith('zh') ? 'zh-CN' : 'en-US';
+                        recognition.lang = fallbackLang;
+                        setSelectedLanguage(fallbackLang);
+                        toast.error(`Language not supported, switched to ${fallbackLang === 'zh-CN' ? '普通话' : 'English'}`);
+                        
+                        // Restart with fallback language
+                        setTimeout(() => {
+                            if (isListening) {
+                                try {
+                                    recognition.start();
+                                } catch (e) {
+                                    setIsListening(false);
+                                }
+                            }
+                        }, 500);
                     } else if (event.error === 'no-speech') {
-                        // No speech detected, no need to stop in continuous mode
+                        // No speech detected, continue listening but don't show error
+                        console.log('No speech detected, continuing to listen...');
                     } else if (event.error === 'aborted') {
                         // User manually stopped, don't show error
+                        setIsListening(false);
+                    } else if (event.error === 'audio-capture') {
+                        setIsListening(false);
+                        toast.error('Audio capture failed, please check microphone connection');
+                    } else if (event.error === 'service-not-allowed') {
+                        setIsListening(false);
+                        toast.error('Speech recognition service not available');
                     } else {
-                        // Other errors, try to restart (if still in listening state)
+                        // Other errors, try to restart with exponential backoff
+                        console.log('Speech recognition error, attempting restart:', event.error);
                         if (isListening) {
                             setTimeout(() => {
                                 if (isListening) {
                                     try {
                                         recognition.start();
                                     } catch (e) {
-                                        // Failed to restart
+                                        console.log('Failed to restart recognition:', e);
+                                        setIsListening(false);
                                     }
                                 }
-                            }, 1000);
+                            }, 2000);
                         }
                     }
                 };
@@ -297,15 +372,53 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
             setIsListening(false);
             speechRecognition.stop();
         } else {
-            // Start speech recognition
-            navigator.mediaDevices.getUserMedia({ audio: true })
-                .then(() => {
-                    speechRecognition.lang = selectedLanguage; // 使用选择的语言
+            // Start speech recognition with enhanced audio settings
+            const audioConstraints = {
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true,
+                    sampleRate: 44100,
+                    channelCount: 1,
+                    volume: 1.0
+                }
+            };
+            
+            navigator.mediaDevices.getUserMedia(audioConstraints)
+                .then((stream) => {
+                    // Test if the stream is active and has audio tracks
+                    const audioTracks = stream.getAudioTracks();
+                    if (audioTracks.length === 0) {
+                        throw new Error('No audio tracks available');
+                    }
+                    
+                    // Configure audio track settings for better quality
+                    audioTracks[0].applyConstraints({
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }).catch(console.warn);
+                    
+                    speechRecognition.lang = selectedLanguage;
                     setIsListening(true);
                     speechRecognition.start();
+                    
+                    // Clean up the stream after a short delay
+                    setTimeout(() => {
+                        stream.getTracks().forEach(track => track.stop());
+                    }, 1000);
                 })
                 .catch((error) => {
-                    toast.error('Please allow microphone access permission');
+                    console.error('Microphone access error:', error);
+                    if (error.name === 'NotAllowedError') {
+                        toast.error('Please allow microphone access permission');
+                    } else if (error.name === 'NotFoundError') {
+                        toast.error('No microphone found, please connect a microphone');
+                    } else if (error.name === 'NotReadableError') {
+                        toast.error('Microphone is being used by another application');
+                    } else {
+                        toast.error('Unable to access microphone, please check your settings');
+                    }
                 });
         }
     };
@@ -1361,14 +1474,7 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
             </button>
             
             <button 
-                type="button"
-                onClick={() => {
-                    if (isLoading || isStreaming) {
-                        stopStreaming();
-                    } else {
-                        sendPrompt(new Event('submit'));
-                    }
-                }}
+                type="submit"
                 className={`${
                     (isLoading || isStreaming)
                         ? "bg-red-600 hover:bg-red-700" 
@@ -1384,6 +1490,14 @@ const PromptBox = ({setIsLoading, isLoading, onPreviewModalChange, showPinnedPan
                             ? t("Please select a chatflow first") 
                             : t("Send")
                 }
+                onClick={(e) => {
+                    // Only handle stop streaming action in onClick
+                    if (isLoading || isStreaming) {
+                        e.preventDefault();
+                        stopStreaming();
+                    }
+                    // Let form submit handle the send action naturally
+                }}
             >
                 <Image 
                     className='w-3 md:w-3.5 aspect-square brightness-0 invert sepia saturate-[500%] hue-rotate-[190deg] transition-transform duration-200 hover:scale-110' 
