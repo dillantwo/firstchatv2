@@ -43,12 +43,19 @@ export function getTranslation(key, language = 'zh', defaultValue = key) {
 
 /**
  * Get language preference from request headers
+ * NOTE: This is only used for API error messages, NOT for AI responses
+ * AI responses should be determined by the system prompt and input content language
  * @param {Request} req - The request object
  * @returns {string} - Language code ('zh' or 'en')
  */
 export function getLanguageFromRequest(req) {
   // Try to get language from Accept-Language header
   const acceptLanguage = req.headers.get('accept-language') || ''
+  
+  // Check for English variants first (more explicit check)
+  if (acceptLanguage.includes('en') || acceptLanguage.includes('english')) {
+    return 'en'
+  }
   
   // Check for Chinese variants
   if (acceptLanguage.includes('zh') || acceptLanguage.includes('chinese')) {
