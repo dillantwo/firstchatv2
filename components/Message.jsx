@@ -391,478 +391,51 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                 
                                                 doc.head.appendChild(katexJS);
                                             }
-                                            
-                                            // Load Chart.js for data visualization
-                                            if (!doc.querySelector('script[data-chartjs]')) {
-                                                const chartJS = doc.createElement('script');
-                                                chartJS.setAttribute('data-chartjs', 'true');
-                                                chartJS.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js';
-                                                chartJS.integrity = 'sha384-6eDaF6RN8e6T3d7x8T8VxX9NyJ6HcEZzOo/w5K5Pk1mKb8l1pQ3lOJKN3lK7OLd';
-                                                chartJS.crossOrigin = 'anonymous';
-                                                doc.head.appendChild(chartJS);
-                                            }
-                                            
-                                            // Load D3.js for advanced visualizations
-                                            if (!doc.querySelector('script[data-d3js]')) {
-                                                const d3JS = doc.createElement('script');
-                                                d3JS.setAttribute('data-d3js', 'true');
-                                                d3JS.src = 'https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js';
-                                                d3JS.crossOrigin = 'anonymous';
-                                                doc.head.appendChild(d3JS);
-                                            }
-                                            
-                                            // Load Three.js for 3D graphics
-                                            if (!doc.querySelector('script[data-threejs]')) {
-                                                const threeJS = doc.createElement('script');
-                                                threeJS.setAttribute('data-threejs', 'true');
-                                                threeJS.src = 'https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js';
-                                                threeJS.crossOrigin = 'anonymous';
-                                                doc.head.appendChild(threeJS);
-                                            }
-                                            
-                                            // Load Lodash for utility functions
-                                            if (!doc.querySelector('script[data-lodash]')) {
-                                                const lodashJS = doc.createElement('script');
-                                                lodashJS.setAttribute('data-lodash', 'true');
-                                                lodashJS.src = 'https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js';
-                                                lodashJS.crossOrigin = 'anonymous';
-                                                doc.head.appendChild(lodashJS);
-                                            }
-                                            
-                                            // Load Moment.js for date handling
-                                            if (!doc.querySelector('script[data-momentjs]')) {
-                                                const momentJS = doc.createElement('script');
-                                                momentJS.setAttribute('data-momentjs', 'true');
-                                                momentJS.src = 'https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js';
-                                                momentJS.crossOrigin = 'anonymous';
-                                                doc.head.appendChild(momentJS);
-                                            }
-                                            
-                                            // Load Bootstrap CSS for styling
-                                            if (!doc.querySelector('link[data-bootstrap-css]')) {
-                                                const bootstrapCSS = doc.createElement('link');
-                                                bootstrapCSS.setAttribute('data-bootstrap-css', 'true');
-                                                bootstrapCSS.rel = 'stylesheet';
-                                                bootstrapCSS.href = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css';
-                                                bootstrapCSS.integrity = 'sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN';
-                                                bootstrapCSS.crossOrigin = 'anonymous';
-                                                doc.head.appendChild(bootstrapCSS);
-                                            }
-                                            
-                                            // Load Bootstrap JS for interactive components
-                                            if (!doc.querySelector('script[data-bootstrap-js]')) {
-                                                const bootstrapJS = doc.createElement('script');
-                                                bootstrapJS.setAttribute('data-bootstrap-js', 'true');
-                                                bootstrapJS.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js';
-                                                bootstrapJS.integrity = 'sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL';
-                                                bootstrapJS.crossOrigin = 'anonymous';
-                                                doc.head.appendChild(bootstrapJS);
-                                            }
 
-                                            // Add basic styles to ensure content displays properly
+                                            // Add minimal styles - only for essential iframe functionality
                                             if (!doc.querySelector('style[data-iframe-styles]')) {
                                                 const style = doc.createElement('style');
                                                 style.setAttribute('data-iframe-styles', 'true');
-                                                    style.textContent = `
+                                                style.textContent = `
+                                                    /* Minimal iframe styles - don't interfere with user content */
                                                     * { box-sizing: border-box; }
                                                     html, body { 
                                                         margin: 0; 
-                                                        padding: 8px; 
-                                                        font-family: Arial, sans-serif;
-                                                        overflow: auto;
-                                                        max-width: 100%;
-                                                        max-height: 100vh;
-                                                        position: relative;
+                                                        padding: 0;
                                                     }
                                                     
-                                                    /* Enhanced CSS support */
-                                                    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-                                                    @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
-                                                    
-                                                    /* Element constraints for better containment */
-                                                    * {
-                                                        max-width: 100% !important;
-                                                        -webkit-user-drag: none !important;
-                                                        -khtml-user-drag: none !important;
-                                                        -moz-user-drag: none !important;
-                                                        -o-user-drag: none !important;
-                                                        user-drag: none !important;
-                                                        draggable: false !important;
-                                                    }
-                                                    
-                                                    /* Enhanced interactive elements */
-                                                    button, input, select, textarea { 
-                                                        cursor: pointer; 
-                                                        font-family: inherit;
-                                                        pointer-events: auto;
-                                                        max-width: 100%;
-                                                        border-radius: 4px;
-                                                        border: 1px solid #ddd;
-                                                        padding: 4px 8px;
-                                                        transition: all 0.2s ease;
-                                                    }
-                                                    
-                                                    button:hover {
-                                                        background-color: #f0f0f0;
-                                                        border-color: #999;
-                                                    }
-                                                    
-                                                    input:focus, textarea:focus, select:focus {
-                                                        outline: 2px solid #007acc;
-                                                        border-color: #007acc;
-                                                    }
-                                                    
-                                                    /* Form styling */
-                                                    form { 
-                                                        display: inline-block; 
-                                                        max-width: 100%;
-                                                    }
-                                                    
-                                                    /* Enhanced table styling */
-                                                    table {
-                                                        border-collapse: collapse;
-                                                        width: 100%;
-                                                        margin: 1em 0;
-                                                    }
-                                                    
-                                                    th, td {
-                                                        border: 1px solid #ddd;
-                                                        padding: 8px;
-                                                        text-align: left;
-                                                    }
-                                                    
-                                                    th {
-                                                        background-color: #f5f5f5;
-                                                        font-weight: bold;
-                                                    }
-                                                    
-                                                    /* CSS Grid and Flexbox support */
-                                                    .grid {
-                                                        display: grid;
-                                                    }
-                                                    
-                                                    .flex {
-                                                        display: flex;
-                                                    }
-                                                    
-                                                    /* CSS Animation support */
-                                                    @keyframes fadeIn {
-                                                        from { opacity: 0; }
-                                                        to { opacity: 1; }
-                                                    }
-                                                    
-                                                    @keyframes slideIn {
-                                                        from { transform: translateX(-100%); }
-                                                        to { transform: translateX(0); }
-                                                    }
-                                                    
-                                                    @keyframes bounce {
-                                                        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-                                                        40% { transform: translateY(-10px); }
-                                                        60% { transform: translateY(-5px); }
-                                                    }
-                                                    
-                                                    /* Common utility classes */
-                                                    .fade-in { animation: fadeIn 0.5s ease-in; }
-                                                    .slide-in { animation: slideIn 0.5s ease-out; }
-                                                    .bounce { animation: bounce 2s infinite; }
-                                                    
-                                                    .text-center { text-align: center; }
-                                                    .text-left { text-align: left; }
-                                                    .text-right { text-align: right; }
-                                                    
-                                                    .m-1 { margin: 0.25rem; }
-                                                    .m-2 { margin: 0.5rem; }
-                                                    .m-4 { margin: 1rem; }
-                                                    .p-1 { padding: 0.25rem; }
-                                                    .p-2 { padding: 0.5rem; }
-                                                    .p-4 { padding: 1rem; }
-                                                    
-                                                    .rounded { border-radius: 0.25rem; }
-                                                    .rounded-lg { border-radius: 0.5rem; }
-                                                    .shadow { box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
-                                                    .shadow-lg { box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
-                                                    
-                                                    /* KaTeX math styling */
-                                                    .katex { font-size: 1.1em; }
-                                                    .katex-display { margin: 1em 0; }
-                                                    
-                                                    /* Container constraints */
-                                                    div, section, article, main {
-                                                        max-width: 100%;
-                                                        overflow: hidden;
-                                                    }
-                                                    
-                                                    /* Media queries for responsive design */
-                                                    @media (max-width: 768px) {
-                                                        body { padding: 4px; }
-                                                        table { font-size: 0.8em; }
-                                                    }
-                                                    
-                                                    /* Enhanced styling for common HTML elements */
-                                                    h1, h2, h3, h4, h5, h6 {
-                                                        margin: 0.5em 0;
-                                                        line-height: 1.4;
-                                                    }
-                                                    
-                                                    p {
-                                                        margin: 0.5em 0;
-                                                        line-height: 1.6;
-                                                    }
-                                                    
-                                                    a {
-                                                        color: #007acc;
-                                                        text-decoration: none;
-                                                    }
-                                                    
-                                                    a:hover {
-                                                        text-decoration: underline;
-                                                    }
-                                                    
+                                                    /* Only restrict images to prevent overflow */
                                                     img {
                                                         max-width: 100%;
                                                         height: auto;
                                                     }
-                                                    
-                                                    pre, code {
-                                                        background-color: #f5f5f5;
-                                                        padding: 0.2em 0.4em;
-                                                        border-radius: 3px;
-                                                        font-family: 'Courier New', monospace;
-                                                    }
-                                                    
-                                                    pre {
-                                                        padding: 1em;
-                                                        overflow-x: auto;
-                                                        white-space: pre-wrap;
-                                                    }
                                                 `;
-                                                doc.head.appendChild(style);
+                                                // Insert at the beginning so user styles can override
+                                                if (doc.head.firstChild) {
+                                                    doc.head.insertBefore(style, doc.head.firstChild);
+                                                } else {
+                                                    doc.head.appendChild(style);
+                                                }
                                             }
                                             
-                                            // Prevent form submission and link navigation from causing page reload, but allow content changes
+                                            // Minimal JavaScript - only prevent page navigation
                                             if (!doc.querySelector('script[data-event-handler]')) {
                                                 const script = doc.createElement('script');
                                                 script.setAttribute('data-event-handler', 'true');
                                                 script.textContent = `
-                                                    // Enhanced JavaScript environment for HTML rendering
-                                                    
-                                                    // Console polyfill for debugging
-                                                    if (!window.console) {
-                                                        window.console = {};
-                                                    }
-                                                    if (!window.console.log) {
-                                                        window.console.log = function() {
-                                                            // You can extend this to show logs in a dev panel if needed
-                                                        };
-                                                    }
-                                                    
-                                                    // Function to render math formulas
-                                                    function renderMath() {
-                                                        // Wait for KaTeX to be available
-                                                        if (window.renderMathInElement && window.katex) {
-                                                            window.renderMathInElement(document.body, {
-                                                                delimiters: [
-                                                                    {left: '$$', right: '$$', display: true},
-                                                                    {left: '$', right: '$', display: false},
-                                                                    {left: '\\\\(', right: '\\\\)', display: false},
-                                                                    {left: '\\\\[', right: '\\\\]', display: true}
-                                                                ],
-                                                                throwOnError: false
-                                                            });
-                                                        } else {
-                                                            setTimeout(renderMath, 200);
-                                                        }
-                                                    }
-                                                    
-                                                    // Enhanced DOM manipulation utilities
-                                                    window.$ = function(selector) {
-                                                        return document.querySelector(selector);
-                                                    };
-                                                    
-                                                    window.$$ = function(selector) {
-                                                        return document.querySelectorAll(selector);
-                                                    };
-                                                    
-                                                    // Animation utilities
-                                                    window.animate = function(element, animation, duration = 1000) {
-                                                        if (typeof element === 'string') {
-                                                            element = document.querySelector(element);
-                                                        }
-                                                        if (element) {
-                                                            element.style.animation = animation + ' ' + duration + 'ms';
-                                                            setTimeout(() => {
-                                                                element.style.animation = '';
-                                                            }, duration);
-                                                        }
-                                                    };
-                                                    
-                                                    // Simple state management
-                                                    window.state = {};
-                                                    window.setState = function(key, value) {
-                                                        window.state[key] = value;
-                                                        // Trigger custom event for state change
-                                                        const event = new CustomEvent('statechange', {
-                                                            detail: { key, value }
-                                                        });
-                                                        document.dispatchEvent(event);
-                                                    };
-                                                    
-                                                    window.getState = function(key) {
-                                                        return window.state[key];
-                                                    };
-                                                    
-                                                    // Enhanced event handling
-                                                    window.on = function(selector, event, handler) {
-                                                        const elements = document.querySelectorAll(selector);
-                                                        elements.forEach(el => {
-                                                            el.addEventListener(event, handler);
-                                                        });
-                                                    };
-                                                    
-                                                    // AJAX utilities (fetch wrapper)
-                                                    window.request = function(url, options = {}) {
-                                                        return fetch(url, {
-                                                            headers: {
-                                                                'Content-Type': 'application/json',
-                                                                ...options.headers
-                                                            },
-                                                            ...options
-                                                        }).then(response => {
-                                                            if (!response.ok) {
-                                                                throw new Error('Network response was not ok');
-                                                            }
-                                                            return response.json();
-                                                        });
-                                                    };
-                                                    
-                                                    // Storage utilities (localStorage wrapper)
-                                                    window.store = {
-                                                        set: function(key, value) {
-                                                            try {
-                                                                localStorage.setItem(key, JSON.stringify(value));
-                                                            } catch (e) {
-                                                                console.warn('LocalStorage not available');
-                                                            }
-                                                        },
-                                                        get: function(key) {
-                                                            try {
-                                                                const item = localStorage.getItem(key);
-                                                                return item ? JSON.parse(item) : null;
-                                                            } catch (e) {
-                                                                console.warn('LocalStorage not available');
-                                                                return null;
-                                                            }
-                                                        },
-                                                        remove: function(key) {
-                                                            try {
-                                                                localStorage.removeItem(key);
-                                                            } catch (e) {
-                                                                console.warn('LocalStorage not available');
-                                                            }
-                                                        }
-                                                    };
-
-                                                    // Prevent form submission from causing page refresh
+                                                    // Prevent form submission from page reload
                                                     document.addEventListener('submit', function(e) {
                                                         e.preventDefault();
-                                                        
-                                                        // Allow custom form handling
-                                                        const form = e.target;
-                                                        const formData = new FormData(form);
-                                                        const formObject = {};
-                                                        formData.forEach((value, key) => {
-                                                            formObject[key] = value;
-                                                        });
-                                                        
-                                                        // Trigger custom submit event with form data
-                                                        const customEvent = new CustomEvent('formsubmit', {
-                                                            detail: { form, data: formObject }
-                                                        });
-                                                        document.dispatchEvent(customEvent);
-                                                        
-                                                        // Delay height adjustment to allow content changes to recalculate (disabled for pinned panels)
-                                                        if (!${isInPinnedPanel}) {
-                                                            setTimeout(function() {
-                                                                renderMath(); // Re-render math after content change
-                                                                const event = new Event('contentChanged');
-                                                                document.dispatchEvent(event);
-                                                            }, 100);
-                                                        }
                                                         return false;
                                                     });
                                                     
-                                                    // Prevent link navigation but allow custom handling
+                                                    // Prevent link navigation
                                                     document.addEventListener('click', function(e) {
                                                         if (e.target.tagName === 'A' && e.target.href) {
                                                             e.preventDefault();
-                                                            
-                                                            // Trigger custom link click event
-                                                            const customEvent = new CustomEvent('linkclick', {
-                                                                detail: { 
-                                                                    href: e.target.href, 
-                                                                    text: e.target.textContent,
-                                                                    target: e.target 
-                                                                }
-                                                            });
-                                                            document.dispatchEvent(customEvent);
                                                             return false;
                                                         }
-                                                        
-                                                        // Button clicks may change content, delay height adjustment
-                                                        if (e.target.tagName === 'BUTTON' && !${isInPinnedPanel}) {
-                                                            // Only auto-adjust height for chatbot messages, not pinned panels
-                                                            setTimeout(function() {
-                                                                renderMath(); // Re-render math after button click
-                                                                const event = new Event('contentChanged');
-                                                                document.dispatchEvent(event);
-                                                            }, 200);
-                                                        }
                                                     });
-                                                    
-                                                    // Listen for DOM changes and auto-adjust height
-                                                    const observer = new MutationObserver(function(mutations) {
-                                                        let shouldResize = false;
-                                                        mutations.forEach(function(mutation) {
-                                                            if (mutation.type === 'childList' || 
-                                                                (mutation.type === 'attributes' && 
-                                                                 ['style', 'class'].includes(mutation.attributeName))) {
-                                                                shouldResize = true;
-                                                            }
-                                                        });
-                                                        if (shouldResize && !${isInPinnedPanel}) {
-                                                            // Only auto-adjust height for chatbot messages to preserve dynamic behavior
-                                                            setTimeout(function() {
-                                                                renderMath(); // Re-render math after DOM changes
-                                                                const event = new Event('contentChanged');
-                                                                document.dispatchEvent(event);
-                                                            }, 100);
-                                                        }
-                                                    });
-                                                    
-                                                    observer.observe(document.body, {
-                                                        childList: true,
-                                                        subtree: true,
-                                                        attributes: true,
-                                                        attributeFilter: ['style', 'class']
-                                                    });
-                                                    
-                                                    // Prevent events that may cause page reload
-                                                    document.addEventListener('beforeunload', function(e) {
-                                                        e.preventDefault();
-                                                        return false;
-                                                    });
-                                                    
-                                                    // Initialize math rendering with multiple retries
-                                                    setTimeout(renderMath, 200);
-                                                    setTimeout(renderMath, 500);
-                                                    setTimeout(renderMath, 1000);
-                                                    
-                                                    // Trigger ready event for user scripts
-                                                    setTimeout(() => {
-                                                        const readyEvent = new Event('iframeready');
-                                                        document.dispatchEvent(readyEvent);
-                                                    }, 100);
                                                 `;
                                                 doc.head.appendChild(script);
                                             }
@@ -872,9 +445,9 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                 doc.addEventListener('contentChanged', adjustHeight);
                                             }
                                             
-                                            // Initial height adjustments - delayed to allow math rendering
-                                            setTimeout(adjustHeight, 500);
-                                            setTimeout(adjustHeight, 1000);
+                                            // Initial height adjustments - delayed to allow rendering
+                                            setTimeout(adjustHeight, 300);
+                                            setTimeout(adjustHeight, 800);
                                             setTimeout(adjustHeight, 1500);
                                             
                                         } catch (error) {
