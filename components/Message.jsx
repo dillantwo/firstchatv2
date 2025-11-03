@@ -129,10 +129,19 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
 
     // Extract HTML code - optimized with useCallback - Updated for better streaming compatibility
     const extractHTMLCode = useCallback((markdownContent) => {
-        // More flexible regex that handles different line endings and spacing
-        const htmlCodeRegex = /```html\s*([\s\S]*?)\s*```/gi;
+        if (!markdownContent) return null;
+        
+        // More robust regex that handles different line endings and edge cases
+        const htmlCodeRegex = /```html\s*\n?([\s\S]*?)\n?```/i;
         const match = htmlCodeRegex.exec(markdownContent);
-        return match && match[1] ? match[1].trim() : null;
+        
+        if (match && match[1]) {
+            // Clean up the extracted HTML
+            const htmlContent = match[1].trim();
+            // Only return if there's actual content
+            return htmlContent.length > 0 ? htmlContent : null;
+        }
+        return null;
     }, []);
 
     // Optimize HTML code extraction with useMemo
@@ -284,7 +293,7 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                 <iframe
                                     ref={iframeRef}
                                     key={`iframe-${role}-${content?.slice(0, 50)}`}
-                                    srcDoc={processMathContent(htmlCode)}
+                                    srcDoc={htmlCode}
                                     className="w-full border-0 rounded"
                                     title={t("HTML Render Preview")}
                                     sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-modals allow-storage-access-by-user-activation"
@@ -308,115 +317,31 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                             // Dynamic height adjustment function
                                             const adjustHeight = () => {
                                                 try {
-                                                    // Get actual content height including all elements
-                                                    const bodyHeight = doc.body.scrollHeight;
-                                                    const documentHeight = doc.documentElement.scrollHeight;
-                                                    const maxHeight = Math.max(bodyHeight, documentHeight);
-                                                    
-                                                    if (isInPinnedPanel) {
-                                                        // For pinned panel, set fixed height and prevent further changes
-                                                        const finalHeight = Math.max(200, maxHeight + 15) + 'px';
-                                                        iframe.style.height = finalHeight;
-                                                        iframe.style.minHeight = finalHeight;
-                                                        iframe.style.maxHeight = finalHeight; // Also set maxHeight to prevent any changes
+                                                    // Wait for styles to be applied
+                                                    requestAnimationFrame(() => {
+                                                        // Get actual content height including all elements
+                                                        const bodyHeight = doc.body ? doc.body.scrollHeight : 0;
+                                                        const documentHeight = doc.documentElement ? doc.documentElement.scrollHeight : 0;
+                                                        const contentHeight = Math.max(bodyHeight, documentHeight);
                                                         
-                                                        // Disable scrolling and fix the container size
-                                                        doc.body.style.overflow = 'hidden';
-                                                        doc.documentElement.style.overflow = 'hidden';
-                                                        doc.body.style.height = finalHeight;
-                                                        doc.documentElement.style.height = finalHeight;
-                                                    } else {
-                                                        // For regular messages (chatbot), add 15px buffer for better spacing
-                                                        const finalHeight = Math.max(200, maxHeight + 15) + 'px';
-                                                        iframe.style.height = finalHeight;
-                                                        iframe.style.minHeight = finalHeight;
-                                                        
-                                                        // Allow appropriate scrolling inside iframe in case content grows dynamically
-                                                        doc.body.style.overflow = 'auto';
-                                                        doc.documentElement.style.overflow = 'auto';
-                                                    }
+                                                        if (contentHeight > 0) {
+                                                            if (isInPinnedPanel) {
+                                                                // For pinned panel, set appropriate height with padding
+                                                                const finalHeight = Math.min(400, Math.max(200, contentHeight + 20));
+                                                                iframe.style.height = finalHeight + 'px';
+                                                                iframe.style.minHeight = finalHeight + 'px';
+                                                            } else {
+                                                                // For regular messages, set height with padding
+                                                                const finalHeight = Math.max(200, contentHeight + 20);
+                                                                iframe.style.height = finalHeight + 'px';
+                                                                iframe.style.minHeight = finalHeight + 'px';
+                                                            }
+                                                        }
+                                                    });
                                                 } catch (innerError) {
-                                                    // Height adjustment failed
+                                                    console.error('Height adjustment failed:', innerError);
                                                 }
                                             };
-                                            
-                                            // Add KaTeX CSS and JavaScript for math rendering
-                                            if (!doc.querySelector('link[data-katex-css]')) {
-                                                const katexCSS = doc.createElement('link');
-                                                katexCSS.setAttribute('data-katex-css', 'true');
-                                                katexCSS.rel = 'stylesheet';
-                                                katexCSS.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css';
-                                                katexCSS.integrity = 'sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn';
-                                                katexCSS.crossOrigin = 'anonymous';
-                                                doc.head.appendChild(katexCSS);
-                                            }
-
-                                            // Load KaTeX main library first
-                                            if (!doc.querySelector('script[data-katex-js]')) {
-                                                const katexJS = doc.createElement('script');
-                                                katexJS.setAttribute('data-katex-js', 'true');
-                                                katexJS.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js';
-                                                katexJS.integrity = 'sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx';
-                                                katexJS.crossOrigin = 'anonymous';
-                                                
-                                                // Load auto-render after main KaTeX library loads
-                                                katexJS.onload = () => {
-                                                    const autoRenderJS = doc.createElement('script');
-                                                    autoRenderJS.setAttribute('data-katex-auto-render', 'true');
-                                                    autoRenderJS.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js';
-                                                    autoRenderJS.integrity = 'sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05';
-                                                    autoRenderJS.crossOrigin = 'anonymous';
-                                                    
-                                                    autoRenderJS.onload = () => {
-                                                        // Initialize KaTeX auto-render after both scripts load
-                                                        setTimeout(() => {
-                                                            if (doc.defaultView && doc.defaultView.renderMathInElement) {
-                                                                doc.defaultView.renderMathInElement(doc.body, {
-                                                                    delimiters: [
-                                                                        {left: '$$', right: '$$', display: true},
-                                                                        {left: '$', right: '$', display: false},
-                                                                        {left: '\\(', right: '\\)', display: false},
-                                                                        {left: '\\[', right: '\\]', display: true}
-                                                                    ],
-                                                                    throwOnError: false
-                                                                });
-                                                                // Re-adjust height after math rendering
-                                                                setTimeout(adjustHeight, 300);
-                                                            }
-                                                        }, 100);
-                                                    };
-                                                    
-                                                    doc.head.appendChild(autoRenderJS);
-                                                };
-                                                
-                                                doc.head.appendChild(katexJS);
-                                            }
-
-                                            // Add minimal styles - only for essential iframe functionality
-                                            if (!doc.querySelector('style[data-iframe-styles]')) {
-                                                const style = doc.createElement('style');
-                                                style.setAttribute('data-iframe-styles', 'true');
-                                                style.textContent = `
-                                                    /* Minimal iframe styles - don't interfere with user content */
-                                                    * { box-sizing: border-box; }
-                                                    html, body { 
-                                                        margin: 0; 
-                                                        padding: 0;
-                                                    }
-                                                    
-                                                    /* Only restrict images to prevent overflow */
-                                                    img {
-                                                        max-width: 100%;
-                                                        height: auto;
-                                                    }
-                                                `;
-                                                // Insert at the beginning so user styles can override
-                                                if (doc.head.firstChild) {
-                                                    doc.head.insertBefore(style, doc.head.firstChild);
-                                                } else {
-                                                    doc.head.appendChild(style);
-                                                }
-                                            }
                                             
                                             // Minimal JavaScript - only prevent page navigation
                                             if (!doc.querySelector('script[data-event-handler]')) {
@@ -440,17 +365,10 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                 doc.head.appendChild(script);
                                             }
                                             
-                                            // Listen for content change events and re-adjust height (only for chatbot messages)
-                                            if (!isInPinnedPanel) {
-                                                doc.addEventListener('contentChanged', adjustHeight);
-                                            }
-                                            
                                             // Initial height adjustments - delayed to allow rendering
+                                            setTimeout(adjustHeight, 100);
                                             setTimeout(adjustHeight, 300);
-                                            setTimeout(adjustHeight, 800);
-                                            setTimeout(adjustHeight, 1500);
-                                            
-                                        } catch (error) {
+                                            setTimeout(adjustHeight, 800);                                        } catch (error) {
                                             // Set compact default height when cross-origin restrictions apply
                                             e.target.style.height = '300px';
                                             e.target.style.minHeight = '300px';
