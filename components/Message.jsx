@@ -327,12 +327,12 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                         if (contentHeight > 0) {
                                                             if (isInPinnedPanel) {
                                                                 // For pinned panel, set appropriate height with padding
-                                                                const finalHeight = Math.min(400, Math.max(200, contentHeight + 20));
+                                                                const finalHeight = Math.max(200, Math.max(200, contentHeight + 10));
                                                                 iframe.style.height = finalHeight + 'px';
                                                                 iframe.style.minHeight = finalHeight + 'px';
                                                             } else {
                                                                 // For regular messages, set height with padding
-                                                                const finalHeight = Math.max(200, contentHeight + 20);
+                                                                const finalHeight = Math.max(200, contentHeight + 10);
                                                                 iframe.style.height = finalHeight + 'px';
                                                                 iframe.style.minHeight = finalHeight + 'px';
                                                             }
