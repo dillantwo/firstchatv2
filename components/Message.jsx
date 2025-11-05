@@ -314,6 +314,44 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                             const iframe = e.target;
                                             const doc = iframe.contentDocument || iframe.contentWindow.document;
                                             
+                                            // Fix common CSS issues in inline styles and style tags
+                                            const fixCSSGradients = () => {
+                                                try {
+                                                    // Fix inline styles
+                                                    const elementsWithStyle = doc.querySelectorAll('[style*="gradient"]');
+                                                    elementsWithStyle.forEach(el => {
+                                                        const style = el.getAttribute('style');
+                                                        if (style) {
+                                                            // Fix patterns like: #a0eaff0% -> #a0eaff 0%
+                                                            // Fix patterns like: #2d8cf0100% -> #2d8cf0 100%
+                                                            const fixedStyle = style
+                                                                .replace(/(#[0-9a-fA-F]{6})(\d+%)/g, '$1 $2')
+                                                                .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2');
+                                                            if (fixedStyle !== style) {
+                                                                el.setAttribute('style', fixedStyle);
+                                                            }
+                                                        }
+                                                    });
+                                                    
+                                                    // Fix style tags
+                                                    const styleTags = doc.querySelectorAll('style');
+                                                    styleTags.forEach(styleTag => {
+                                                        const originalCSS = styleTag.textContent;
+                                                        const fixedCSS = originalCSS
+                                                            .replace(/(#[0-9a-fA-F]{6})(\d+%)/g, '$1 $2')
+                                                            .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2');
+                                                        if (fixedCSS !== originalCSS) {
+                                                            styleTag.textContent = fixedCSS;
+                                                        }
+                                                    });
+                                                } catch (error) {
+                                                    console.error('CSS gradient fix failed:', error);
+                                                }
+                                            };
+                                            
+                                            // Apply CSS fixes immediately
+                                            fixCSSGradients();
+                                            
                                             // Dynamic height adjustment function
                                             const adjustHeight = () => {
                                                 try {
