@@ -317,18 +317,24 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                             // Fix common CSS issues in inline styles and style tags
                                             const fixCSSGradients = () => {
                                                 try {
-                                                    // Fix inline styles with gradients
-                                                    const elementsWithStyle = doc.querySelectorAll('[style*="gradient"]');
+                                                    // Fix inline styles - check all elements with style attribute
+                                                    const elementsWithStyle = doc.querySelectorAll('[style]');
                                                     elementsWithStyle.forEach(el => {
                                                         const style = el.getAttribute('style');
                                                         if (style) {
-                                                            // Fix patterns like: #a0eaff0% -> #a0eaff 0%
-                                                            // Fix patterns like: #2d8cf0100% -> #2d8cf0 100%
-                                                            const fixedStyle = style
+                                                            // Apply same fixes as style tags
+                                                            let fixedStyle = style
+                                                                // Fix gradients: #a0eaff0% -> #a0eaff 0%
                                                                 .replace(/(#[0-9a-fA-F]{6})(\d+%)/g, '$1 $2')
                                                                 .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2')
-                                                                // Fix RGB/RGBA patterns: rgb(255,0,0)50% -> rgb(255,0,0) 50%
-                                                                .replace(/(rgba?\([^)]+\))(\d+%)/g, '$1 $2');
+                                                                .replace(/(rgba?\([^)]+\))(\d+%)/g, '$1 $2')
+                                                                // Fix multiple values without spaces
+                                                                .replace(/:\s*(\d+(?:px|em|rem|%))(\d+(?:px|em|rem|%))/g, ': $1 $2')
+                                                                // Fix box-shadow
+                                                                .replace(/box-shadow:\s*0(\d+px)(\d+px)/g, 'box-shadow: 0 $1 $2')
+                                                                // Fix other common properties
+                                                                .replace(/(margin|padding):\s*(\d+(?:px|em|rem|%))0(\s|;|}|$)/g, '$1: $2 0$3');
+                                                            
                                                             if (fixedStyle !== style) {
                                                                 el.setAttribute('style', fixedStyle);
                                                             }
@@ -346,11 +352,34 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                             // Fix RGB/RGBA + percentage without space
                                                             .replace(/(rgba?\([^)]+\))(\d+%)/g, '$1 $2')
                                                             // Fix HSL/HSLA + percentage without space
-                                                            .replace(/(hsla?\([^)]+\))(\d+%)/g, '$1 $2');
+                                                            .replace(/(hsla?\([^)]+\))(\d+%)/g, '$1 $2')
+                                                            // Fix box-shadow: 02px12px -> 0 2px 12px (handle multiple variations)
+                                                            .replace(/box-shadow:\s*0(\d+px)(\d+px)/g, 'box-shadow: 0 $1 $2')
+                                                            .replace(/box-shadow:\s*(\d+px)(\d+px)(\d+px)/g, 'box-shadow: $1 $2 $3')
+                                                            // Fix gap: 10px8px -> 10px 8px
+                                                            .replace(/gap:\s*(\d+(?:px|em|rem|%))(\d+(?:px|em|rem|%))/g, 'gap: $1 $2')
+                                                            // Fix margin/padding: 24px0 -> 24px 0 (handles both 2 and 4 values)
+                                                            .replace(/(margin|padding):\s*(\d+(?:px|em|rem|%))0(\s|;|})/g, '$1: $2 0$3')
+                                                            .replace(/(margin|padding):\s*(\d+(?:px|em|rem|%))(\d+(?:px|em|rem|%))(\d+(?:px|em|rem|%))(\d+(?:px|em|rem|%))/g, '$1: $2 $3 $4 $5')
+                                                            .replace(/(margin|padding):\s*(\d+(?:px|em|rem|%))(\d+(?:px|em|rem|%))/g, '$1: $2 $3')
+                                                            // Fix border-radius without spaces: 16px16px16px16px -> 16px 16px 16px 16px
+                                                            .replace(/border-radius:\s*(\d+(?:px|%))(\d+(?:px|%))(\d+(?:px|%))(\d+(?:px|%))(?:\s*\/\s*(\d+(?:px|%))(\d+(?:px|%))(\d+(?:px|%))(\d+(?:px|%)))?/g, 
+                                                                (match, v1, v2, v3, v4, v5, v6, v7, v8) => {
+                                                                    if (v5) return `border-radius: ${v1} ${v2} ${v3} ${v4} / ${v5} ${v6} ${v7} ${v8}`;
+                                                                    return `border-radius: ${v1} ${v2} ${v3} ${v4}`;
+                                                                })
+                                                            // Fix animation: float2s -> float 2s
+                                                            .replace(/animation:\s*(\w+)(\d+s)/g, 'animation: $1 $2')
+                                                            // Fix width/height combos: width:32px;height:44px -> width: 32px; height: 44px
+                                                            .replace(/width:\s*(\d+(?:px|%));?\s*height:\s*(\d+(?:px|%))/g, 'width: $1; height: $2')
+                                                            // Fix left/bottom combos: left:50%;bottom:-10px
+                                                            .replace(/(left|right|top|bottom):\s*(\d+(?:px|%|em));?\s*(left|right|top|bottom):\s*(-?\d+(?:px|%|em))/g, '$1: $2; $3: $4')
+                                                            // General fix: property:valuevalue -> property: value value (for any remaining cases)
+                                                            .replace(/:\s*(\d+(?:px|em|rem|%))(\d+(?:px|em|rem|%))/g, ': $1 $2');
                                                         
                                                         if (fixedCSS !== originalCSS) {
                                                             styleTag.textContent = fixedCSS;
-                                                            console.log('CSS fixed:', fixedCSS);
+                                                            console.log('🎨 CSS auto-fixed - characters changed:', originalCSS.length, '→', fixedCSS.length);
                                                         }
                                                     });
                                                     
