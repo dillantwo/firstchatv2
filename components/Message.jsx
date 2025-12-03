@@ -298,10 +298,10 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                     title={t("HTML Render Preview")}
                                     sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-modals allow-storage-access-by-user-activation"
                                     style={{ 
-                                        height: isInPinnedPanel ? '200px' : '350px', // Initial height for pinned panel, will be set to actual content height by adjustHeight
-                                        minHeight: isInPinnedPanel ? '200px' : '150px', // Initial minHeight for pinned panel, will be set to actual content height by adjustHeight
-                                        maxHeight: isInPinnedPanel ? 'none' : '350px', // No max height limit for pinned panel
-                                        overflow: 'hidden', // Hide overflow to prevent expansion
+                                        height: isInPinnedPanel ? '200px' : '400px', // Initial height for pinned panel, will be set to actual content height by adjustHeight
+                                        minHeight: isInPinnedPanel ? '200px' : '200px', // Initial minHeight for pinned panel, will be set to actual content height by adjustHeight
+                                        maxHeight: isInPinnedPanel ? 'none' : 'none', // Remove max height limit to allow full content display
+                                        overflow: 'auto', // Allow scrolling if content is too large
                                         border: 'none',
                                         display: 'block',
                                         width: '100%',
@@ -344,6 +344,21 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                             styleTag.textContent = fixedCSS;
                                                         }
                                                     });
+                                                    
+                                                    // Ensure SVG elements are properly sized
+                                                    const svgs = doc.querySelectorAll('svg');
+                                                    svgs.forEach(svg => {
+                                                        // Set preserveAspectRatio if not set
+                                                        if (!svg.hasAttribute('preserveAspectRatio')) {
+                                                            svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                                                        }
+                                                        // Ensure viewBox is set for proper scaling
+                                                        if (!svg.hasAttribute('viewBox') && svg.hasAttribute('width') && svg.hasAttribute('height')) {
+                                                            const width = svg.getAttribute('width');
+                                                            const height = svg.getAttribute('height');
+                                                            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+                                                        }
+                                                    });
                                                 } catch (error) {
                                                     console.error('CSS gradient fix failed:', error);
                                                 }
@@ -360,17 +375,27 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                         // Get actual content height including all elements
                                                         const bodyHeight = doc.body ? doc.body.scrollHeight : 0;
                                                         const documentHeight = doc.documentElement ? doc.documentElement.scrollHeight : 0;
-                                                        const contentHeight = Math.max(bodyHeight, documentHeight);
+                                                        
+                                                        // Check for SVG elements and their bounding boxes
+                                                        const svgs = doc.querySelectorAll('svg');
+                                                        let maxSvgHeight = 0;
+                                                        svgs.forEach(svg => {
+                                                            const bbox = svg.getBoundingClientRect();
+                                                            const svgBottom = bbox.bottom + (svg.offsetTop || 0);
+                                                            maxSvgHeight = Math.max(maxSvgHeight, svgBottom);
+                                                        });
+                                                        
+                                                        const contentHeight = Math.max(bodyHeight, documentHeight, maxSvgHeight);
                                                         
                                                         if (contentHeight > 0) {
                                                             if (isInPinnedPanel) {
                                                                 // For pinned panel, set appropriate height with padding
-                                                                const finalHeight = Math.max(200, Math.max(200, contentHeight + 10));
+                                                                const finalHeight = Math.max(200, contentHeight + 20);
                                                                 iframe.style.height = finalHeight + 'px';
                                                                 iframe.style.minHeight = finalHeight + 'px';
                                                             } else {
                                                                 // For regular messages, set height with padding
-                                                                const finalHeight = Math.max(200, contentHeight + 10);
+                                                                const finalHeight = Math.max(200, contentHeight + 20);
                                                                 iframe.style.height = finalHeight + 'px';
                                                                 iframe.style.minHeight = finalHeight + 'px';
                                                             }
@@ -406,7 +431,10 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                             // Initial height adjustments - delayed to allow rendering
                                             setTimeout(adjustHeight, 100);
                                             setTimeout(adjustHeight, 300);
-                                            setTimeout(adjustHeight, 800);                                        } catch (error) {
+                                            setTimeout(adjustHeight, 600);
+                                            setTimeout(adjustHeight, 1000);
+                                            setTimeout(adjustHeight, 1500);
+                                        } catch (error) {
                                             // Set compact default height when cross-origin restrictions apply
                                             e.target.style.height = '300px';
                                             e.target.style.minHeight = '300px';
