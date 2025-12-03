@@ -296,7 +296,7 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                     srcDoc={htmlCode}
                                     className="w-full border-0 rounded"
                                     title={t("HTML Render Preview")}
-                                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-modals allow-storage-access-by-user-activation"
+                                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-modals allow-storage-access-by-user-activation allow-top-navigation-by-user-activation allow-presentation"
                                     style={{ 
                                         height: isInPinnedPanel ? '200px' : '400px', // Initial height for pinned panel, will be set to actual content height by adjustHeight
                                         minHeight: isInPinnedPanel ? '200px' : '200px', // Initial minHeight for pinned panel, will be set to actual content height by adjustHeight
@@ -317,7 +317,7 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                             // Fix common CSS issues in inline styles and style tags
                                             const fixCSSGradients = () => {
                                                 try {
-                                                    // Fix inline styles
+                                                    // Fix inline styles with gradients
                                                     const elementsWithStyle = doc.querySelectorAll('[style*="gradient"]');
                                                     elementsWithStyle.forEach(el => {
                                                         const style = el.getAttribute('style');
@@ -326,22 +326,31 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                             // Fix patterns like: #2d8cf0100% -> #2d8cf0 100%
                                                             const fixedStyle = style
                                                                 .replace(/(#[0-9a-fA-F]{6})(\d+%)/g, '$1 $2')
-                                                                .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2');
+                                                                .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2')
+                                                                // Fix RGB/RGBA patterns: rgb(255,0,0)50% -> rgb(255,0,0) 50%
+                                                                .replace(/(rgba?\([^)]+\))(\d+%)/g, '$1 $2');
                                                             if (fixedStyle !== style) {
                                                                 el.setAttribute('style', fixedStyle);
                                                             }
                                                         }
                                                     });
                                                     
-                                                    // Fix style tags
+                                                    // Fix style tags - more comprehensive
                                                     const styleTags = doc.querySelectorAll('style');
                                                     styleTags.forEach(styleTag => {
                                                         const originalCSS = styleTag.textContent;
-                                                        const fixedCSS = originalCSS
+                                                        let fixedCSS = originalCSS
+                                                            // Fix hex color + percentage without space
                                                             .replace(/(#[0-9a-fA-F]{6})(\d+%)/g, '$1 $2')
-                                                            .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2');
+                                                            .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2')
+                                                            // Fix RGB/RGBA + percentage without space
+                                                            .replace(/(rgba?\([^)]+\))(\d+%)/g, '$1 $2')
+                                                            // Fix HSL/HSLA + percentage without space
+                                                            .replace(/(hsla?\([^)]+\))(\d+%)/g, '$1 $2');
+                                                        
                                                         if (fixedCSS !== originalCSS) {
                                                             styleTag.textContent = fixedCSS;
+                                                            console.log('CSS fixed:', fixedCSS);
                                                         }
                                                     });
                                                     
@@ -357,6 +366,20 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                             const width = svg.getAttribute('width');
                                                             const height = svg.getAttribute('height');
                                                             svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+                                                        }
+                                                    });
+                                                    
+                                                    // Ensure embedded iframes (like Canva) have proper styles
+                                                    const embeddedIframes = doc.querySelectorAll('iframe');
+                                                    embeddedIframes.forEach(embeddedIframe => {
+                                                        if (!embeddedIframe.style.display) {
+                                                            embeddedIframe.style.display = 'block';
+                                                        }
+                                                        if (!embeddedIframe.style.width && !embeddedIframe.hasAttribute('width')) {
+                                                            embeddedIframe.style.width = '100%';
+                                                        }
+                                                        if (!embeddedIframe.hasAttribute('loading')) {
+                                                            embeddedIframe.setAttribute('loading', 'lazy');
                                                         }
                                                     });
                                                 } catch (error) {
@@ -385,7 +408,18 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                             maxSvgHeight = Math.max(maxSvgHeight, svgBottom);
                                                         });
                                                         
-                                                        const contentHeight = Math.max(bodyHeight, documentHeight, maxSvgHeight);
+                                                        // Check for embedded iframes (like Canva) and their heights
+                                                        const embeddedIframes = doc.querySelectorAll('iframe');
+                                                        let maxIframeHeight = 0;
+                                                        embeddedIframes.forEach(embeddedIframe => {
+                                                            const iframeHeight = embeddedIframe.offsetHeight || 
+                                                                               parseInt(embeddedIframe.style.height) || 
+                                                                               parseInt(embeddedIframe.getAttribute('height')) || 0;
+                                                            const iframeBottom = iframeHeight + (embeddedIframe.offsetTop || 0);
+                                                            maxIframeHeight = Math.max(maxIframeHeight, iframeBottom);
+                                                        });
+                                                        
+                                                        const contentHeight = Math.max(bodyHeight, documentHeight, maxSvgHeight, maxIframeHeight);
                                                         
                                                         if (contentHeight > 0) {
                                                             if (isInPinnedPanel) {
