@@ -314,10 +314,10 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                         src={iframeSrc}
                                         className="w-full border-0 rounded"
                                         title={t("HTML Render Preview")}
-                                        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-modals allow-storage-access-by-user-activation"
+                                        sandbox="allow-scripts allow-forms allow-popups"
                                     style={{ 
-                                        height: isInPinnedPanel ? '200px' : '400px', // Initial height for pinned panel, will be set to actual content height by adjustHeight
-                                        minHeight: isInPinnedPanel ? '200px' : '200px', // Initial minHeight for pinned panel, will be set to actual content height by adjustHeight
+                                        height: isInPinnedPanel ? '300px' : '600px', // Initial height for pinned panel, will be set to actual content height by adjustHeight
+                                        minHeight: isInPinnedPanel ? '300px' : '300px', // Initial minHeight for pinned panel, will be set to actual content height by adjustHeight
                                         maxHeight: isInPinnedPanel ? 'none' : 'none', // Remove max height limit to allow full content display
                                         overflow: 'auto', // Allow scrolling if content is too large
                                         border: 'none',
