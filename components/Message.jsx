@@ -14,7 +14,6 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
 
     const [previewModal, setPreviewModal] = useState({ isOpen: false, image: null });
     const [htmlViewMode, setHtmlViewMode] = useState('rendered'); // 'rendered' | 'code'
-    const [iframeSrc, setIframeSrc] = useState(null); // Blob URL for iframe
     const iframeRef = React.useRef(null);
     const { isDark } = useTheme();
     const { t } = useLanguage();
@@ -22,39 +21,6 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
     useEffect(()=>{
         Prism.highlightAll()
     }, [content])
-
-    // Create and manage Blob URL for iframe src
-    useEffect(() => {
-        const htmlCode = extractHTMLCode(content);
-        if (htmlCode) {
-            // Create a Blob from HTML content
-            const blob = new Blob([htmlCode], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            setIframeSrc(url);
-
-            // Cleanup: revoke the Blob URL when component unmounts or content changes
-            return () => {
-                URL.revokeObjectURL(url);
-                setIframeSrc(null);
-            };
-        } else {
-            setIframeSrc(null);
-        }
-    }, [content]);
-
-    // Extract HTML code - optimized with useCallback
-    const extractHTMLCode = useCallback((markdownContent) => {
-        if (!markdownContent) return null;
-        
-        const htmlCodeRegex = /```html\s*\n?([\s\S]*?)\n?```/i;
-        const match = htmlCodeRegex.exec(markdownContent);
-        
-        if (match && match[1]) {
-            const htmlContent = match[1].trim();
-            return htmlContent.length > 0 ? htmlContent : null;
-        }
-        return null;
-    }, []);
 
     // Specialized processing for LaTeX mathematical formula formats and table formatting
     const processMathContent = (text) => {
@@ -160,6 +126,23 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
     const closePreviewModal = () => {
         setPreviewModal({ isOpen: false, image: null });
     };
+
+    // Extract HTML code - optimized with useCallback - Updated for better streaming compatibility
+    const extractHTMLCode = useCallback((markdownContent) => {
+        if (!markdownContent) return null;
+        
+        // More robust regex that handles different line endings and edge cases
+        const htmlCodeRegex = /```html\s*\n?([\s\S]*?)\n?```/i;
+        const match = htmlCodeRegex.exec(markdownContent);
+        
+        if (match && match[1]) {
+            // Clean up the extracted HTML
+            const htmlContent = match[1].trim();
+            // Only return if there's actual content
+            return htmlContent.length > 0 ? htmlContent : null;
+        }
+        return null;
+    }, []);
 
     // Optimize HTML code extraction with useMemo
     const htmlCode = useMemo(() => extractHTMLCode(content), [content, extractHTMLCode]);
@@ -307,17 +290,16 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                         )}
                         <div className={isInPinnedPanel ? '' : 'p-4'}>
                             {htmlViewMode === 'rendered' ? (
-                                iframeSrc ? (
-                                    <iframe
-                                        ref={iframeRef}
-                                        key={`iframe-${iframeSrc}-${Date.now()}`}
-                                        src={iframeSrc}
-                                        className="w-full border-0 rounded"
-                                        title={t("HTML Render Preview")}
-                                        sandbox="allow-scripts allow-forms allow-popups"
+                                <iframe
+                                    ref={iframeRef}
+                                    key={`iframe-${role}-${content?.slice(0, 50)}`}
+                                    srcDoc={htmlCode}
+                                    className="w-full border-0 rounded"
+                                    title={t("HTML Render Preview")}
+                                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-modals allow-storage-access-by-user-activation"
                                     style={{ 
-                                        height: isInPinnedPanel ? '300px' : '600px', // Initial height for pinned panel, will be set to actual content height by adjustHeight
-                                        minHeight: isInPinnedPanel ? '300px' : '300px', // Initial minHeight for pinned panel, will be set to actual content height by adjustHeight
+                                        height: isInPinnedPanel ? '200px' : '400px', // Initial height for pinned panel, will be set to actual content height by adjustHeight
+                                        minHeight: isInPinnedPanel ? '200px' : '200px', // Initial minHeight for pinned panel, will be set to actual content height by adjustHeight
                                         maxHeight: isInPinnedPanel ? 'none' : 'none', // Remove max height limit to allow full content display
                                         overflow: 'auto', // Allow scrolling if content is too large
                                         border: 'none',
@@ -458,12 +440,7 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                             e.target.style.minHeight = '300px';
                                         }
                                     }}
-                                    />
-                                ) : (
-                                    <div className={`p-4 text-center ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                        <p>{t('Loading HTML content...')}</p>
-                                    </div>
-                                )
+                                />
                             ) : (
                                 <div className={`${
                                     isInPinnedPanel ? '' : 'rounded border bg-gray-50'
