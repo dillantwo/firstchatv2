@@ -310,7 +310,7 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                 iframeSrc ? (
                                     <iframe
                                         ref={iframeRef}
-                                        key={`iframe-${role}-${content?.slice(0, 50)}`}
+                                        key={`iframe-${iframeSrc}-${Date.now()}`}
                                         src={iframeSrc}
                                         className="w-full border-0 rounded"
                                         title={t("HTML Render Preview")}
