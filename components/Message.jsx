@@ -312,7 +312,22 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                         // Auto-adjust iframe height to fully fit content and monitor content changes
                                         try {
                                             const iframe = e.target;
-                                            const doc = iframe.contentDocument || iframe.contentWindow.document;
+                                            const iframeWindow = iframe.contentWindow;
+                                            const doc = iframe.contentDocument || iframeWindow.document;
+                                            
+                                            // Trigger any initialization functions that might be waiting
+                                            // This ensures scripts execute even if DOMContentLoaded already fired
+                                            if (iframeWindow && doc.readyState === 'complete') {
+                                                // Manually trigger DOMContentLoaded if the document is already loaded
+                                                // but listeners might have been registered too late
+                                                setTimeout(() => {
+                                                    const event = new Event('DOMContentLoaded', {
+                                                        bubbles: true,
+                                                        cancelable: true
+                                                    });
+                                                    doc.dispatchEvent(event);
+                                                }, 0);
+                                            }
                                             
                                             // Fix common CSS issues in inline styles and style tags
                                             const fixCSSGradients = () => {
@@ -406,7 +421,7 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                 }
                                             };
                                             
-                                            // Minimal JavaScript - only prevent page navigation
+                                            // Only add minimal event prevention script
                                             if (!doc.querySelector('script[data-event-handler]')) {
                                                 const script = doc.createElement('script');
                                                 script.setAttribute('data-event-handler', 'true');
@@ -425,23 +440,8 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                         }
                                                     });
                                                 `;
-                                                doc.head.appendChild(script);
+                                                doc.body.appendChild(script);
                                             }
-                                            
-                                            // Ensure all scripts in the document execute properly
-                                            // This fixes issues with scripts that rely on DOMContentLoaded
-                                            const scripts = doc.querySelectorAll('script:not([data-event-handler])');
-                                            scripts.forEach(oldScript => {
-                                                if (!oldScript.hasAttribute('data-reexecuted')) {
-                                                    const newScript = doc.createElement('script');
-                                                    Array.from(oldScript.attributes).forEach(attr => {
-                                                        newScript.setAttribute(attr.name, attr.value);
-                                                    });
-                                                    newScript.setAttribute('data-reexecuted', 'true');
-                                                    newScript.textContent = oldScript.textContent;
-                                                    oldScript.parentNode.replaceChild(newScript, oldScript);
-                                                }
-                                            });
                                             
                                             // Initial height adjustments - delayed to allow rendering
                                             setTimeout(adjustHeight, 100);
