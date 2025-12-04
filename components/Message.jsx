@@ -428,6 +428,21 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                 doc.head.appendChild(script);
                                             }
                                             
+                                            // Ensure all scripts in the document execute properly
+                                            // This fixes issues with scripts that rely on DOMContentLoaded
+                                            const scripts = doc.querySelectorAll('script:not([data-event-handler])');
+                                            scripts.forEach(oldScript => {
+                                                if (!oldScript.hasAttribute('data-reexecuted')) {
+                                                    const newScript = doc.createElement('script');
+                                                    Array.from(oldScript.attributes).forEach(attr => {
+                                                        newScript.setAttribute(attr.name, attr.value);
+                                                    });
+                                                    newScript.setAttribute('data-reexecuted', 'true');
+                                                    newScript.textContent = oldScript.textContent;
+                                                    oldScript.parentNode.replaceChild(newScript, oldScript);
+                                                }
+                                            });
+                                            
                                             // Initial height adjustments - delayed to allow rendering
                                             setTimeout(adjustHeight, 100);
                                             setTimeout(adjustHeight, 300);
