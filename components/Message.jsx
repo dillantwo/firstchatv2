@@ -348,17 +348,6 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                         }
                                                     });
                                                     
-                                                    // Fix style tags
-                                                    const styleTags = doc.querySelectorAll('style');
-                                                    styleTags.forEach(styleTag => {
-                                                        const originalCSS = styleTag.textContent;
-                                                        const fixedCSS = originalCSS
-                                                            .replace(/(#[0-9a-fA-F]{6})(\d+%)/g, '$1 $2')
-                                                            .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2');
-                                                        if (fixedCSS !== originalCSS) {
-                                                            styleTag.textContent = fixedCSS;
-                                                        }
-                                                    });
                                                     
                                                     // Ensure SVG elements are properly sized
                                                     const svgs = doc.querySelectorAll('svg');
