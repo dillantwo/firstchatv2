@@ -147,6 +147,64 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
     // Optimize HTML code extraction with useMemo
     const htmlCode = useMemo(() => extractHTMLCode(content), [content, extractHTMLCode]);
 
+    // Wrap HTML content with CSS reset to ensure complete style isolation in iframe
+    const wrappedHtmlCode = useMemo(() => {
+        if (!htmlCode) return null;
+        
+        // Check if HTML already has complete structure (has <html> or <!DOCTYPE>)
+        const hasFullStructure = /<html|<!doctype/i.test(htmlCode);
+        
+        if (hasFullStructure) {
+            // Inject CSS reset BEFORE other styles to allow original styles to override
+            const cssReset = `
+<style data-css-reset="true">
+/* CSS Reset - placed first so original HTML styles can override */
+/* Reset inherited styles from parent page */
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video, svg, path, circle, g {
+    all: revert;
+}
+</style>`;
+            
+            // Insert CSS reset right after <head> tag but BEFORE any existing styles
+            if (/<head[^>]*>/i.test(htmlCode)) {
+                return htmlCode.replace(/(<head[^>]*>)/i, `$1${cssReset}`);
+            } else if (/<html[^>]*>/i.test(htmlCode)) {
+                return htmlCode.replace(/(<html[^>]*>)/i, `$1<head>${cssReset}</head>`);
+            } else {
+                return cssReset + htmlCode;
+            }
+        } else {
+            // Wrap simple HTML snippets with full structure and CSS reset
+            return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style data-css-reset="true">
+    /* CSS Reset for simple HTML snippets */
+    html, body, div, span, p, svg, path, circle, g {
+        all: revert;
+    }
+    </style>
+</head>
+<body>
+${htmlCode}
+</body>
+</html>`;
+        }
+    }, [htmlCode]);
+
     // Custom components for better table styling
     const markdownComponents = useMemo(() => ({
         table: ({ children }) => (
@@ -193,7 +251,7 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
         ),
         // Prevent p tag nesting issues
         p: ({ children }) => (
-            <div className={`mb-4 last:mb-0 ${isInPinnedPanel ? 'text-white' : ''}`}>
+            <div className={`mb-4 last:mb-0 ${isInPinnedPanel ? (isDark ? 'text-white' : 'text-gray-900') : ''}`}>
                 {children}
             </div>
         ),
@@ -293,7 +351,7 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                 <iframe
                                     ref={iframeRef}
                                     key={`iframe-${role}-${content?.slice(0, 50)}`}
-                                    srcDoc={htmlCode}
+                                    srcDoc={wrappedHtmlCode}
                                     className="w-full border-0 rounded"
                                     title={t("HTML Render Preview")}
                                     sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-modals allow-storage-access-by-user-activation"
@@ -496,7 +554,7 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                 </div>
             );
         }
-    }, [content, htmlCode, htmlViewMode, processedContent, markdownComponents, isInPinnedPanel, isDark]);
+    }, [content, htmlCode, wrappedHtmlCode, htmlViewMode, processedContent, markdownComponents, isInPinnedPanel, isDark]);
 
   return (
     <div className={`flex flex-col items-center w-full ${isInPinnedPanel ? 'max-w-full text-lg' : 'max-w-3xl text-base'}`}>
