@@ -146,74 +146,6 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
 
     // Optimize HTML code extraction with useMemo
     const htmlCode = useMemo(() => extractHTMLCode(content), [content, extractHTMLCode]);
-    
-    // Create blob URL for iframe src to avoid CSP issues with srcDoc
-    const htmlBlobUrl = useMemo(() => {
-        if (!htmlCode) return null;
-        
-        // Fix CSS issues before creating blob
-        const fixHtmlCss = (html) => {
-            // Fix CSS selector specificity issues for dynamically created elements
-            // This ensures class-based styles work correctly on SVG elements created by JavaScript
-            let fixedHtml = html;
-            
-            // Look for style tags and enhance selectors for common SVG styling issues
-            fixedHtml = fixedHtml.replace(/<style>([\s\S]*?)<\/style>/gi, (match, cssContent) => {
-                let fixedCss = cssContent;
-                
-                // Fix any CSS syntax issues with gradients and colors first
-                fixedCss = fixedCss
-                    .replace(/(#[0-9a-fA-F]{6})(\d+%)/g, '$1 $2')
-                    .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2');
-                
-                // Enhance CSS selectors for SVG elements (path, circle, rect, etc.) with classes
-                // This ensures dynamically created SVG elements get their styles applied
-                // Match standalone class selectors (not preceded by element selectors)
-                fixedCss = fixedCss.replace(
-                    /(\s|^|,|\})\.(\w[\w-]*)\s*\{([^}]+)\}/g,
-                    (cssMatch, prefix, className, properties) => {
-                        // Check if properties contain SVG-related styles (fill, stroke)
-                        if (/\b(fill|stroke|stroke-width)\s*:/i.test(properties)) {
-                            // Add SVG element selectors for better specificity
-                            return `${prefix}path.${className}, circle.${className}, rect.${className}, .${className} {${properties}}`;
-                        }
-                        return cssMatch;
-                    }
-                );
-                
-                return `<style>${fixedCss}</style>`;
-            });
-            
-            return fixedHtml;
-        };
-        
-        // Apply CSS fixes
-        const fixedHtmlCode = fixHtmlCss(htmlCode);
-        
-        // Create a complete HTML document
-        const fullHtml = fixedHtmlCode.includes('<!DOCTYPE') ? fixedHtmlCode : `<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body>
-${fixedHtmlCode}
-</body>
-</html>`;
-        
-        const blob = new Blob([fullHtml], { type: 'text/html' });
-        return URL.createObjectURL(blob);
-    }, [htmlCode]);
-    
-    // Cleanup blob URL on unmount or when htmlCode changes
-    useEffect(() => {
-        return () => {
-            if (htmlBlobUrl) {
-                URL.revokeObjectURL(htmlBlobUrl);
-            }
-        };
-    }, [htmlBlobUrl]);
 
     // Custom components for better table styling
     const markdownComponents = useMemo(() => ({
@@ -361,9 +293,10 @@ ${fixedHtmlCode}
                                 <iframe
                                     ref={iframeRef}
                                     key={`iframe-${role}-${content?.slice(0, 50)}`}
-                                    src={htmlBlobUrl}
+                                    srcDoc={htmlCode}
                                     className="w-full border-0 rounded"
                                     title={t("HTML Render Preview")}
+                                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-modals allow-storage-access-by-user-activation"
                                     style={{ 
                                         height: isInPinnedPanel ? '200px' : '400px', // Initial height for pinned panel, will be set to actual content height by adjustHeight
                                         minHeight: isInPinnedPanel ? '200px' : '200px', // Initial minHeight for pinned panel, will be set to actual content height by adjustHeight
@@ -397,40 +330,31 @@ ${fixedHtmlCode}
                                             }
                                             
                                             // Fix common CSS issues in inline styles and style tags
-                                            const fixCSSIssues = () => {
+                                            const fixCSSGradients = () => {
                                                 try {
-                                                    // Fix inline styles - clean up all style attributes
-                                                    const elementsWithStyle = doc.querySelectorAll('[style]');
+                                                    // Fix inline styles
+                                                    const elementsWithStyle = doc.querySelectorAll('[style*="gradient"]');
                                                     elementsWithStyle.forEach(el => {
                                                         const style = el.getAttribute('style');
                                                         if (style) {
-                                                            // Fix gradient patterns: #a0eaff0% -> #a0eaff 0%
-                                                            let fixedStyle = style
+                                                            // Fix patterns like: #a0eaff0% -> #a0eaff 0%
+                                                            // Fix patterns like: #2d8cf0100% -> #2d8cf0 100%
+                                                            const fixedStyle = style
                                                                 .replace(/(#[0-9a-fA-F]{6})(\d+%)/g, '$1 $2')
-                                                                .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2')
-                                                                // Fix missing spaces in rgba/rgb
-                                                                .replace(/rgba?\((\d+),(\d+),(\d+),?([0-9.]*)\)/g, (match, r, g, b, a) => {
-                                                                    return a ? `rgba(${r}, ${g}, ${b}, ${a})` : `rgb(${r}, ${g}, ${b})`;
-                                                                })
-                                                                // Normalize whitespace
-                                                                .replace(/\s+/g, ' ')
-                                                                .trim();
-                                                            
+                                                                .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2');
                                                             if (fixedStyle !== style) {
                                                                 el.setAttribute('style', fixedStyle);
                                                             }
                                                         }
                                                     });
                                                     
-                                                    // Fix style tags - clean up CSS syntax (minimal changes only)
+                                                    // Fix style tags
                                                     const styleTags = doc.querySelectorAll('style');
                                                     styleTags.forEach(styleTag => {
                                                         const originalCSS = styleTag.textContent;
-                                                        let fixedCSS = originalCSS
-                                                            // Only fix gradient patterns where hex color is directly followed by percentage
+                                                        const fixedCSS = originalCSS
                                                             .replace(/(#[0-9a-fA-F]{6})(\d+%)/g, '$1 $2')
                                                             .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2');
-                                                        
                                                         if (fixedCSS !== originalCSS) {
                                                             styleTag.textContent = fixedCSS;
                                                         }
@@ -439,9 +363,11 @@ ${fixedHtmlCode}
                                                     // Ensure SVG elements are properly sized
                                                     const svgs = doc.querySelectorAll('svg');
                                                     svgs.forEach(svg => {
+                                                        // Set preserveAspectRatio if not set
                                                         if (!svg.hasAttribute('preserveAspectRatio')) {
                                                             svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
                                                         }
+                                                        // Ensure viewBox is set for proper scaling
                                                         if (!svg.hasAttribute('viewBox') && svg.hasAttribute('width') && svg.hasAttribute('height')) {
                                                             const width = svg.getAttribute('width');
                                                             const height = svg.getAttribute('height');
@@ -449,12 +375,12 @@ ${fixedHtmlCode}
                                                         }
                                                     });
                                                 } catch (error) {
-                                                    console.error('CSS fix failed:', error);
+                                                    console.error('CSS gradient fix failed:', error);
                                                 }
                                             };
                                             
                                             // Apply CSS fixes immediately
-                                            fixCSSIssues();
+                                            fixCSSGradients();
                                             
                                             // Dynamic height adjustment function
                                             const adjustHeight = () => {
@@ -570,7 +496,7 @@ ${fixedHtmlCode}
                 </div>
             );
         }
-    }, [content, htmlCode, htmlViewMode, htmlBlobUrl, processedContent, markdownComponents, isInPinnedPanel, isDark]);
+    }, [content, htmlCode, htmlViewMode, processedContent, markdownComponents, isInPinnedPanel, isDark]);
 
   return (
     <div className={`flex flex-col items-center w-full ${isInPinnedPanel ? 'max-w-full text-lg' : 'max-w-3xl text-base'}`}>
