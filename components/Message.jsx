@@ -151,15 +151,54 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
     const htmlBlobUrl = useMemo(() => {
         if (!htmlCode) return null;
         
+        // Fix CSS issues before creating blob
+        const fixHtmlCss = (html) => {
+            // Fix CSS selector specificity issues for dynamically created elements
+            // This ensures class-based styles work correctly on SVG elements created by JavaScript
+            let fixedHtml = html;
+            
+            // Look for style tags and enhance selectors for common SVG styling issues
+            fixedHtml = fixedHtml.replace(/<style>([\s\S]*?)<\/style>/gi, (match, cssContent) => {
+                let fixedCss = cssContent;
+                
+                // Fix any CSS syntax issues with gradients and colors first
+                fixedCss = fixedCss
+                    .replace(/(#[0-9a-fA-F]{6})(\d+%)/g, '$1 $2')
+                    .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2');
+                
+                // Enhance CSS selectors for SVG elements (path, circle, rect, etc.) with classes
+                // This ensures dynamically created SVG elements get their styles applied
+                // Match standalone class selectors (not preceded by element selectors)
+                fixedCss = fixedCss.replace(
+                    /(\s|^|,|\})\.(\w[\w-]*)\s*\{([^}]+)\}/g,
+                    (cssMatch, prefix, className, properties) => {
+                        // Check if properties contain SVG-related styles (fill, stroke)
+                        if (/\b(fill|stroke|stroke-width)\s*:/i.test(properties)) {
+                            // Add SVG element selectors for better specificity
+                            return `${prefix}path.${className}, circle.${className}, rect.${className}, .${className} {${properties}}`;
+                        }
+                        return cssMatch;
+                    }
+                );
+                
+                return `<style>${fixedCss}</style>`;
+            });
+            
+            return fixedHtml;
+        };
+        
+        // Apply CSS fixes
+        const fixedHtmlCode = fixHtmlCss(htmlCode);
+        
         // Create a complete HTML document
-        const fullHtml = htmlCode.includes('<!DOCTYPE') ? htmlCode : `<!DOCTYPE html>
+        const fullHtml = fixedHtmlCode.includes('<!DOCTYPE') ? fixedHtmlCode : `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-${htmlCode}
+${fixedHtmlCode}
 </body>
 </html>`;
         
@@ -383,27 +422,14 @@ ${htmlCode}
                                                         }
                                                     });
                                                     
-                                                    // Fix style tags - clean up CSS syntax
+                                                    // Fix style tags - clean up CSS syntax (minimal changes only)
                                                     const styleTags = doc.querySelectorAll('style');
                                                     styleTags.forEach(styleTag => {
                                                         const originalCSS = styleTag.textContent;
                                                         let fixedCSS = originalCSS
-                                                            // Fix gradient patterns
+                                                            // Only fix gradient patterns where hex color is directly followed by percentage
                                                             .replace(/(#[0-9a-fA-F]{6})(\d+%)/g, '$1 $2')
-                                                            .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2')
-                                                            // Fix rgba/rgb spacing
-                                                            .replace(/rgba?\((\d+),(\d+),(\d+),?([0-9.]*)\)/g, (match, r, g, b, a) => {
-                                                                return a ? `rgba(${r}, ${g}, ${b}, ${a})` : `rgb(${r}, ${g}, ${b})`;
-                                                            })
-                                                            // Fix box-shadow syntax
-                                                            .replace(/box-shadow:\s*([^;]+);/g, (match, value) => {
-                                                                const cleaned = value.trim().replace(/\s+/g, ' ');
-                                                                return `box-shadow: ${cleaned};`;
-                                                            })
-                                                            // Ensure proper spacing around values
-                                                            .replace(/:\s*([^;{]+)/g, (match, value) => {
-                                                                return `: ${value.trim()}`;
-                                                            });
+                                                            .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2');
                                                         
                                                         if (fixedCSS !== originalCSS) {
                                                             styleTag.textContent = fixedCSS;
@@ -544,7 +570,7 @@ ${htmlCode}
                 </div>
             );
         }
-    }, [content, htmlCode, htmlViewMode, processedContent, markdownComponents, isInPinnedPanel, isDark]);
+    }, [content, htmlCode, htmlViewMode, htmlBlobUrl, processedContent, markdownComponents, isInPinnedPanel, isDark]);
 
   return (
     <div className={`flex flex-col items-center w-full ${isInPinnedPanel ? 'max-w-full text-lg' : 'max-w-3xl text-base'}`}>
