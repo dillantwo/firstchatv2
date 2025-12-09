@@ -330,31 +330,53 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                             }
                                             
                                             // Fix common CSS issues in inline styles and style tags
-                                            const fixCSSGradients = () => {
+                                            const fixCSSIssues = () => {
                                                 try {
-                                                    // Fix inline styles
-                                                    const elementsWithStyle = doc.querySelectorAll('[style*="gradient"]');
+                                                    // Fix inline styles - clean up all style attributes
+                                                    const elementsWithStyle = doc.querySelectorAll('[style]');
                                                     elementsWithStyle.forEach(el => {
                                                         const style = el.getAttribute('style');
                                                         if (style) {
-                                                            // Fix patterns like: #a0eaff0% -> #a0eaff 0%
-                                                            // Fix patterns like: #2d8cf0100% -> #2d8cf0 100%
-                                                            const fixedStyle = style
+                                                            // Fix gradient patterns: #a0eaff0% -> #a0eaff 0%
+                                                            let fixedStyle = style
                                                                 .replace(/(#[0-9a-fA-F]{6})(\d+%)/g, '$1 $2')
-                                                                .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2');
+                                                                .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2')
+                                                                // Fix missing spaces in rgba/rgb
+                                                                .replace(/rgba?\((\d+),(\d+),(\d+),?([0-9.]*)\)/g, (match, r, g, b, a) => {
+                                                                    return a ? `rgba(${r}, ${g}, ${b}, ${a})` : `rgb(${r}, ${g}, ${b})`;
+                                                                })
+                                                                // Normalize whitespace
+                                                                .replace(/\s+/g, ' ')
+                                                                .trim();
+                                                            
                                                             if (fixedStyle !== style) {
                                                                 el.setAttribute('style', fixedStyle);
                                                             }
                                                         }
                                                     });
                                                     
-                                                    // Fix style tags
+                                                    // Fix style tags - clean up CSS syntax
                                                     const styleTags = doc.querySelectorAll('style');
                                                     styleTags.forEach(styleTag => {
                                                         const originalCSS = styleTag.textContent;
-                                                        const fixedCSS = originalCSS
+                                                        let fixedCSS = originalCSS
+                                                            // Fix gradient patterns
                                                             .replace(/(#[0-9a-fA-F]{6})(\d+%)/g, '$1 $2')
-                                                            .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2');
+                                                            .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2')
+                                                            // Fix rgba/rgb spacing
+                                                            .replace(/rgba?\((\d+),(\d+),(\d+),?([0-9.]*)\)/g, (match, r, g, b, a) => {
+                                                                return a ? `rgba(${r}, ${g}, ${b}, ${a})` : `rgb(${r}, ${g}, ${b})`;
+                                                            })
+                                                            // Fix box-shadow syntax
+                                                            .replace(/box-shadow:\s*([^;]+);/g, (match, value) => {
+                                                                const cleaned = value.trim().replace(/\s+/g, ' ');
+                                                                return `box-shadow: ${cleaned};`;
+                                                            })
+                                                            // Ensure proper spacing around values
+                                                            .replace(/:\s*([^;{]+)/g, (match, value) => {
+                                                                return `: ${value.trim()}`;
+                                                            });
+                                                        
                                                         if (fixedCSS !== originalCSS) {
                                                             styleTag.textContent = fixedCSS;
                                                         }
@@ -363,11 +385,9 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                     // Ensure SVG elements are properly sized
                                                     const svgs = doc.querySelectorAll('svg');
                                                     svgs.forEach(svg => {
-                                                        // Set preserveAspectRatio if not set
                                                         if (!svg.hasAttribute('preserveAspectRatio')) {
                                                             svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
                                                         }
-                                                        // Ensure viewBox is set for proper scaling
                                                         if (!svg.hasAttribute('viewBox') && svg.hasAttribute('width') && svg.hasAttribute('height')) {
                                                             const width = svg.getAttribute('width');
                                                             const height = svg.getAttribute('height');
@@ -375,12 +395,12 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                                         }
                                                     });
                                                 } catch (error) {
-                                                    console.error('CSS gradient fix failed:', error);
+                                                    console.error('CSS fix failed:', error);
                                                 }
                                             };
                                             
                                             // Apply CSS fixes immediately
-                                            fixCSSGradients();
+                                            fixCSSIssues();
                                             
                                             // Dynamic height adjustment function
                                             const adjustHeight = () => {
