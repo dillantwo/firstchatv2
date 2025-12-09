@@ -325,7 +325,6 @@ ${htmlCode}
                                     src={htmlBlobUrl}
                                     className="w-full border-0 rounded"
                                     title={t("HTML Render Preview")}
-                                    sandbox="allow-scripts allow-same-origin"
                                     style={{ 
                                         height: isInPinnedPanel ? '200px' : '400px', // Initial height for pinned panel, will be set to actual content height by adjustHeight
                                         minHeight: isInPinnedPanel ? '200px' : '200px', // Initial minHeight for pinned panel, will be set to actual content height by adjustHeight
