@@ -146,6 +146,35 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
 
     // Optimize HTML code extraction with useMemo
     const htmlCode = useMemo(() => extractHTMLCode(content), [content, extractHTMLCode]);
+    
+    // Create blob URL for iframe src to avoid CSP issues with srcDoc
+    const htmlBlobUrl = useMemo(() => {
+        if (!htmlCode) return null;
+        
+        // Create a complete HTML document
+        const fullHtml = htmlCode.includes('<!DOCTYPE') ? htmlCode : `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+${htmlCode}
+</body>
+</html>`;
+        
+        const blob = new Blob([fullHtml], { type: 'text/html' });
+        return URL.createObjectURL(blob);
+    }, [htmlCode]);
+    
+    // Cleanup blob URL on unmount or when htmlCode changes
+    useEffect(() => {
+        return () => {
+            if (htmlBlobUrl) {
+                URL.revokeObjectURL(htmlBlobUrl);
+            }
+        };
+    }, [htmlBlobUrl]);
 
     // Custom components for better table styling
     const markdownComponents = useMemo(() => ({
@@ -293,7 +322,7 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                                 <iframe
                                     ref={iframeRef}
                                     key={`iframe-${role}-${content?.slice(0, 50)}`}
-                                    srcDoc={htmlCode}
+                                    src={htmlBlobUrl}
                                     className="w-full border-0 rounded"
                                     title={t("HTML Render Preview")}
                                     sandbox="allow-scripts allow-same-origin"
