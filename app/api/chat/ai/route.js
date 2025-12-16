@@ -123,6 +123,32 @@ export async function POST(req){
         // Extract chatId, prompt, images, documents, chatflowId, and optional courseId from the request body
         const { chatId, prompt, images, documents, chatflowId, courseId } = await req.json();
 
+        // Security validation - 检测攻击模式但不停止服务
+        const dangerousPatterns = [
+            /(\||;|&&|`|\$\(|\$\{)/gi,  // Shell operators
+            /(wget|curl|nc|netcat|bash|sh\s|exec\(|eval\(|spawn\()/gi,  // Dangerous commands
+            /(base64.*\|.*sh|echo.*\|.*base64)/gi,  // Base64 injection
+            /<script[^>]*>/gi,  // XSS
+        ];
+        
+        const promptStr = String(prompt || '');
+        for (const pattern of dangerousPatterns) {
+            if (pattern.test(promptStr)) {
+                console.error('[SECURITY ALERT] Attack detected:', {
+                    userId,
+                    pattern: pattern.toString(),
+                    prompt: promptStr.substring(0, 200),
+                    ip: req.headers.get('x-forwarded-for') || 'unknown',
+                    timestamp: new Date().toISOString()
+                });
+                // 返回错误但不抛出异常，保持服务运行
+                return NextResponse.json({
+                    success: false,
+                    message: t("Invalid input detected"),
+                }, { status: 400 });
+            }
+        }
+
         // Validate required parameters
         if(!prompt?.trim()){
             return NextResponse.json({
@@ -439,6 +465,8 @@ export async function POST(req){
                         }
                     }
                 } catch (error) {
+                    // 记录错误但不抛出，避免影响服务
+                    console.error('[Stream Error]', error);
                     controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({
                         type: 'error',
                         error: error.message
@@ -459,10 +487,17 @@ export async function POST(req){
             }
         });
     } catch (error) {
+        // 记录所有错误但不让进程崩溃
+        console.error('[API Error - Chat AI]', {
+            error: error.message,
+            stack: error.stack,
+            timestamp: new Date().toISOString()
+        });
+        
         return NextResponse.json({ 
             success: false, 
             message: error.message || t('An error occurred while processing your request'),
             error: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        });
+        }, { status: 500 });
     }
 }
