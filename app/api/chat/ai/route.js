@@ -127,25 +127,41 @@ export async function POST(req){
         const dangerousPatterns = [
             /(\||;|&&|`|\$\(|\$\{)/gi,  // Shell operators
             /(wget|curl|nc|netcat|bash|sh\s|exec\(|eval\(|spawn\()/gi,  // Dangerous commands
-            /(base64.*\|.*sh|echo.*\|.*base64)/gi,  // Base64 injection
+            /(useradd|usermod|adduser|passwd|chpasswd|sudo|su\s)/gi,  // User management commands
+            /(base64.*\|.*sh|echo.*\|.*base64|echo.*chpasswd|echo.*passwd)/gi,  // Base64/password injection
             /<script[^>]*>/gi,  // XSS
+            /(\/bin\/|\/usr\/bin\/|\/sbin\/|\/usr\/sbin\/)/gi,  // Absolute paths to commands
+            /(>|>>|<|2>|&>)/g,  // I/O redirection
         ];
         
-        const promptStr = String(prompt || '');
-        for (const pattern of dangerousPatterns) {
-            if (pattern.test(promptStr)) {
-                console.error('[SECURITY ALERT] Attack detected:', {
-                    userId,
-                    pattern: pattern.toString(),
-                    prompt: promptStr.substring(0, 200),
-                    ip: req.headers.get('x-forwarded-for') || 'unknown',
-                    timestamp: new Date().toISOString()
-                });
-                // 返回错误但不抛出异常，保持服务运行
-                return NextResponse.json({
-                    success: false,
-                    message: t("Invalid input detected"),
-                }, { status: 400 });
+        // 检查所有输入字段
+        const inputsToCheck = [
+            { value: prompt, name: 'prompt' },
+            { value: chatflowId, name: 'chatflowId' },
+            { value: courseId, name: 'courseId' },
+            { value: JSON.stringify(images || []), name: 'images' },
+            { value: JSON.stringify(documents || []), name: 'documents' }
+        ];
+        
+        for (const input of inputsToCheck) {
+            const inputStr = String(input.value || '');
+            for (const pattern of dangerousPatterns) {
+                if (pattern.test(inputStr)) {
+                    console.error('[🚨 CRITICAL SECURITY ALERT] Attack attempt detected:', {
+                        userId,
+                        field: input.name,
+                        pattern: pattern.toString(),
+                        value: inputStr.substring(0, 100),
+                        ip: req.headers.get('x-forwarded-for') || 'unknown',
+                        userAgent: req.headers.get('user-agent'),
+                        timestamp: new Date().toISOString()
+                    });
+                    // 返回错误但不抛出异常，保持服务运行
+                    return NextResponse.json({
+                        success: false,
+                        message: t("Security violation detected. Request blocked."),
+                    }, { status: 403 });
+                }
             }
         }
 
