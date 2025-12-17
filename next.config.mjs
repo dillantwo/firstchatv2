@@ -29,6 +29,10 @@ const nextConfig = {
       },
     ];
   },
+  // 启用 instrumentation
+  experimental: {
+    instrumentationHook: true,
+  },
 };
 
 export default nextConfig;

@@ -3,6 +3,7 @@ export const maxDuration = 300;
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import mammoth from "mammoth";
+import { isFileNameSafe, containsDangerousPattern, logSecurityEvent } from "@/middleware/securityValidation";
 
 export async function POST(req) {
     try {
@@ -62,26 +63,20 @@ export async function POST(req) {
         for (const file of files) {
             console.log(`[Upload API] Processing file: ${file.name} Type: ${file.type} Size: ${file.size}`);
             
-            // Security: 检查文件名中的危险模式
-            const dangerousFilePatterns = [
-                /\.sh$|\.bash$|\.bat$|\.cmd$|\.exe$/i,  // 可执行文件
-                /\.\.|\/|\\/,  // 路径遍历
-            ];
-            
-            for (const pattern of dangerousFilePatterns) {
-                if (pattern.test(file.name)) {
-                    console.error('[SECURITY ALERT] Dangerous file detected:', {
-                        userId,
-                        fileName: file.name,
-                        pattern: pattern.toString(),
-                        timestamp: new Date().toISOString()
-                    });
-                    // 返回错误但不停止服务
-                    return NextResponse.json({
-                        success: false,
-                        message: `File ${file.name} is not allowed`,
-                    }, { status: 400 });
-                }
+            // Security: 使用统一的文件名验证
+            if (!isFileNameSafe(file.name)) {
+                logSecurityEvent({
+                    type: 'dangerous_file_upload',
+                    userId,
+                    fileName: file.name,
+                    ip: req.headers.get('x-forwarded-for') || 'unknown',
+                    timestamp: new Date().toISOString()
+                });
+                
+                return NextResponse.json({
+                    success: false,
+                    message: `File "${file.name}" is not allowed for security reasons`,
+                }, { status: 400 });
             }
             
             if (file.size === 0) {

@@ -8,6 +8,7 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { checkChatflowPermission } from "@/utils/permissionUtilsNew.mjs";
 import { getLanguageFromRequest, createTranslator } from "@/utils/serverTranslations.js";
+import { validateRequestBody, logSecurityEvent } from "@/middleware/securityValidation.js";
 
 // Flowise API configuration
 const FLOWISE_BASE_URL = process.env.FLOWISE_BASE_URL;
@@ -123,46 +124,25 @@ export async function POST(req){
         // Extract chatId, prompt, images, documents, chatflowId, and optional courseId from the request body
         const { chatId, prompt, images, documents, chatflowId, courseId } = await req.json();
 
-        // Security validation - 检测攻击模式但不停止服务
-        const dangerousPatterns = [
-            /(\||;|&&|`|\$\(|\$\{)/gi,  // Shell operators
-            /(wget|curl|nc|netcat|bash|sh\s|exec\(|eval\(|spawn\()/gi,  // Dangerous commands
-            /(useradd|usermod|adduser|passwd|chpasswd|sudo|su\s)/gi,  // User management commands
-            /(base64.*\|.*sh|echo.*\|.*base64|echo.*chpasswd|echo.*passwd)/gi,  // Base64/password injection
-            /<script[^>]*>/gi,  // XSS
-            /(\/bin\/|\/usr\/bin\/|\/sbin\/|\/usr\/sbin\/)/gi,  // Absolute paths to commands
-            /(>|>>|<|2>|&>)/g,  // I/O redirection
-        ];
+        // Security validation - 使用统一的验证函数
+        const securityViolations = validateRequestBody(
+            { prompt, chatflowId, courseId, images, documents },
+            ['prompt', 'chatflowId', 'courseId', 'images', 'documents']
+        );
         
-        // 检查所有输入字段
-        const inputsToCheck = [
-            { value: prompt, name: 'prompt' },
-            { value: chatflowId, name: 'chatflowId' },
-            { value: courseId, name: 'courseId' },
-            { value: JSON.stringify(images || []), name: 'images' },
-            { value: JSON.stringify(documents || []), name: 'documents' }
-        ];
-        
-        for (const input of inputsToCheck) {
-            const inputStr = String(input.value || '');
-            for (const pattern of dangerousPatterns) {
-                if (pattern.test(inputStr)) {
-                    console.error('[🚨 CRITICAL SECURITY ALERT] Attack attempt detected:', {
-                        userId,
-                        field: input.name,
-                        pattern: pattern.toString(),
-                        value: inputStr.substring(0, 100),
-                        ip: req.headers.get('x-forwarded-for') || 'unknown',
-                        userAgent: req.headers.get('user-agent'),
-                        timestamp: new Date().toISOString()
-                    });
-                    // 返回错误但不抛出异常，保持服务运行
-                    return NextResponse.json({
-                        success: false,
-                        message: t("Security violation detected. Request blocked."),
-                    }, { status: 403 });
-                }
-            }
+        if (securityViolations) {
+            logSecurityEvent({
+                type: 'command_injection_attempt',
+                userId,
+                violations: securityViolations,
+                ip: req.headers.get('x-forwarded-for') || 'unknown',
+                userAgent: req.headers.get('user-agent')
+            });
+            
+            return NextResponse.json({
+                success: false,
+                message: t("Security violation detected. Request blocked."),
+            }, { status: 403 });
         }
 
         // Validate required parameters
