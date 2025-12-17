@@ -20,12 +20,21 @@ process.on('uncaughtException', (error, origin) => {
         error: error.message,
         stack: error.stack,
         origin: origin,
+        code: error.code,
         timestamp: new Date().toISOString()
     });
     
     // 记录具体的错误类型
     if (error.code === 'EACCES') {
-        console.error('[Security] Attempted to access forbidden path:', error.path);
+        console.error('[🚨 SECURITY ATTACK BLOCKED] Path access denied:', error.path);
+        // 这是攻击行为，记录后继续运行，不退出
+        return;
+    }
+    
+    // 命令执行失败也不退出
+    if (error.message && error.message.includes('Command failed')) {
+        console.error('[🚨 SECURITY ATTACK BLOCKED] Command execution blocked');
+        return;
     }
     
     // 不退出进程，让PM2或其他进程管理器处理重启
