@@ -124,10 +124,10 @@ export async function POST(req){
         // Extract chatId, prompt, images, documents, chatflowId, and optional courseId from the request body
         const { chatId, prompt, images, documents, chatflowId, courseId } = await req.json();
 
-        // Security validation - 使用统一的验证函数
+        // Security validation - 只檢查文字欄位，跳過 images 和 documents（它們包含 base64 數據會觸發誤報）
         const securityViolations = validateRequestBody(
-            { prompt, chatflowId, courseId, images, documents },
-            ['prompt', 'chatflowId', 'courseId', 'images', 'documents']
+            { prompt, chatflowId, courseId },
+            ['prompt', 'chatflowId', 'courseId']
         );
         
         if (securityViolations) {
@@ -143,6 +143,22 @@ export async function POST(req){
                 success: false,
                 message: t("Security violation detected. Request blocked."),
             }, { status: 403 });
+        }
+        
+        // 對 images 進行基本驗證（不檢查 base64 內容，只檢查結構）
+        if (images && Array.isArray(images)) {
+            for (const img of images) {
+                // 確保 image 是合法的 data URL 或 URL 格式
+                if (typeof img === 'string' && img.length > 0) {
+                    // 只允許 data:image 或 http/https URL
+                    if (!img.startsWith('data:image/') && !img.startsWith('http://') && !img.startsWith('https://')) {
+                        return NextResponse.json({
+                            success: false,
+                            message: t("Invalid image format"),
+                        }, { status: 400 });
+                    }
+                }
+            }
         }
 
         // Validate required parameters
