@@ -13,8 +13,8 @@ const DANGEROUS_PATTERNS = [
     // User management commands
     /(useradd|usermod|adduser|passwd|chpasswd|sudo|su\s)/gi,
     
-    // Base64 command injection patterns
-    /(base64.*\|.*sh|echo.*\|.*base64|echo.*chpasswd|echo.*passwd)/gi,
+    // Base64 command injection patterns - more specific to avoid false positives with data URLs
+    /(base64\s+(--decode|-d)\s*\|.*sh|echo.*\|.*base64\s+(--decode|-d)|echo.*chpasswd|echo.*passwd)/gi,
     
     // Path traversal
     /(\.\.[\/\\]|\.\.%2[fF]|\.\.%5[cC])/gi,
@@ -25,8 +25,8 @@ const DANGEROUS_PATTERNS = [
     // I/O redirection
     /(>|>>|<|2>|&>)/g,
     
-    // XSS patterns
-    /<script[^>]*>/gi,
+    // XSS patterns - exclude data URLs
+    /<script[^>]*>(?!.*<\/script>.*data:)/gi,
     
     // SQL injection patterns
     /('|"|;|--|\bOR\b|\bAND\b|\bUNION\b|\bSELECT\b|\bDROP\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b).*(\bFROM\b|\bWHERE\b|\bTABLE\b)/gi,
@@ -37,14 +37,32 @@ const DANGEROUS_PATTERNS = [
 
 /**
  * 验证字符串是否包含危险模式
+ * @param {any} value - 要检查的值
+ * @param {string} fieldName - 字段名称
+ * @param {boolean} isMediaContent - 是否是媒体内容（如 base64 图片/文档）
  */
-export function containsDangerousPattern(value, fieldName = 'input') {
+export function containsDangerousPattern(value, fieldName = 'input', isMediaContent = false) {
     if (!value) return null;
+    
+    // Skip validation for media content (images, documents with data URLs)
+    if (isMediaContent) return null;
     
     const valueStr = typeof value === 'string' ? value : JSON.stringify(value);
     
+    // Skip if this looks like a data URL or base64 media content
+    if (/^data:(image|application|text)\/[a-z0-9+-]+;base64,/i.test(valueStr)) {
+        return null;
+    }
+    
+    // Skip if this is a URL field containing a data URL
+    if (valueStr.includes('data:image/') || valueStr.includes('data:application/')) {
+        return null;
+    }
+    
     for (const pattern of DANGEROUS_PATTERNS) {
         if (pattern.test(valueStr)) {
+            // Reset regex lastIndex to avoid issues with global flag
+            pattern.lastIndex = 0;
             return {
                 field: fieldName,
                 pattern: pattern.toString(),
@@ -144,14 +162,22 @@ export function logSecurityEvent(event) {
 
 /**
  * 验证请求体的所有字段
+ * @param {Object} body - 请求体
+ * @param {string[]} allowedFields - 允许的字段列表
+ * @param {string[]} mediaFields - 媒体字段列表（跳过安全检查）
  */
-export function validateRequestBody(body, allowedFields = []) {
+export function validateRequestBody(body, allowedFields = [], mediaFields = ['images', 'documents']) {
     const results = [];
     
     for (const [key, value] of Object.entries(body)) {
         // 如果指定了允许的字段，检查是否在列表中
         if (allowedFields.length > 0 && !allowedFields.includes(key)) {
             continue; // 跳过不在白名单中的字段
+        }
+        
+        // Skip media fields (images, documents) as they contain base64 data
+        if (mediaFields.includes(key)) {
+            continue;
         }
         
         const danger = containsDangerousPattern(value, key);

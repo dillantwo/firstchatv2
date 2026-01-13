@@ -1,6 +1,6 @@
 import { assets } from '@/assets/assets'
 import Image from 'next/image'
-import React, { useEffect, useState, useMemo, useCallback, memo } from 'react'
+import React, { useEffect, useState, useMemo, useCallback, memo, useRef } from 'react'
 import Markdown from 'react-markdown'
 import remarkMath from 'remark-math'
 import remarkGfm from 'remark-gfm'
@@ -9,6 +9,54 @@ import Prism from 'prismjs'
 import toast from 'react-hot-toast'
 import { useTheme } from '@/context/ThemeContext'
 import { useLanguage } from '@/context/LanguageContext'
+
+// Separate IframeRenderer component to handle postMessage height updates
+const IframeRenderer = memo(({ iframeRef, sandboxedHtmlCode, role, content, isInPinnedPanel, t }) => {
+    const [iframeHeight, setIframeHeight] = useState(isInPinnedPanel ? 200 : 400);
+    const localIframeRef = useRef(null);
+    const actualRef = iframeRef || localIframeRef;
+
+    useEffect(() => {
+        const handleMessage = (event) => {
+            // Handle height messages from the iframe
+            if (event.data && event.data.type === 'iframeHeight') {
+                const newHeight = Math.max(isInPinnedPanel ? 200 : 200, event.data.height);
+                setIframeHeight(newHeight);
+                if (actualRef.current) {
+                    actualRef.current.style.height = newHeight + 'px';
+                    actualRef.current.style.minHeight = newHeight + 'px';
+                }
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, [isInPinnedPanel, actualRef]);
+
+    return (
+        <iframe
+            ref={actualRef}
+            key={`iframe-${role}-${content?.slice(0, 50)}`}
+            srcDoc={sandboxedHtmlCode}
+            className="w-full border-0 rounded"
+            title={t("HTML Render Preview")}
+            sandbox="allow-scripts allow-forms allow-popups allow-pointer-lock allow-modals"
+            style={{ 
+                height: iframeHeight + 'px',
+                minHeight: (isInPinnedPanel ? 200 : 200) + 'px',
+                maxHeight: 'none',
+                overflow: 'auto',
+                border: 'none',
+                display: 'block',
+                width: '100%',
+                maxWidth: '100%',
+                resize: 'none'
+            }}
+        />
+    );
+});
+
+IframeRenderer.displayName = 'IframeRenderer';
 
 const Message = ({role, content, images, documents, onPinMessage, isPinned = false, showPinButton = true, isInPinnedPanel = false}) => {
 
@@ -137,15 +185,221 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
         
         if (match && match[1]) {
             // Clean up the extracted HTML
-            const htmlContent = match[1].trim();
+            let htmlContent = match[1].trim();
+            
             // Only return if there's actual content
-            return htmlContent.length > 0 ? htmlContent : null;
+            if (htmlContent.length === 0) return null;
+            
+            // Sanitize JavaScript in script tags to fix common syntax errors
+            htmlContent = htmlContent.replace(/<script([^>]*)>([\s\S]*?)<\/script>/gi, (match, attrs, scriptContent) => {
+                let fixedScript = scriptContent;
+                
+                // Skip if script is empty or just whitespace
+                if (!fixedScript.trim()) {
+                    return `<script${attrs}></script>`;
+                }
+                
+                // Fix common JS syntax issues:
+                // 1. Remove trailing commas before closing braces/brackets
+                fixedScript = fixedScript.replace(/,\s*([}\]])/g, '$1');
+                
+                // 2. Fix double semicolons
+                fixedScript = fixedScript.replace(/;;+/g, ';');
+                
+                // 3. Balance braces - count and fix
+                let openBraces = (fixedScript.match(/{/g) || []).length;
+                let closeBraces = (fixedScript.match(/}/g) || []).length;
+                
+                if (closeBraces > openBraces) {
+                    // Too many closing braces - remove extras from the end
+                    let excess = closeBraces - openBraces;
+                    while (excess > 0) {
+                        fixedScript = fixedScript.replace(/}\s*$/, '');
+                        excess--;
+                    }
+                } else if (openBraces > closeBraces) {
+                    // Too few closing braces - add them
+                    fixedScript += '}'.repeat(openBraces - closeBraces);
+                }
+                
+                // 4. Balance parentheses
+                let openParens = (fixedScript.match(/\(/g) || []).length;
+                let closeParens = (fixedScript.match(/\)/g) || []).length;
+                
+                if (closeParens > openParens) {
+                    let excess = closeParens - openParens;
+                    while (excess > 0) {
+                        fixedScript = fixedScript.replace(/\)\s*$/, '');
+                        excess--;
+                    }
+                } else if (openParens > closeParens) {
+                    fixedScript += ')'.repeat(openParens - closeParens);
+                }
+                
+                // 5. Ensure script doesn't end with orphan characters
+                fixedScript = fixedScript.replace(/[{,;(\[]\s*$/, '');
+                
+                // 6. Check if already has try-catch wrapper - don't double wrap
+                const hasTryCatch = /^\s*try\s*\{/.test(fixedScript.trim());
+                
+                if (!hasTryCatch) {
+                    // Wrap in self-executing function with error handling
+                    fixedScript = `(function() {
+try {
+${fixedScript}
+} catch(e) { console.warn('Script error:', e); }
+})();`;
+                }
+                
+                return `<script${attrs}>${fixedScript}</script>`;
+            });
+            
+            return htmlContent;
         }
         return null;
     }, []);
 
     // Optimize HTML code extraction with useMemo
     const htmlCode = useMemo(() => extractHTMLCode(content), [content, extractHTMLCode]);
+
+    // Prepare sandboxed HTML with injected scripts for proper rendering
+    // Since we removed allow-same-origin, we inject necessary scripts into srcDoc
+    const sandboxedHtmlCode = useMemo(() => {
+        if (!htmlCode) return null;
+        
+        // Fix common CSS syntax errors from AI-generated code
+        let fixedHtmlCode = htmlCode
+            // Fix linear-gradient color values missing spaces (e.g., #4caf5080% -> #4caf50 80%)
+            .replace(/(#[0-9a-fA-F]{6})(\d+%)/g, '$1 $2')
+            .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2')
+            // Fix rgba/rgb values missing spaces
+            .replace(/rgba?\(([^)]+)\)/g, (match, inner) => {
+                const fixed = inner.replace(/(\d+),(\d+)/g, '$1, $2').replace(/(\d+)%,(\d+)/g, '$1%, $2');
+                return match.replace(inner, fixed);
+            })
+            // Fix border-radius missing spaces (e.g., 8px8px00 -> 8px 8px 0 0)
+            .replace(/border-radius:\s*([^;}\n]+)/gi, (match, value) => {
+                const fixedValue = value
+                    .replace(/(\d+(?:px|em|rem|%))(\d)/g, '$1 $2')
+                    .replace(/(\d)(\d+(?:px|em|rem|%))/g, '$1 $2')
+                    .replace(/(\d+(?:px|em|rem|%))([a-zA-Z])/g, '$1 $2')
+                    .replace(/00(?=\s|;|$)/g, '0 0')
+                    .replace(/([0-9])([0-9]+px)/g, '$1 $2');
+                return `border-radius: ${fixedValue}`;
+            })
+            // Fix margin/padding missing spaces
+            .replace(/(margin|padding):\s*([^;}\n]+)/gi, (match, prop, value) => {
+                const fixedValue = value
+                    .replace(/(\d+(?:px|em|rem|%))(\d)/g, '$1 $2')
+                    .replace(/00(?=\s|;|$)/g, '0 0');
+                return `${prop}: ${fixedValue}`;
+            })
+            // Fix animation property (e.g., "growBaris" -> "growBar 1s")
+            .replace(/animation:\s*([a-zA-Z]+)(\d*\.?\d*s?)?\s*(ease|linear|ease-in|ease-out|ease-in-out)?/gi, (match, name, duration, timing) => {
+                const fixedDuration = duration || '1s';
+                const fixedTiming = timing || 'ease-in-out';
+                // Check if duration is missing 's' suffix
+                const durationWithUnit = fixedDuration.match(/\d+\.?\d*s$/) ? fixedDuration : fixedDuration + 's';
+                return `animation: ${name} ${durationWithUnit} ${fixedTiming}`;
+            });
+        
+        // Script to inject for event handling and height reporting via postMessage
+        const injectedScript = `
+<script>
+(function() {
+    // Prevent form submission from page reload
+    document.addEventListener('submit', function(e) {
+        e.preventDefault();
+        return false;
+    });
+    
+    // Prevent link navigation
+    document.addEventListener('click', function(e) {
+        if (e.target.tagName === 'A' && e.target.href) {
+            e.preventDefault();
+            return false;
+        }
+    });
+    
+    // Report height to parent via postMessage
+    function reportHeight() {
+        try {
+            var bodyHeight = document.body ? document.body.scrollHeight : 0;
+            var docHeight = document.documentElement ? document.documentElement.scrollHeight : 0;
+            var height = Math.max(bodyHeight, docHeight);
+            if (height > 0) {
+                window.parent.postMessage({ type: 'iframeHeight', height: height + 20 }, '*');
+            }
+        } catch(e) {}
+    }
+    
+    // Report height on load and periodically
+    if (document.readyState === 'complete') {
+        reportHeight();
+    } else {
+        window.addEventListener('load', reportHeight);
+    }
+    setTimeout(reportHeight, 100);
+    setTimeout(reportHeight, 300);
+    setTimeout(reportHeight, 600);
+    setTimeout(reportHeight, 1000);
+    
+    // Also observe DOM changes to update height
+    if (typeof MutationObserver !== 'undefined') {
+        var observer = new MutationObserver(function() {
+            setTimeout(reportHeight, 50);
+        });
+        observer.observe(document.body || document.documentElement, { 
+            childList: true, 
+            subtree: true, 
+            attributes: true 
+        });
+    }
+})();
+</script>`;
+
+        // Ensure HTML has proper structure for rendering
+        const hasHtmlTag = /<html[\s>]/i.test(fixedHtmlCode);
+        const hasBodyTag = /<body[\s>]/i.test(fixedHtmlCode);
+        
+        // Base styles to ensure proper rendering
+        const baseStyle = `<style>
+            * { box-sizing: border-box; }
+            html, body { margin: 0; padding: 8px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", sans-serif; }
+        </style>`;
+        
+        let finalHtml;
+        
+        if (hasHtmlTag && hasBodyTag) {
+            // Full HTML document - inject script before </body>
+            if (fixedHtmlCode.includes('</body>')) {
+                finalHtml = fixedHtmlCode.replace('</body>', injectedScript + '</body>');
+            } else if (fixedHtmlCode.includes('</html>')) {
+                finalHtml = fixedHtmlCode.replace('</html>', injectedScript + '</html>');
+            } else {
+                finalHtml = fixedHtmlCode + injectedScript;
+            }
+        } else if (hasBodyTag) {
+            // Has body but no html tag - wrap properly
+            finalHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8">${baseStyle}</head>${fixedHtmlCode.replace('</body>', injectedScript + '</body>')}</html>`;
+        } else {
+            // Fragment - wrap in full HTML structure
+            finalHtml = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    ${baseStyle}
+</head>
+<body>
+${fixedHtmlCode}
+${injectedScript}
+</body>
+</html>`;
+        }
+        
+        return finalHtml;
+    }, [htmlCode]);
 
     // Custom components for better table styling
     const markdownComponents = useMemo(() => ({
@@ -290,171 +544,13 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
                         )}
                         <div className={isInPinnedPanel ? '' : 'p-4'}>
                             {htmlViewMode === 'rendered' ? (
-                                <iframe
-                                    ref={iframeRef}
-                                    key={`iframe-${role}-${content?.slice(0, 50)}`}
-                                    srcDoc={htmlCode}
-                                    className="w-full border-0 rounded"
-                                    title={t("HTML Render Preview")}
-                                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-modals allow-storage-access-by-user-activation"
-                                    style={{ 
-                                        height: isInPinnedPanel ? '200px' : '400px', // Initial height for pinned panel, will be set to actual content height by adjustHeight
-                                        minHeight: isInPinnedPanel ? '200px' : '200px', // Initial minHeight for pinned panel, will be set to actual content height by adjustHeight
-                                        maxHeight: isInPinnedPanel ? 'none' : 'none', // Remove max height limit to allow full content display
-                                        overflow: 'auto', // Allow scrolling if content is too large
-                                        border: 'none',
-                                        display: 'block',
-                                        width: '100%',
-                                        maxWidth: '100%', // Prevent horizontal expansion
-                                        resize: 'none' // Disable manual resizing
-                                    }}
-                                    onLoad={(e) => {
-                                        // Auto-adjust iframe height to fully fit content and monitor content changes
-                                        try {
-                                            const iframe = e.target;
-                                            const iframeWindow = iframe.contentWindow;
-                                            const doc = iframe.contentDocument || iframeWindow.document;
-                                            
-                                            // Trigger any initialization functions that might be waiting
-                                            // This ensures scripts execute even if DOMContentLoaded already fired
-                                            if (iframeWindow && doc.readyState === 'complete') {
-                                                // Manually trigger DOMContentLoaded if the document is already loaded
-                                                // but listeners might have been registered too late
-                                                setTimeout(() => {
-                                                    const event = new Event('DOMContentLoaded', {
-                                                        bubbles: true,
-                                                        cancelable: true
-                                                    });
-                                                    doc.dispatchEvent(event);
-                                                }, 0);
-                                            }
-                                            
-                                            // Fix common CSS issues in inline styles and style tags
-                                            const fixCSSGradients = () => {
-                                                try {
-                                                    // Fix inline styles
-                                                    const elementsWithStyle = doc.querySelectorAll('[style*="gradient"]');
-                                                    elementsWithStyle.forEach(el => {
-                                                        const style = el.getAttribute('style');
-                                                        if (style) {
-                                                            // Fix patterns like: #a0eaff0% -> #a0eaff 0%
-                                                            // Fix patterns like: #2d8cf0100% -> #2d8cf0 100%
-                                                            const fixedStyle = style
-                                                                .replace(/(#[0-9a-fA-F]{6})(\d+%)/g, '$1 $2')
-                                                                .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2');
-                                                            if (fixedStyle !== style) {
-                                                                el.setAttribute('style', fixedStyle);
-                                                            }
-                                                        }
-                                                    });
-                                                    
-                                                    // Fix style tags
-                                                    const styleTags = doc.querySelectorAll('style');
-                                                    styleTags.forEach(styleTag => {
-                                                        const originalCSS = styleTag.textContent;
-                                                        const fixedCSS = originalCSS
-                                                            .replace(/(#[0-9a-fA-F]{6})(\d+%)/g, '$1 $2')
-                                                            .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2');
-                                                        if (fixedCSS !== originalCSS) {
-                                                            styleTag.textContent = fixedCSS;
-                                                        }
-                                                    });
-                                                    
-                                                    // Ensure SVG elements are properly sized
-                                                    const svgs = doc.querySelectorAll('svg');
-                                                    svgs.forEach(svg => {
-                                                        // Set preserveAspectRatio if not set
-                                                        if (!svg.hasAttribute('preserveAspectRatio')) {
-                                                            svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-                                                        }
-                                                        // Ensure viewBox is set for proper scaling
-                                                        if (!svg.hasAttribute('viewBox') && svg.hasAttribute('width') && svg.hasAttribute('height')) {
-                                                            const width = svg.getAttribute('width');
-                                                            const height = svg.getAttribute('height');
-                                                            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-                                                        }
-                                                    });
-                                                } catch (error) {
-                                                    console.error('CSS gradient fix failed:', error);
-                                                }
-                                            };
-                                            
-                                            // Apply CSS fixes immediately
-                                            fixCSSGradients();
-                                            
-                                            // Dynamic height adjustment function
-                                            const adjustHeight = () => {
-                                                try {
-                                                    // Wait for styles to be applied
-                                                    requestAnimationFrame(() => {
-                                                        // Get actual content height including all elements
-                                                        const bodyHeight = doc.body ? doc.body.scrollHeight : 0;
-                                                        const documentHeight = doc.documentElement ? doc.documentElement.scrollHeight : 0;
-                                                        
-                                                        // Check for SVG elements and their bounding boxes
-                                                        const svgs = doc.querySelectorAll('svg');
-                                                        let maxSvgHeight = 0;
-                                                        svgs.forEach(svg => {
-                                                            const bbox = svg.getBoundingClientRect();
-                                                            const svgBottom = bbox.bottom + (svg.offsetTop || 0);
-                                                            maxSvgHeight = Math.max(maxSvgHeight, svgBottom);
-                                                        });
-                                                        
-                                                        const contentHeight = Math.max(bodyHeight, documentHeight, maxSvgHeight);
-                                                        
-                                                        if (contentHeight > 0) {
-                                                            if (isInPinnedPanel) {
-                                                                // For pinned panel, set appropriate height with padding
-                                                                const finalHeight = Math.max(200, contentHeight + 20);
-                                                                iframe.style.height = finalHeight + 'px';
-                                                                iframe.style.minHeight = finalHeight + 'px';
-                                                            } else {
-                                                                // For regular messages, set height with padding
-                                                                const finalHeight = Math.max(200, contentHeight + 20);
-                                                                iframe.style.height = finalHeight + 'px';
-                                                                iframe.style.minHeight = finalHeight + 'px';
-                                                            }
-                                                        }
-                                                    });
-                                                } catch (innerError) {
-                                                    console.error('Height adjustment failed:', innerError);
-                                                }
-                                            };
-                                            
-                                            // Only add minimal event prevention script
-                                            if (!doc.querySelector('script[data-event-handler]')) {
-                                                const script = doc.createElement('script');
-                                                script.setAttribute('data-event-handler', 'true');
-                                                script.textContent = `
-                                                    // Prevent form submission from page reload
-                                                    document.addEventListener('submit', function(e) {
-                                                        e.preventDefault();
-                                                        return false;
-                                                    });
-                                                    
-                                                    // Prevent link navigation
-                                                    document.addEventListener('click', function(e) {
-                                                        if (e.target.tagName === 'A' && e.target.href) {
-                                                            e.preventDefault();
-                                                            return false;
-                                                        }
-                                                    });
-                                                `;
-                                                doc.body.appendChild(script);
-                                            }
-                                            
-                                            // Initial height adjustments - delayed to allow rendering
-                                            setTimeout(adjustHeight, 100);
-                                            setTimeout(adjustHeight, 300);
-                                            setTimeout(adjustHeight, 600);
-                                            setTimeout(adjustHeight, 1000);
-                                            setTimeout(adjustHeight, 1500);
-                                        } catch (error) {
-                                            // Set compact default height when cross-origin restrictions apply
-                                            e.target.style.height = '300px';
-                                            e.target.style.minHeight = '300px';
-                                        }
-                                    }}
+                                <IframeRenderer 
+                                    iframeRef={iframeRef}
+                                    sandboxedHtmlCode={sandboxedHtmlCode}
+                                    role={role}
+                                    content={content}
+                                    isInPinnedPanel={isInPinnedPanel}
+                                    t={t}
                                 />
                             ) : (
                                 <div className={`${
