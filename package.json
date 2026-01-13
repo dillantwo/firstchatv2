@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "next dev",
     "dev-turbo": "next dev --turbopack",
-    "build": "next build",
+    "build": "NODE_OPTIONS='--max-old-space-size=2048' next build",
+    "build:low-mem": "NODE_OPTIONS='--max-old-space-size=1024' next build",
     "start": "next start",
     "lint": "next lint",
     "setup-lti": "node scripts/migrate-to-lti.js",
