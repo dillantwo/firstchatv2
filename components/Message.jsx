@@ -179,7 +179,7 @@ const Message = ({role, content, images, documents, onPinMessage, isPinned = fal
     const extractHTMLCode = useCallback((markdownContent) => {
         if (!markdownContent) return null;
         
-        // More robust regex that handles different line endings and edge cases
+        // First, try to match ```html code blocks
         const htmlCodeRegex = /```html\s*\n?([\s\S]*?)\n?```/i;
         const match = htmlCodeRegex.exec(markdownContent);
         
@@ -256,6 +256,66 @@ ${fixedScript}
             
             return htmlContent;
         }
+        
+        // If no ```html block found, check if content contains <!DOCTYPE html>
+        // This handles cases where AI returns raw HTML without code block markers
+        if (markdownContent.includes('<!DOCTYPE html>')) {
+            // Extract from <!DOCTYPE html> to </html>
+            const doctypeRegex = /<!DOCTYPE html>[\s\S]*?<\/html>/i;
+            const doctypeMatch = doctypeRegex.exec(markdownContent);
+            
+            if (doctypeMatch) {
+                let htmlContent = doctypeMatch[0].trim();
+                
+                // Apply same JavaScript sanitization as above
+                htmlContent = htmlContent.replace(/<script([^>]*)>([\s\S]*?)<\/script>/gi, (match, attrs, scriptContent) => {
+                    let fixedScript = scriptContent;
+                    if (!fixedScript.trim()) {
+                        return `<script${attrs}></script>`;
+                    }
+                    fixedScript = fixedScript.replace(/,\s*([}\]])/g, '$1');
+                    fixedScript = fixedScript.replace(/;;+/g, ';');
+                    
+                    let openBraces = (fixedScript.match(/{/g) || []).length;
+                    let closeBraces = (fixedScript.match(/}/g) || []).length;
+                    if (closeBraces > openBraces) {
+                        let excess = closeBraces - openBraces;
+                        while (excess > 0) {
+                            fixedScript = fixedScript.replace(/}\s*$/, '');
+                            excess--;
+                        }
+                    } else if (openBraces > closeBraces) {
+                        fixedScript += '}'.repeat(openBraces - closeBraces);
+                    }
+                    
+                    let openParens = (fixedScript.match(/\(/g) || []).length;
+                    let closeParens = (fixedScript.match(/\)/g) || []).length;
+                    if (closeParens > openParens) {
+                        let excess = closeParens - openParens;
+                        while (excess > 0) {
+                            fixedScript = fixedScript.replace(/\)\s*$/, '');
+                            excess--;
+                        }
+                    } else if (openParens > closeParens) {
+                        fixedScript += ')'.repeat(openParens - closeParens);
+                    }
+                    
+                    fixedScript = fixedScript.replace(/[{,;(\[]\s*$/, '');
+                    const hasTryCatch = /^\s*try\s*\{/.test(fixedScript.trim());
+                    if (!hasTryCatch) {
+                        fixedScript = `(function() {
+try {
+${fixedScript}
+} catch(e) { console.warn('Script error:', e); }
+})();`;
+                    }
+                    return `<script${attrs}>${fixedScript}</script>`;
+                });
+                
+                return htmlContent;
+            }
+        }
+        
         return null;
     }, []);
 
@@ -457,9 +517,25 @@ ${injectedScript}
     const renderedContent = useMemo(() => {
         if (htmlCode) {
             // Split content to find HTML code block position
-            const parts = content.split(/```html[\s\S]*?```/gi);
-            const beforeHTML = parts[0];
-            const afterHTML = parts[1] || '';
+            // Handle both ```html blocks and raw <!DOCTYPE html> content
+            let beforeHTML = '';
+            let afterHTML = '';
+            
+            if (content.includes('```html')) {
+                // Has markdown code block
+                const parts = content.split(/```html[\s\S]*?```/gi);
+                beforeHTML = parts[0];
+                afterHTML = parts[1] || '';
+            } else if (content.includes('<!DOCTYPE html>')) {
+                // Has raw HTML without code block
+                const doctypeIndex = content.indexOf('<!DOCTYPE html>');
+                const htmlEndIndex = content.indexOf('</html>');
+                
+                if (doctypeIndex !== -1 && htmlEndIndex !== -1) {
+                    beforeHTML = content.substring(0, doctypeIndex).trim();
+                    afterHTML = content.substring(htmlEndIndex + 7).trim(); // 7 = '</html>'.length
+                }
+            }
             
             return (
                 <div className={`space-y-4 w-full ${hasMathFormulas ? 'message-with-math' : ''} ${isInPinnedPanel ? (isDark ? 'text-white' : 'text-gray-900') : ''}`}>
