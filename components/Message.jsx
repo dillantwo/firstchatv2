@@ -327,41 +327,10 @@ ${fixedScript}
     const sandboxedHtmlCode = useMemo(() => {
         if (!htmlCode) return null;
         
-        // Fix common CSS syntax errors from AI-generated code
-        let fixedHtmlCode = htmlCode
-            // Fix linear-gradient color values missing spaces (e.g., #4caf5080% -> #4caf50 80%)
-            .replace(/(#[0-9a-fA-F]{6})(\d+%)/g, '$1 $2')
-            .replace(/(#[0-9a-fA-F]{3})(\d+%)/g, '$1 $2')
-            // Fix rgba/rgb values missing spaces
-            .replace(/rgba?\(([^)]+)\)/g, (match, inner) => {
-                const fixed = inner.replace(/(\d+),(\d+)/g, '$1, $2').replace(/(\d+)%,(\d+)/g, '$1%, $2');
-                return match.replace(inner, fixed);
-            })
-            // Fix border-radius missing spaces (e.g., 8px8px00 -> 8px 8px 0 0)
-            .replace(/border-radius:\s*([^;}\n]+)/gi, (match, value) => {
-                const fixedValue = value
-                    .replace(/(\d+(?:px|em|rem|%))(\d)/g, '$1 $2')
-                    .replace(/(\d)(\d+(?:px|em|rem|%))/g, '$1 $2')
-                    .replace(/(\d+(?:px|em|rem|%))([a-zA-Z])/g, '$1 $2')
-                    .replace(/00(?=\s|;|$)/g, '0 0')
-                    .replace(/([0-9])([0-9]+px)/g, '$1 $2');
-                return `border-radius: ${fixedValue}`;
-            })
-            // Fix margin/padding missing spaces
-            .replace(/(margin|padding):\s*([^;}\n]+)/gi, (match, prop, value) => {
-                const fixedValue = value
-                    .replace(/(\d+(?:px|em|rem|%))(\d)/g, '$1 $2')
-                    .replace(/00(?=\s|;|$)/g, '0 0');
-                return `${prop}: ${fixedValue}`;
-            })
-            // Fix animation property (e.g., "growBaris" -> "growBar 1s")
-            .replace(/animation:\s*([a-zA-Z]+)(\d*\.?\d*s?)?\s*(ease|linear|ease-in|ease-out|ease-in-out)?/gi, (match, name, duration, timing) => {
-                const fixedDuration = duration || '1s';
-                const fixedTiming = timing || 'ease-in-out';
-                // Check if duration is missing 's' suffix
-                const durationWithUnit = fixedDuration.match(/\d+\.?\d*s$/) ? fixedDuration : fixedDuration + 's';
-                return `animation: ${name} ${durationWithUnit} ${fixedTiming}`;
-            });
+        // Note: Most CSS issues were caused by stream chunking problems in the API
+        // which have been fixed with proper buffering. Keeping minimal fixes for
+        // any remaining AI-generated CSS quirks.
+        let fixedHtmlCode = htmlCode;
         
         // Script to inject for event handling and height reporting via postMessage
         const injectedScript = `
@@ -794,8 +763,8 @@ ${injectedScript}
                                 ))}
                             </div>
                         )}
-                        {/* Display text content */}
-                        <span>{content}</span>
+                        {/* Display text content - preserve line breaks */}
+                        <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{content}</span>
                     </div>
                 )
                 :
