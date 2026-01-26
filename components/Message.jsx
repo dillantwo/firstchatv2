@@ -814,7 +814,7 @@ ${injectedScript}
         )}
       </div>
     </div>
-  )a
+  )
 }
 
 export default memo(Message)
