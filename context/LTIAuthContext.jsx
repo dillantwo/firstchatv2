@@ -28,7 +28,7 @@ export const LTIAuthProvider = ({ children }) => {
 
   // Redirect to Moodle courses page
   const redirectToMoodle = () => {
-    window.location.href = 'https://qefmoodle.com/my/courses.php';
+    window.location.href = 'https://www.qefmoodle.com/my/courses.php';
   };
 
   // Check authentication status
